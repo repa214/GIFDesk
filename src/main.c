@@ -4,15 +4,19 @@
         0.50: первый релиз
         0.51: исправлена ошибка переполнения памяти при загрузке анимации с большим разрешением
         0.52: отображенеие анимации соответствует её фреймрейту
-        0.53: исправлено отображение анимации с неявным значением Frame Blending Mode
-        0.54: исправлено отображение анимации с неявным значением Frame Blending Mode
+        0.53: исправлено отображение анимаций с неявным значением Frame Blending Mode (1)
+        0.54: исправлено отображение анимаций с неявным значением Frame Blending Mode (2)
         0.55: добавлена возможность показывать или скрывать окно приложения в панеле задач
-        0.56: исправлено отображение анимации с неявным значением Frame Blending Mode
+        0.56: исправлено отображение анимаций с неявным значением Frame Blending Mode (3)
         0.57: дополнен сценарий обработки неподдерживаемых типов файла
         0.58: исправлен алгоритм обработки неподдерживаемых типов файла
         0.59: переименованы некоторые пункты настроек
 
         0.60: добавлена возможность масштабировать изображение (beta)
+        0.61: исправлено отображение анимаций с неявным значением Frame Blending Mode (4)
+        0.62: исправлена логика поведеня окна в таскбаре
+        0.63: все параметры из ПКМ-меню сохраняются при перезапуске утилиты
+        0.64: исправлен баг при котором не работало ПКМ-меню после манипуляций с масштабом
 
 
 **/
@@ -32,7 +36,7 @@
 #include "../Libraries/GIF_LOAD/gif_load.h"
 
 
-#define APP_NAME "GIFDesk 0.60"
+#define APP_NAME "GIFDesk 0.64"
 
 
 /**
@@ -57,6 +61,7 @@ HINSTANCE hInstance;
 int nCmdShow;
 POINT p;
 HMENU hMenu;
+LONG_PTR exStyle;
 FILE *file;
 
 /**
@@ -82,7 +87,7 @@ int width = 0, height = 0, fc = 0, TASKBAR = 1, TOPMOST = 1, DESTROY_WINDOW = 0,
 struct timeval t_start, t_current;
 double start, current;
 char filename[260] = "";
-char settings_path[260] = "";
+char settings_path[260];
 float size = 1;
 char str_size[11];
 
@@ -91,6 +96,96 @@ float texCoord[] = {0,  1,
                     1,  1,
                     1,  0,
                     0,  0};
+
+/**
+        Инициализирует параметры окна
+**/
+
+void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, LRESULT CALLBACK Proc) {
+    (*wcex).cbSize =           sizeof(WNDCLASSEX);
+    (*wcex).style =            CS_OWNDC;
+    (*wcex).lpfnWndProc =      Proc;
+    (*wcex).cbClsExtra =       0;
+    (*wcex).cbWndExtra =       0;
+    (*wcex).hInstance =        hInstance;
+    (*wcex).hIcon =            (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
+    (*wcex).hCursor =          LoadCursor(NULL, IDC_ARROW);
+    (*wcex).hbrBackground =    (HBRUSH)GetStockObject(BLACK_BRUSH);
+    (*wcex).lpszMenuName =     NULL;
+    (*wcex).lpszClassName =    lpszClassName;
+    (*wcex).hIconSm =          (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
+}
+
+
+/**
+        Получает путь к файлу "settings"
+**/
+
+char* GetSettingsPath() {
+    static char str[260] = "";
+    GetModuleFileName(NULL, str, sizeof(str));
+    char* ls = strrchr(str, '\\');
+    if (ls) *(ls + 1) = '\0';
+    strcat(str, "settings");
+    return str;
+}
+
+
+/**
+        Работает с файлом "settings"
+**/
+
+int WriteSettings(const char *filename, float size, int taskbar, int topmost)
+{
+    FILE *f = fopen(settings_path, "wb");
+    fwrite(filename, sizeof(char), 261, f);
+    fwrite(&size, sizeof(float), 1, f);
+    fwrite(&taskbar, sizeof(int), 1, f);
+    fwrite(&topmost, sizeof(int), 1, f);
+
+    fclose(f);
+}
+
+int ReadSettings(int fi)
+{
+    FILE *f = fopen(settings_path, "rb");
+    if (f != NULL && !fi) {
+        if (fread(filename, sizeof(char), 261, f) < 261) goto filename_init;
+        if (fread(&size, sizeof(float), 1, f) < 1) goto filename_init;
+        if (fread(&TASKBAR, sizeof(float), 1, f) < 1) goto filename_init;
+        if (fread(&TOPMOST, sizeof(float), 1, f) < 1) goto filename_init;
+    }
+    else {
+        goto filename_init;
+    }
+    fclose(f);
+    return 1;
+
+    filename_init:
+        fclose(f);
+        OPENFILENAME ofn;
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = NULL;
+        ofn.lpstrFile = filename;
+        ofn.lpstrFile[0] = '\0';
+        ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
+        ofn.nMaxFile = sizeof(filename);
+        ofn.lpstrTitle = "Select a GIF file to display";
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+        if (GetOpenFileName(&ofn)) {
+            if (CheckExtension((char const *)filename)) {
+                WriteSettings(filename, size, TASKBAR, TOPMOST);
+            }
+            else {
+                MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
+                return 0;
+            }
+        }
+        else return 0;
+        return 1;
+}
 
 
 /**
@@ -142,13 +237,17 @@ void LoadTextures(const char *filename)
     unsigned char *frame = (unsigned char *)malloc(width * height * 4);
     memset(frame, 0, width * height * 4);
 
-    void write_frame(void *anim, struct GIF_WHDR *whdr) {
+    void write_frame(void *anim, struct GIF_WHDR *whdr)
+    {
         textures = (unsigned int *)realloc(textures, sizeof(unsigned int) * (fc + 1));
         delays = (double *)realloc(delays, sizeof(double) * (fc + 1));
         *(delays + fc) = (whdr->time) ? (double)whdr->time / 100 : 0.1;
 
+        // printf("Frame: %d WHDR_MODE: %d\n", fc, whdr->mode);
+
         if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
         else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
+        else if (whdr->mode == GIF_PREV) memset(frame, 0, width * height * 4);
 
         unsigned int index = (width * whdr->fryo) * 4;
 
@@ -178,8 +277,8 @@ void LoadTextures(const char *filename)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
                                     0, GL_RGBA, GL_UNSIGNED_BYTE, frame);
@@ -201,6 +300,8 @@ void LoadTextures(const char *filename)
 
     GIF_Load(data, size, write_frame, NULL, NULL, 0);
 
+    // printf("Frames: %d\n", fc);
+
     free(data); free(frame);
 }
 
@@ -212,6 +313,9 @@ void LoadTextures(const char *filename)
 void ShowFrame(int k)
 {
     wglMakeCurrent(hdc, hRC);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_TEXTURE_2D);
 
@@ -249,6 +353,8 @@ void Render_Thread() {
         gettimeofday(&t_start, NULL);
         start = t_start.tv_sec + t_start.tv_usec / 1e6;
 
+        // printf("%d|", k);
+
         ShowFrame(k);
 
         gettimeofday(&t_current, NULL);
@@ -273,94 +379,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     setlocale(LC_ALL, "Russian");
 
-    wcex.cbSize =           sizeof(WNDCLASSEX);
-    wcex.style =            CS_OWNDC;
-    wcex.lpfnWndProc =      WindowProc;
-    wcex.cbClsExtra =       0;
-    wcex.cbWndExtra =       0;
-    wcex.hInstance =        hInstance;
-    wcex.hIcon =            (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
-    wcex.hCursor =          LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground =    (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wcex.lpszMenuName =     NULL;
-    wcex.lpszClassName =    "Window";
-    wcex.hIconSm =          (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
-
-    wcex_2.cbSize =           sizeof(WNDCLASSEX);
-    wcex_2.style =            CS_OWNDC;
-    wcex_2.lpfnWndProc =      WindowProc_2;
-    wcex_2.cbClsExtra =       0;
-    wcex_2.cbWndExtra =       0;
-    wcex_2.hInstance =        hInstance;
-    wcex_2.hIcon =            (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
-    wcex_2.hCursor =          LoadCursor(NULL, IDC_ARROW);
-    wcex_2.hbrBackground =    (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wcex_2.lpszMenuName =     NULL;
-    wcex_2.lpszClassName =    "Window_2";
-    wcex_2.hIconSm =          (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
+    WcexInit(&wcex, "Window", WindowProc);
+    WcexInit(&wcex_2, "Window_2", WindowProc_2);
 
     if (!RegisterClassEx(&wcex)) return 0;
+    if (!RegisterClassEx(&wcex_2)) return 0;
 
-    GetModuleFileName(NULL, settings_path, sizeof(settings_path));
-    char* ls = strrchr(settings_path, '\\');
-    if (ls) *(ls + 1) = '\0';
-    strcat(settings_path, "settings");
+    strcpy(settings_path, GetSettingsPath());
 
-    FILE *file = fopen(settings_path, "r");
-
-    if (file != NULL) {
-        if (fgets(filename, sizeof(filename), file) != NULL) {
-            file = fopen(filename, "rb");
-            if (file != NULL) {
-                fclose(file);
-                goto window_init;
-            }
-            else {
-                fclose(file);
-                goto filename_init;
-            }
-        }
-        else {
-            fclose(file);
-            goto filename_init;
-        }
-    }
-    else {
-        fclose(file);
-        goto filename_init;
-    }
-
-
-    filename_init:
-        printf("filename_init\n");
-        OPENFILENAME ofn;
-
-        ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = NULL;
-        ofn.lpstrFile = filename;
-        ofn.lpstrFile[0] = '\0';
-        ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
-        ofn.nMaxFile = sizeof(filename);
-        ofn.lpstrTitle = "Select a GIF file to display";
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-        if (GetOpenFileName(&ofn)) {
-            if (CheckExtension((char const *)filename)) {
-                file = fopen(settings_path, "wb");
-                fwrite(filename, sizeof(char), strlen(filename), file);
-                fclose(file);
-
-                goto window_init;
-            }
-            else MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION); return 0;
-        }
-        else return 0;
+    if (ReadSettings(0)) { goto window_init; }
+    else return 0;
 
     window_init:
-        printf("window_init\n");
-
-        CheckExtension((char const *)filename);
+        CheckExtension((const char*)filename);
+        // printf("filename: %s\nsize: %f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
 
         hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                               "Window",
@@ -375,7 +407,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                               hInstance,
                               NULL);
 
+        exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+        if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
+
+        SetWindowPos(hwnd, (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
+
         SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
+
         ShowWindow(hwnd, SW_SHOWDEFAULT);
         EnableOpenGL(hwnd, &hdc, &hRC);
         LoadTextures((char const *)filename);
@@ -389,6 +429,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             else {
                 wglMakeCurrent(NULL, NULL);
 
+                // printf("%d\\", k);
                 ShowFrame(k);
 
                 gettimeofday(&t_current, NULL);
@@ -439,7 +480,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }   break;
 
         case WM_RBUTTONDOWN: {
-            if (!WAITING) {
+            if (!IsWindow(hwnd_2)) {
                 wglMakeCurrent(NULL, NULL);
                 pthread_create(&render, NULL, Render_Thread, NULL);
 
@@ -488,9 +529,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         width = 0; height = 0;
 
                         if (CheckExtension((char const *)filename)) {
-                            file = fopen(settings_path, "wb");
-                            fwrite(filename, sizeof(char), strlen(filename), file);
-                            fclose(file);
+                            WriteSettings(filename, size, TASKBAR, TOPMOST);
 
                             GetWindowRect(hwnd, &rect);
                             DisableOpenGL(hwnd, hdc, hRC);
@@ -509,6 +548,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                                   NULL,
                                                   hInstance,
                                                   NULL);
+
+                            exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+                            if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
+                            SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
+
+                            SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
 
                             SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
 
@@ -537,7 +583,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     WAITING = 1;
 
-                    hwnd_2 = CreateWindowEx(WS_EX_TOPMOST,
+                    hwnd_2 = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
                                             "Window_2",
                                             APP_NAME,
                                             WS_POPUP,
@@ -612,6 +658,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DestroyWindow(hwnd_2);
 
+                    WriteSettings(filename, size, TASKBAR, TOPMOST);
+
                     WAITING = 0;
                     DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
                     GetWindowRect(hwnd, &rect);
@@ -633,6 +681,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                           hInstance,
                                           NULL);
 
+                    exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+                    if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
+                    SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
+
+                    SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
+
                     SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
 
                     ShowWindow(hwnd, SW_SHOWDEFAULT);
@@ -647,7 +702,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 /** Show taskbar icon **/
                 case 3: {
-                    LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+                    exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 
                     if (TASKBAR) {
                         exStyle |= WS_EX_TOOLWINDOW;
@@ -659,7 +714,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
 
                     SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-
+                    // printf("filename: %s\nsize: %f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
+                    WriteSettings(filename, size, TASKBAR, TOPMOST);
                     SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
                 } break;
 
@@ -671,6 +727,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else {
                         TOPMOST = 1; SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                     }
+                    WriteSettings(filename, size, TASKBAR, TOPMOST);
                 } break;
 
                 /** Exit **/
