@@ -17,6 +17,8 @@
         0.62: исправлена логика поведеня окна в таскбаре
         0.63: все параметры из ПКМ-меню сохраняются при перезапуске утилиты
         0.64: исправлен баг при котором не работало ПКМ-меню после манипуляций с масштабом
+        0.65: доработана кнопка сохранения масштаба изображения
+        0.66: исправлен баг отсутствия изображения, если отменить выбор GIF-файла, а затем изменить его масштаб
 
 
 **/
@@ -36,7 +38,7 @@
 #include "../Libraries/GIF_LOAD/gif_load.h"
 
 
-#define APP_NAME "GIFDesk 0.64"
+#define APP_NAME "GIFDesk 0.66"
 
 
 /**
@@ -83,12 +85,12 @@ HFONT hFont;
 
 pthread_t render;
 
-int width = 0, height = 0, fc = 0, TASKBAR = 1, TOPMOST = 1, DESTROY_WINDOW = 0, k = 0, WAITING = 0;
+int width = 0, height = 0, fc = 0, TASKBAR = 1, TOPMOST = 1, DESTROY_WINDOW = 0, k = 0, WAITING = 0, HOVERED = 0;
 struct timeval t_start, t_current;
 double start, current;
 char filename[260] = "";
 char settings_path[260];
-float size = 1;
+float size = 1, past_size = 1;
 char str_size[11];
 
 float vertex[] = {-1,-1,0,  1,-1,0,  1,1,0,  -1,1,0};
@@ -243,8 +245,6 @@ void LoadTextures(const char *filename)
         delays = (double *)realloc(delays, sizeof(double) * (fc + 1));
         *(delays + fc) = (whdr->time) ? (double)whdr->time / 100 : 0.1;
 
-        // printf("Frame: %d WHDR_MODE: %d\n", fc, whdr->mode);
-
         if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
         else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
         else if (whdr->mode == GIF_PREV) memset(frame, 0, width * height * 4);
@@ -277,8 +277,8 @@ void LoadTextures(const char *filename)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
                                     0, GL_RGBA, GL_UNSIGNED_BYTE, frame);
@@ -299,8 +299,6 @@ void LoadTextures(const char *filename)
     fclose(file);
 
     GIF_Load(data, size, write_frame, NULL, NULL, 0);
-
-    // printf("Frames: %d\n", fc);
 
     free(data); free(frame);
 }
@@ -354,7 +352,6 @@ void Render_Thread() {
         start = t_start.tv_sec + t_start.tv_usec / 1e6;
 
         // printf("%d|", k);
-
         ShowFrame(k);
 
         gettimeofday(&t_current, NULL);
@@ -387,12 +384,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     strcpy(settings_path, GetSettingsPath());
 
-    if (ReadSettings(0)) { goto window_init; }
-    else return 0;
+    if (!ReadSettings(0)) { return 0; }
 
-    window_init:
+
         CheckExtension((const char*)filename);
-        // printf("filename: %s\nsize: %f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
+        printf("filename: %s\nsize: %.2f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
 
         hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                               "Window",
@@ -429,7 +425,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             else {
                 wglMakeCurrent(NULL, NULL);
 
-                // printf("%d\\", k);
                 ShowFrame(k);
 
                 gettimeofday(&t_current, NULL);
@@ -519,7 +514,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ofn.lpstrFile[0] = '\0';
                     ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
                     ofn.nMaxFile = sizeof(filename);
-                    ofn.lpstrTitle = "Select a GIF file";
+                    ofn.lpstrTitle = "Select GIF-file";
                     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if (TOPMOST) SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
@@ -527,7 +522,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     if (GetOpenFileName(&ofn)) {
                         width = 0; height = 0;
-
                         if (CheckExtension((char const *)filename)) {
                             WriteSettings(filename, size, TASKBAR, TOPMOST);
 
@@ -569,6 +563,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                         else MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
                     }
+                    else ReadSettings(0);
                     WAITING = 0;
                     ZeroMemory(&ofn, sizeof(ofn));
                 }   break;
@@ -590,7 +585,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                             p.x - 20,
                                             p.y - 20,
                                             164,
-                                            68,
+                                            73,
                                             NULL,
                                             NULL,
                                             hInstance,
@@ -614,9 +609,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                              "Button",
                                              WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
                                              4,
-                                             38,
+                                             42,
                                              156,
-                                             30,
+                                             25,
                                              hwnd_2,
                                              (HMENU)1,
                                              NULL,
@@ -643,7 +638,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SendMessage(hTrackbar, TBM_SETPOS, TRUE, size * 100);
                     SendMessage(hTrackbar, TBM_SETTIC, 100, 0);
 
-                    hRgn = CreateRoundRectRgn(0, 0, 164, 70, 5, 5);
+                    hRgn = CreateRoundRectRgn(0, 0, 164, 73, 5, 5);
                     SetWindowRgn(hwnd_2, hRgn, TRUE);
 
                     SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
@@ -696,6 +691,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     free(textures);
                     LoadTextures((char const *)filename);
+
+                    /*
+                    SetWindowPos(hwnd,
+                                 NULL,
+                                 0,
+                                 0,
+                                 (width * size < 10.0) ? 10.0 : width * size,
+                                 (height * size < 10.0) ? 10.0 : height * size,
+                                 SWP_NOZORDER | SWP_NOMOVE);
+                    */
+
                     if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                     else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                 }   break;
@@ -714,7 +720,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
 
                     SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-                    // printf("filename: %s\nsize: %f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
                     WriteSettings(filename, size, TASKBAR, TOPMOST);
                     SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
                 } break;
@@ -735,7 +740,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             }   break;
         }
-
         default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
@@ -745,6 +749,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 **/
 
 LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    // printf("%u|", uMsg);
     switch (uMsg) {
         case WM_QUIT: {
             PostQuitMessage(0);
@@ -765,6 +770,21 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             int pos = SendMessage(hTrackbar, TBM_GETPOS, 0, 0);
             size = (float)pos / 100;
         }   break;
+
+        case WM_SETCURSOR: {
+            GetCursorPos(&p);
+            ScreenToClient(hwnd, &p);
+            RECT rect;
+            GetWindowRect(hButton, &rect);
+
+            if (PtInRect(&rect, p)) {
+                if (!HOVERED) { HOVERED = 1; InvalidateRect(hButton, NULL, TRUE); }
+            }
+            else if (PtInRect(&rect, p)) {
+                if (HOVERED) { HOVERED = 0; InvalidateRect(hButton, NULL, TRUE); }
+            }
+            else { HOVERED = 0; InvalidateRect(hButton, NULL, TRUE); }
+        }
 
         case WM_PAINT: {
             hdc_2 = BeginPaint(hwnd_2, &ps);
@@ -790,7 +810,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             /** Рисует кнопку **/
             SetBkMode(hdc_b, TRANSPARENT);
-            HBRUSH hBrush = CreateSolidBrush(RGB(240, 240, 240));
+            HBRUSH hBrush = CreateSolidBrush(HOVERED ? RGB(225, 225, 225) : RGB(240, 240, 240));
             FillRect(hdc_b, &rect, hBrush);
             DrawText(hdc_b, "           Save scale", -1, &rect, DT_VCENTER | DT_SINGLELINE);
 
