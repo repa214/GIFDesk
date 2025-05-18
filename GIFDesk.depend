@@ -1,0 +1,81 @@
+# depslib dependency file v1.0
+1747524440 source:d:\projects\gifdesk\main.c
+	"gifdesk.h"
+	"resource.h"
+
+1546758772 d:\projects\libraries\gif_load\gif_load.h
+	<stdint.h>
+	<stdlib.h>
+
+1747521361 source:d:\projects\gifdesk\loadgif.c
+	"loadgif.h"
+	"opengl_proc.h"
+
+1746474591 d:\projects\gifdesk\gifdesk.h
+	"loadgif.h"
+	"opengl_proc.h"
+	"settings.h"
+	"window_proc.h"
+	"../Libraries/GIF_LOAD/gif_load.h"
+
+1747521547 source:d:\projects\gifdesk\opengl_proc.c
+	"opengl_proc.h"
+	"loadgif.h"
+	"settings.h"
+	"window_proc.h"
+
+1746475710 source:d:\projects\gifdesk\settings.c
+	"settings.h"
+
+1747524374 source:d:\projects\gifdesk\window_proc.c
+	"window_proc.h"
+	"opengl_proc.h"
+	"settings.h"
+	"loadgif.h"
+	"resource.h"
+
+1747520915 d:\projects\gifdesk\loadgif.h
+	<windows.h>
+	<gl/gl.h>
+	<stdio.h>
+	<stdlib.h>
+	<locale.h>
+	<pthread.h>
+	<commctrl.h>
+	"../Libraries/GIF_LOAD/gif_load.h"
+
+1746740746 d:\projects\gifdesk\opengl_proc.h
+	<windows.h>
+	<gl/gl.h>
+	<stdio.h>
+	<stdlib.h>
+	<locale.h>
+	<pthread.h>
+	<commctrl.h>
+	"../Libraries/GIF_LOAD/gif_load.h"
+
+1747514528 d:\projects\gifdesk\settings.h
+	<windows.h>
+	<gl/gl.h>
+	<stdio.h>
+	<stdlib.h>
+	<locale.h>
+	<pthread.h>
+	<commctrl.h>
+	"../Libraries/GIF_LOAD/gif_load.h"
+
+1747524536 d:\projects\gifdesk\window_proc.h
+	<windows.h>
+	<gl/gl.h>
+	<stdio.h>
+	<stdlib.h>
+	<locale.h>
+	<pthread.h>
+	<commctrl.h>
+	"../Libraries/GIF_LOAD/gif_load.h"
+
+1747524067 d:\projects\gifdesk\resource.h
+
+1747524210 source:d:\projects\gifdesk\resource.rc
+	"resource.h"
+
