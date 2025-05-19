@@ -21,9 +21,16 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
     delays = (double *)realloc(delays, sizeof(double) * (fc + 1));
     *(delays + fc) = (whdr->time) ? (double)whdr->time / 100 : 0.1;
 
+
+    if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, (width + 1) * (height + 1) * 4);
+    else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, (width + 1) * (height + 1) * 4);
+    else if (whdr->mode == GIF_PREV) memset(frame, 0, (width + 1) * (height + 1) * 4);
+
+    /*
     if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
     else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
     else if (whdr->mode == GIF_PREV) memset(frame, 0, width * height * 4);
+    */
 
     unsigned int index = (width * whdr->fryo) * 4;
 
@@ -39,11 +46,18 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
                 frame[index + 2] = (whdr->cpal[i].B) ? whdr->cpal[i].B : whdr->cpal[i].B + 1;
                 frame[index + 3] = 255;
             }
-            else tran_t = 1;
 
             index += 4;
         }
         index += (width - whdr->frxd - whdr->frxo) * 4;
+    }
+
+    index = 0;
+    for (long y = 0; y < height; y++) {
+        for (long x = 0; x < width; x++) {
+            if (x >= width - 1 || y >= height - 1) frame[index + 3] = 0;
+            index += 4;
+        }
     }
 
     glEnable(GL_BLEND);
@@ -73,8 +87,8 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
 void LoadTextures(const char *filename, int tran_lp)
 {
     textures = (GLuint *)malloc(sizeof(GLuint) * 1);
-    frame = (unsigned char *)malloc(width * height * 4);
-    memset(frame, 0, width * height * 4);
+    frame = (unsigned char *)malloc((width + 1) * (height + 1) * 4);
+    memset(frame, 0, (width + 1) * (height + 1) * 4);
 
     FILE *file = fopen(filename, "rb");
 
@@ -120,7 +134,6 @@ int CheckExtension(const char *filename, int fs)
     fclose(file);
 
     GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
-
     free(data);
 
     if (checkwidth && checkheight) {

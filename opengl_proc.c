@@ -3,11 +3,14 @@
 #include "settings.h"
 #include "window_proc.h"
 
-float vertex[] = {-1, -1, 0,
-                   1, -1, 0,
-                   1,  1, 0,
-                  -1,  1, 0};
-float texCoord[] = {0, 1, 1, 1, 1, 0, 0, 0};
+float vertex[] = {-1, -1, 0,  // ËÍ
+                   1, -1, 0,  // ÏÍ
+                   1,  1, 0,  // ÏÂ
+                  -1,  1, 0}; // ËÂ
+float texCoord[] = {0, 1,
+                    1, 1,
+                    1, 0,
+                    0, 0};
 
 int k = 0;
 int DRAWING = 0;
@@ -119,4 +122,5 @@ void RenderThread() {
         if (k >= fc - 1) k = 0;
         else k++;
     }
+    wglMakeCurrent(NULL, NULL);
 }

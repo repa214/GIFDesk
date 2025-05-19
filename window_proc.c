@@ -19,6 +19,8 @@ HMENU hSubMenu;
 LONG_PTR exStyle;
 FILE *file;
 HBITMAP appIcon;
+HBRUSH hBrushBk;
+HBRUSH hBrushHovered;
 
 HWND hwnd_2;
 WNDCLASSEX wcex_2;
@@ -97,6 +99,9 @@ void DropFiles(HDROP hDrop) {
 **/
 
 void GetApplicationIcon() {
+    hBrushBk = RGB(240, 240, 240);
+    hBrushHovered = RGB(210, 210, 210);
+
     HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(MENU_ICON));
     HDC hDC = GetDC(NULL);
     HDC hMemDC = CreateCompatibleDC(hDC);
@@ -128,6 +133,8 @@ void GetApplicationIcon() {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+
+
         case WM_DROPFILES: {
             DropFiles(wParam);
         } break;
@@ -276,6 +283,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 /** Scale (%.0f%%) **/
                 case 2: {
                     GetCursorPos(&p);
+
+                    float trackbar_size = 0;
+                    int px = 0, py = 0;
+
                     if (!RegisterClassEx(&wcex_2));
 
                     wglMakeCurrent(NULL, NULL);
@@ -285,13 +296,42 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
+                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
+                    texCoord[1] = 2 / size;
+                    texCoord[2] = 2 / size;
+                    texCoord[3] = 2 / size;
+                    texCoord[4] = 2 / size;
+
+                    trackbar_size = size;
+                    size = 2;
+
+                    SetWindowPos(hwnd,
+                         NULL,
+                         0,
+                         0,
+                         (width * size < 10.0) ? 10.0 : width * size,
+                         (height * size < 10.0) ? 10.0 : height * size,
+                         SWP_NOMOVE);
+
+                    pthread_create(&render, NULL, &RenderThread, NULL);
+
                     DragAcceptFiles(hwnd, FALSE);
+
+                    RECT res;
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+                    if (p.x + 144 > res.right - res.left) { px = res.right - res.left - 164; }
+                    else { px = p.x; }
+
+                    if (p.y + 144 > res.bottom - res.top) { py = res.bottom - res.top - 73; }
+                    else { py = p.y; }
 
                     hwnd_2 = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
                                             "Window_2",
                                             APP_NAME,
                                             WS_POPUP,
-                                            p.x - 20,
+                                            px,
                                             p.y - 20,
                                             164,
                                             73,
@@ -303,7 +343,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hTrackbar = CreateWindowEx(0,
                                                TRACKBAR_CLASS,
                                                NULL,
-                                               WS_CHILD | WS_VISIBLE | TBS_NOTICKS | TBS_TOOLTIPS | TBS_BOTH,
+                                               WS_TABSTOP | WS_CHILD | WS_VISIBLE | TBS_NOTICKS | TBS_TOOLTIPS | TBS_BOTH,
                                                -1,
                                                5,
                                                166,
@@ -344,7 +384,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SendMessage(hButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
                     SendMessage(hTrackbar, TBM_SETRANGE, TRUE, MAKELONG(1, 200));
-                    SendMessage(hTrackbar, TBM_SETPOS, TRUE, size * 200);
+                    SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
                     SendMessage(hTrackbar, TBM_SETTIC, 200, 0);
 
                     hRgn = CreateRoundRectRgn(0, 0, 164, 73, 5, 5);
@@ -358,6 +398,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DispatchMessage(&msg_2);
                     }
 
+                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
+                    int pos = SendMessage(hTrackbar, TBM_GETPOS, 0, 0);
+                    size = (float)pos / 100;
+
                     DestroyWindow(hwnd_2);
 
                     WriteSettings(filename, size, TASKBAR, TOPMOST);
@@ -368,11 +413,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                  0,
                                  (width * size < 10.0) ? 10.0 : width * size,
                                  (height * size < 10.0) ? 10.0 : height * size,
-                                 SWP_NOMOVE | SWP_NOSIZE);
+                                 SWP_NOMOVE);
+
+                    texCoord[1] = 1;
+                    texCoord[2] = 1;
+                    texCoord[3] = 1;
+                    texCoord[4] = 1;
 
                     DragAcceptFiles(hwnd, TRUE);
                     WAITING = 0;
-                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
                 }   break;
 
                 /** Show taskbar icon **/
@@ -419,7 +468,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case 6: {
                     SetWindowPos(hwnd,
                          NULL,
-                         GetSystemMetrics(SM_CXSCREEN) - width * size,
+                         GetSystemMetrics(SM_CXSCREEN) - (width + 1) * size,
                          0,
                          0,
                          0,
@@ -434,7 +483,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowPos(hwnd,
                          NULL,
                          0,
-                         res.bottom - res.top - height * size,
+                         res.bottom - res.top - (height + 1) * size,
                          0,
                          0,
                          SWP_NOSIZE);
@@ -447,8 +496,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SetWindowPos(hwnd,
                          NULL,
-                         res.right - res.left - width * size,
-                         res.bottom - res.top - height * size,
+                         res.right - res.left - (width + 1) * size,
+                         res.bottom - res.top - (height + 1) * size,
                          0,
                          0,
                          SWP_NOSIZE);
@@ -479,7 +528,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         } break;
 
         case WM_SETFOCUS: {
-            SetFocus(hwnd_2);
+            // SetFocus(hwnd_2);
         } break;
 
         case WM_LBUTTONDOWN: {
@@ -487,16 +536,13 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_HSCROLL: {
+            SetFocus(hwnd_2);
             int pos = SendMessage(hTrackbar, TBM_GETPOS, 0, 0);
-            size = (float)pos / 100;
 
-            SetWindowPos(hwnd,
-                         NULL,
-                         0,
-                         0,
-                         (width * size < 10.0) ? 10.0 : width * size,
-                         (height * size < 10.0) ? 10.0 : height * size,
-                         SWP_NOMOVE | SWP_NOREDRAW);
+            texCoord[1] = 2 / ((float)pos / 100);
+            texCoord[2] = 2 / ((float)pos / 100);
+            texCoord[3] = 2 / ((float)pos / 100);
+            texCoord[4] = 2 / ((float)pos / 100);
 
             if (!DRAWING) ShowFrame(k);
         }   break;
@@ -530,7 +576,9 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             DeleteObject(hBrush);
             EndPaint(hwnd_2, &ps);
+
         }   break;
+
 
         case WM_DRAWITEM: {
             RECT rect;
@@ -540,7 +588,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             hdc_b = drawitem->hDC;
             rect = drawitem->rcItem;
 
-            /** Рисует кнопку **/
             SetBkMode(hdc_b, TRANSPARENT);
             HBRUSH hBrush = CreateSolidBrush(HOVERED ? RGB(225, 225, 225) : RGB(240, 240, 240));
             FillRect(hdc_b, &rect, hBrush);

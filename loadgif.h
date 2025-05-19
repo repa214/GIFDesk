@@ -13,8 +13,8 @@
 extern GLuint *textures;
 extern int width;
 extern int height;
-extern int oldwidth;
-extern int oldheight;
+extern int checkwidth;
+extern int checkheight;
 extern int fc;
 extern double *delays;
 extern int past_mode;
