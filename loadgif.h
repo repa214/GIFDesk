@@ -18,13 +18,11 @@ extern int checkheight;
 extern int fc;
 extern double *delays;
 extern int past_mode;
-extern int tran_lp;
-extern int tran_t;
 extern int frames;
 
 void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr);
-void LoadTextures(const char *filename, int tran_lp);
-int CheckExtension(const char *filename, int fs);
-void RenderThread();
+void LoadTextures(const char *filename);
+int CheckExtension(const char *filename);
+void* RenderThread(void *arg);
 
 #endif // LOADGIF_H_INCLUDED

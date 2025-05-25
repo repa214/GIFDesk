@@ -3,7 +3,7 @@
 #include "window_proc.h"
 #include "settings.h"
 
-GLuint *textures;
+GLuint *textures = NULL;
 unsigned char *frame;
 int width = 0;
 int height = 0;
@@ -12,7 +12,6 @@ int checkheight = 0;
 int fc = 0;
 double *delays;
 int past_mode = 0;
-int tran_t = 0;
 int frames = 0;
 
 /**
@@ -96,9 +95,12 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
         LoadTextures
 **/
 
-void LoadTextures(const char *filename, int tran_lp)
+void LoadTextures(const char *filename)
 {
-    textures = (GLuint *)malloc(sizeof(GLuint) * 1);
+    if (delays != NULL) { free(delays); delays = NULL; }
+    if (textures != NULL) { free(textures); textures = NULL; }
+
+    textures = (GLuint *)malloc(sizeof(GLuint));
     frame = (unsigned char *)malloc((width + 1) * (height + 1) * 4);
     memset(frame, 0, (width + 1) * (height + 1) * 4);
 
@@ -114,7 +116,8 @@ void LoadTextures(const char *filename, int tran_lp)
 
     GIF_Load(data, size, WriteFrames, NULL, NULL, 0);
 
-    free(data); free(frame);
+    if (data != NULL) { free(data); data = NULL; }
+    if (frame != NULL) { free(frame); frame = NULL; }
 }
 
 /**
@@ -130,7 +133,7 @@ void CheckFrames(void *data, struct GIF_WHDR *whdr) {
         CheckExtension
 **/
 
-int CheckExtension(const char *filename, int fs)
+int CheckExtension(const char *filename)
 {
     checkwidth = 0; checkheight = 0;
     void *data;
@@ -145,7 +148,7 @@ int CheckExtension(const char *filename, int fs)
     fread(data, 1, size, file);
     fclose(file);
 
-    int frame_count = GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
+    int frame_count = (int)GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
     free(data);
 
     if (checkwidth && checkheight) {

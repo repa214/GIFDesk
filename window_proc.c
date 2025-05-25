@@ -21,8 +21,6 @@ HMENU hLangMenu;
 LONG_PTR exStyle;
 FILE *file;
 HBITMAP appIcon;
-HBRUSH hBrushBk;
-HBRUSH hBrushHovered;
 RECT res;
 
 HWND hwnd_2;
@@ -51,7 +49,7 @@ void DropFiles(HDROP hDrop) {
     char filename[MAX_PATH];
     DragQueryFile(hDrop, 0, filename, MAX_PATH);
 
-    frames = CheckExtension((char const *)filename, 0);
+    frames = CheckExtension((char const *)filename);
     if (frames) {
         WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
@@ -87,8 +85,7 @@ void DropFiles(HDROP hDrop) {
 
         EnableOpenGL(hwnd, &hdc, &hRC);
 
-        free(textures);
-        LoadTextures((char const *)filename, 0);
+        LoadTextures((char const *)filename);
 
         SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
@@ -117,32 +114,23 @@ void DropFiles(HDROP hDrop) {
 **/
 
 void GetApplicationIcon() {
-    hBrushBk = RGB(240, 240, 240);
-    hBrushHovered = RGB(210, 210, 210);
+    HBRUSH hBrushBk = CreateSolidBrush(RGB(240, 240, 240));
+    HBRUSH hBrushHovered = CreateSolidBrush(RGB(210, 210, 210));
 
     HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(MENU_ICON));
-    HDC hDC = GetDC(NULL);
-    HDC hMemDC = CreateCompatibleDC(hDC);
-    appIcon = CreateCompatibleBitmap(hDC, 16, 16);
-    HGDIOBJ hOrgBMP = SelectObject(hMemDC, appIcon);
+    HDC hdc = GetDC(NULL);
+    HDC hMemDC = CreateCompatibleDC(hdc);
+    appIcon = CreateCompatibleBitmap(hdc, 16, 16);
+    SelectObject(hMemDC, appIcon);
 
     DrawIconEx(hMemDC, 0, 0, hIcon, 16, 16, 0, NULL, DI_NORMAL);
 
-    SelectObject(hMemDC, hOrgBMP);
     DeleteDC(hMemDC);
+    ReleaseDC(NULL, hdc);
     DestroyIcon(hIcon);
 
-    HDC hdc = GetDC(NULL);
-    HBITMAP newBitmap = CreateCompatibleBitmap(hdc, 16, 16);
-
-    HDC newDC = CreateCompatibleDC(NULL);
-    SelectObject(newDC, newBitmap);
-    StretchBlt(newDC, 0, 0, 16, 16, hDC, 0, 0, 16, 16, SRCCOPY);
-
-    ReleaseDC(NULL, hdc);
-    ReleaseDC(NULL, hDC);
-    ReleaseDC(NULL, newDC);
-    DeleteDC(newBitmap);
+    DeleteObject(hBrushBk);
+    DeleteObject(hBrushHovered);
 }
 
 /**
@@ -152,24 +140,24 @@ void GetApplicationIcon() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_DROPFILES: {
-            DropFiles(wParam);
-        } break;
+            DropFiles((HDROP)wParam);
+        }   break;
 
         case WM_SETCURSOR: {
             if (LOWORD(lParam) == HTCLIENT) SetCursor(LoadCursor(NULL, IDC_SIZEALL));
-        } break;
+        }   break;
 
         case WM_QUIT: {
             DESTROY_WINDOW = 1;
-        } break;
+        }   break;
 
         case WM_CLOSE: {
             DESTROY_WINDOW = 1;
-        } break;
+        }   break;
 
         case WM_SIZE: {
             InvalidateRect(hwnd, NULL, FALSE);
-        } break;
+        }   break;
 
         case WM_LBUTTONDOWN: {
             wglMakeCurrent(NULL, NULL);
@@ -217,7 +205,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 SetMenuItemInfo(hMenu, 1, FALSE, &mii);
 
-                AppendMenu(hMenu, MF_SEPARATOR, NULL, NULL);
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
                 AppendMenu(hMenu, MF_STRING, 1, lang.changeGIF[LANGGIF]);
                 AppendMenu(hMenu, MF_STRING, 2, str_size);
                 AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, lang.showiconGIF[LANGGIF]);
@@ -245,7 +233,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ofn.hwndOwner = NULL;
                     ofn.lpstrFile = filename;
                     ofn.lpstrFile[0] = '\0';
-                    ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
+                    ofn.lpstrFilter = OFNfilter;
                     ofn.nMaxFile = sizeof(filename);
                     ofn.lpstrTitle = lang.selectGIF[LANGGIF];
                     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
@@ -255,7 +243,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, FALSE);
                     if (GetOpenFileName(&ofn)) {
-                        frames = CheckExtension((char const *)filename, 0);
+                        frames = CheckExtension((char const *)filename);
                         if (frames) {
                             WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
@@ -290,8 +278,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                             EnableOpenGL(hwnd, &hdc, &hRC);
 
-                            free(textures);
-                            LoadTextures((char const *)filename, 0);
+                            LoadTextures((char const *)filename);
 
                             SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
@@ -321,7 +308,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     GetCursorPos(&p);
 
                     float trackbar_size = 0;
-                    int px = 0, py = 0;
+                    int px = 0;
 
                     if (!RegisterClassEx(&wcex_2));
 
@@ -358,9 +345,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     if (p.x + 144 > res.right - res.left) { px = res.right - res.left - 164; }
                     else { px = p.x; }
-
-                    if (p.y + 144 > res.bottom - res.top) { py = res.bottom - res.top - 73; }
-                    else { py = p.y; }
 
                     hwnd_2 = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
                                             "Window_2",
@@ -475,7 +459,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
                     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
                     SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
-                } break;
+                }   break;
 
                 /** Always on top **/
                 case 4: {
@@ -486,7 +470,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         TOPMOST = 1; SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                     }
                     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-                } break;
+                }   break;
 
                 /** Top left corner **/
                 case 5: {
@@ -497,7 +481,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          0,
                          0,
                          SWP_NOSIZE);
-                } break;
+                }   break;
 
                 /** Top right corner **/
                 case 6: {
@@ -508,7 +492,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          0,
                          0,
                          SWP_NOSIZE);
-                } break;
+                }   break;
 
                 /** Bottom left corner **/
                 case 7: {
@@ -522,7 +506,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          0,
                          0,
                          SWP_NOSIZE);
-                } break;
+                }   break;
 
                 /** Bottom left corner **/
                 case 8: {
@@ -536,19 +520,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          0,
                          0,
                          SWP_NOSIZE);
-                } break;
+                }   break;
 
                 /** English **/
                 case 9: {
                     LANGGIF = 0;
                     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-                } break;
+                }   break;
 
                 /** Русский **/
                 case 10: {
                     LANGGIF = 1;
                     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-                } break;
+                }   break;
 
                 /** Exit **/
                 case 11: DESTROY_WINDOW = 1; break;
@@ -557,6 +541,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
         default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+    return 0;
 }
 
 /**
@@ -568,11 +553,11 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
     switch (uMsg) {
         case WM_QUIT: {
             PostQuitMessage(0);
-        } break;
+        }   break;
 
         case WM_CLOSE: {
             PostQuitMessage(0);
-        } break;
+        }   break;
 
         case WM_LBUTTONDOWN: {
             SendMessage(hwnd_2, WM_NCLBUTTONDOWN, HTCAPTION, 0);
@@ -604,7 +589,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (HOVERED) { HOVERED = 0; InvalidateRect(hButton, NULL, TRUE); }
             }
             else { HOVERED = 0; InvalidateRect(hButton, NULL, TRUE); }
-        }
+        }   break;
 
         case WM_PAINT: {
             hdc_2 = BeginPaint(hwnd_2, &ps);
@@ -641,11 +626,12 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_COMMAND: {
             switch (wParam) {
                 case 1: SendMessage(hwnd_2, WM_CLOSE, 0, 0);
-            }
-        }
+            }   break;
+        }   break;
 
         default: return DefWindowProc(hwnd_2, uMsg, wParam, lParam);
     }
+    return 0;
 }
 
 
@@ -653,7 +639,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         WINDOW SETTINGS
 **/
 
-void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, LRESULT CALLBACK Proc) {
+void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, WNDPROC Proc) {
     (*wcex).cbSize =           sizeof(WNDCLASSEX);
     (*wcex).style =            CS_OWNDC;
     (*wcex).lpfnWndProc =      Proc;

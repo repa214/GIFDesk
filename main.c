@@ -38,6 +38,9 @@
         0.81: исправлена ошибка чтения несуществующей директории в файле настроек
         0.82: добавлена поддержка русского языка
         0.83: добавлено соответствие языку, которой пользуется система, при первом запуске утилиты
+        0.84: исправлена утечка памяти с хранением delays для анимаций
+        0.85: исправлена утечка памяти с хранением иконки для утилиты
+        0.86: исправлено много мелких недочётов в коде
 
         Планы:
         - окно должно отвечать независимо от delay
@@ -66,8 +69,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     setlocale(LC_ALL, "Russian");
 
-    WcexInit(&wcex, "Window", WindowProc);
-    WcexInit(&wcex_2, "Window_2", WindowProc_2);
+    WcexInit(&wcex, "Window", (WNDPROC)WindowProc);
+    WcexInit(&wcex_2, "Window_2", (WNDPROC)WindowProc_2);
 
     if (!RegisterClassEx(&wcex)) return 0;
     if (!RegisterClassEx(&wcex_2)) return 0;
@@ -76,7 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (!ReadSettings(0)) { return 0; }
 
-    frames = CheckExtension((const char*)filename, 1);
+    frames = CheckExtension((const char*)filename);
     if (!frames) { if (!ReadSettings(1)) return 0; }
 
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
@@ -106,7 +109,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hwnd, SW_SHOWDEFAULT);
     DragAcceptFiles(hwnd, TRUE);
     EnableOpenGL(hwnd, &hdc, &hRC);
-    LoadTextures((char const *)filename, 0);
+    LoadTextures((char const *)filename);
 
     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
@@ -123,10 +126,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     SetCursor(LoadCursor(NULL, IDC_ARROW));
 
-    // const GLubyte* version = glGetString(GL_VERSION);
-    // printf("OpenGL Version: %s\n", version);
+    const GLubyte* version = glGetString(GL_VERSION);
+    printf("OpenGL Version: %s\n", version);
 
     while (1) {
+
         gettimeofday(&t_start, NULL);
         start = t_start.tv_sec + t_start.tv_usec / 1e6;
 
@@ -155,8 +159,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     pthread_join(render, NULL);
     DisableOpenGL(hwnd, hdc, hRC);
     DestroyWindow(hwnd);
-    free(textures);
-    free(delays);
+    DeleteObject(appIcon);
+    if (delays != NULL) { free(delays); delays = NULL; }
+    if (textures != NULL) { free(textures); textures = NULL; }
 
     return 0;
 }
@@ -172,6 +177,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         void LoadTextures
         void CheckFrames
         int CheckExtension
+
+        GLuint *textures;
+        unsigned char *frame;
+        int width;
+        int height;
+        int checkwidth;
+        int checkheight;
+        int fc;
+        double *delays;
+        int past_mode;
+        int frames;
 
     window_proc.c:
         void DropFiles
@@ -190,6 +206,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         void RenderThread
         void EnableOpenGL
         void DisableOpenGL
+
+    language.c:
+        struct lang
 
 **/
 

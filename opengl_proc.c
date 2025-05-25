@@ -19,6 +19,30 @@ struct timeval t_start, t_current;
 double start, current;
 
 /**
+
+        gettimeofday
+
+**/
+
+void gettimeofday(struct timeval* tp, void* tzp) {
+    (void)tzp; // Не используется
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+
+    // Преобразование в микросекунды (начиная с 1601-01-01)
+    uli.QuadPart /= 10;
+    // Вычитаем смещение эпохи (1970-01-01)
+    uli.QuadPart -= 11644473600000000ULL;
+
+    tp->tv_sec = (long)(uli.QuadPart / 1000000);
+    tp->tv_usec = (long)(uli.QuadPart % 1000000);
+}
+
+/**
         EnableOpenGL
 **/
 
@@ -103,7 +127,7 @@ void ShowFrame(int k)
         RenderThread
 **/
 
-void RenderThread() {
+void* RenderThread(void *arg) {
     wglMakeCurrent(hdc, hRC);
     while (!DESTROY_WINDOW) {
         gettimeofday(&t_start, NULL);
@@ -123,4 +147,5 @@ void RenderThread() {
         else k++;
     }
     wglMakeCurrent(NULL, NULL);
+    return NULL;
 }

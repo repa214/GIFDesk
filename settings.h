@@ -10,7 +10,7 @@
 #include <commctrl.h>
 #include "../Libraries/GIF_LOAD/gif_load.h"
 
-#define APP_NAME "GIFDesk 0.83"
+#define APP_NAME "GIFDesk 0.86"
 
 extern char settings_path[260];
 extern char filename[260];
@@ -18,9 +18,10 @@ extern char str_size[11];
 extern float size;
 extern int TASKBAR;
 extern int TOPMOST;
+extern const char OFNfilter[150];
 
 char* GetSettingsPath();
-int WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang);
+void WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang);
 int ReadSettings(int fi);
 
 #endif // SETTINGS_H_INCLUDED

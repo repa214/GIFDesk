@@ -20,9 +20,10 @@ extern struct timeval t_start, t_current;
 extern double start, current;
 extern int DRAWING;
 
+void gettimeofday(struct timeval* tp, void* tzp);
 void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC);
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC);
 void ShowFrame(int k);
-void RenderThread();
+void* RenderThread(void *arg);
 
 #endif // OPENGL_PROC_H_INCLUDED

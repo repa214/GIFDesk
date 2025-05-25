@@ -51,7 +51,7 @@ extern int SETTING_POS;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, LRESULT CALLBACK Proc);
+void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, WNDPROC Proc);
 void GetApplicationIcon();
 
 #endif // WINDOW_PROC_H_INCLUDED

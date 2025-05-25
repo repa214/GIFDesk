@@ -39,6 +39,10 @@
 		</Linker>
 		<Unit filename="../Libraries/GIF_LOAD/gif_load.h" />
 		<Unit filename="gifdesk.h" />
+		<Unit filename="language.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="language.h" />
 		<Unit filename="loadgif.c">
 			<Option compilerVar="CC" />
 		</Unit>

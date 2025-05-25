@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "loadgif.h"
 
 float size = 1;
 int TASKBAR = 1;
@@ -8,6 +9,12 @@ int LANGGIF = 0;
 char settings_path[MAX_PATH];
 char filename[MAX_PATH];
 char str_size[11];
+const char OFNfilter[150] = "Image Files (*.gif; *.webp; *.png)\0*.gif;*.webp;*.png\0"
+                            "GIF Files (*.gif)\0*.gif\0"
+                            "WEBP Files (*.webp)\0*.webp\0"
+                            "PNG Files (*.png)\0*.png\0"
+                            "All Files (*.*)\0*.*\0";
+
 
 /**
         GetSettingsPath
@@ -26,7 +33,7 @@ char* GetSettingsPath() {
         WriteSettings
 **/
 
-int WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang)
+void WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang)
 {
     FILE *f = fopen(settings_path, "wb");
     fwrite(filename, sizeof(char), 261, f);
@@ -66,15 +73,18 @@ int ReadSettings(int fi)
         ofn.hwndOwner = NULL;
         ofn.lpstrFile = filename;
         ofn.lpstrFile[0] = '\0';
-        ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
+        // ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
+        ofn.lpstrFilter = OFNfilter;
         ofn.nMaxFile = sizeof(filename);
         ofn.lpstrTitle = "Select a GIF file to display";
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
         if (GetOpenFileName(&ofn)) {
-            if (CheckExtension((char const *)filename)) {
+            frames = CheckExtension((char const *)filename);
+            if (frames) {
                 if (GetUserDefaultUILanguage() == 1049) LANGGIF = 1;
                 WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
+                return 0;
             }
             else {
                 MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
