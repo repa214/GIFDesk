@@ -25,6 +25,7 @@ extern int nCmdShow;
 extern POINT p;
 extern HMENU hMenu;
 extern HMENU hSubMenu;
+extern HMENU hLangMenu;
 extern LONG_PTR exStyle;
 extern FILE *file;
 extern HBITMAP appIcon;

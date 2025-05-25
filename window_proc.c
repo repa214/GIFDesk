@@ -2,6 +2,7 @@
 #include "opengl_proc.h"
 #include "settings.h"
 #include "loadgif.h"
+#include "language.h"
 #include "resource.h"
 
 HWND hwnd;
@@ -16,6 +17,7 @@ int nCmdShow;
 POINT p;
 HMENU hMenu;
 HMENU hSubMenu;
+HMENU hLangMenu;
 LONG_PTR exStyle;
 FILE *file;
 HBITMAP appIcon;
@@ -51,7 +53,7 @@ void DropFiles(HDROP hDrop) {
 
     frames = CheckExtension((char const *)filename, 0);
     if (frames) {
-        WriteSettings(filename, size, TASKBAR, TOPMOST);
+        WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
         hwnd = FindWindow(NULL, APP_NAME);
         GetWindowRect(hwnd, &rect);
@@ -104,7 +106,7 @@ void DropFiles(HDROP hDrop) {
         if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
         else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
     }
-    else MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
+    else MessageBox(NULL, lang.notGIF[LANGGIF], APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
 
 
     DragFinish(hDrop);
@@ -192,13 +194,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 hMenu = CreatePopupMenu();
                 hSubMenu = CreatePopupMenu();
+                hLangMenu = CreatePopupMenu();
                 GetCursorPos(&p);
-                sprintf(str_size, "Scale (%.0f%%)", size * 100);
+                sprintf(str_size, lang.scaleGIF[LANGGIF], size * 100);
 
-                AppendMenu(hSubMenu, MF_STRING, 5, "Top left corner");
-                AppendMenu(hSubMenu, MF_STRING, 6, "Top right corner");
-                AppendMenu(hSubMenu, MF_STRING, 7, "Bottom left corner");
-                AppendMenu(hSubMenu, MF_STRING, 8, "Bottom right corner");
+                AppendMenu(hSubMenu, MF_STRING, 5, lang.tlcGIF[LANGGIF]);
+                AppendMenu(hSubMenu, MF_STRING, 6, lang.trcGIF[LANGGIF]);
+                AppendMenu(hSubMenu, MF_STRING, 7, lang.blcGIF[LANGGIF]);
+                AppendMenu(hSubMenu, MF_STRING, 8, lang.brcGIF[LANGGIF]);
+
+                AppendMenu(hLangMenu, MF_STRING, 9, "English");
+                AppendMenu(hLangMenu, MF_STRING, 10, "Русский");
 
                 AppendMenu(hMenu, MF_STRING, 1, "");
 
@@ -212,12 +218,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetMenuItemInfo(hMenu, 1, FALSE, &mii);
 
                 AppendMenu(hMenu, MF_SEPARATOR, NULL, NULL);
-                AppendMenu(hMenu, MF_STRING, 1, "Change GIF");
+                AppendMenu(hMenu, MF_STRING, 1, lang.changeGIF[LANGGIF]);
                 AppendMenu(hMenu, MF_STRING, 2, str_size);
-                AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, "Show taskbar icon");
-                AppendMenu(hMenu, MF_STRING | (TOPMOST) ? MF_CHECKED : 0, 4, "Always on top");
-                AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT_PTR)hSubMenu, "Move window to");
-                AppendMenu(hMenu, MF_STRING, 9, "Exit");
+                AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, lang.showiconGIF[LANGGIF]);
+                AppendMenu(hMenu, MF_STRING | (TOPMOST) ? MF_CHECKED : 0, 4, lang.topmostGIF[LANGGIF]);
+                AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT_PTR)hSubMenu, lang.movewindowGIF[LANGGIF]);
+                AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT_PTR)hLangMenu, lang.langGIF[LANGGIF]);
+                AppendMenu(hMenu, MF_STRING, 11, lang.exitGIF[LANGGIF]);
 
                 TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_LEFTALIGN, p.x, p.y, 0, hwnd, NULL);
 
@@ -240,7 +247,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ofn.lpstrFile[0] = '\0';
                     ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
                     ofn.nMaxFile = sizeof(filename);
-                    ofn.lpstrTitle = "Select GIF-file";
+                    ofn.lpstrTitle = lang.selectGIF[LANGGIF];
                     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if (TOPMOST) SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
@@ -250,7 +257,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (GetOpenFileName(&ofn)) {
                         frames = CheckExtension((char const *)filename, 0);
                         if (frames) {
-                            WriteSettings(filename, size, TASKBAR, TOPMOST);
+                            WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
                             hwnd = FindWindow(NULL, APP_NAME);
                             GetWindowRect(hwnd, &rect);
@@ -302,7 +309,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                             else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                         }
-                        else MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
+                        else MessageBox(NULL, lang.notGIF[LANGGIF], APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
                     }
                     else ReadSettings(0);
                     WAITING = 0;
@@ -433,7 +440,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DestroyWindow(hwnd_2);
 
-                    WriteSettings(filename, size, TASKBAR, TOPMOST);
+                    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
                     SetWindowPos(hwnd,
                                  (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
@@ -466,7 +473,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
 
                     SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-                    WriteSettings(filename, size, TASKBAR, TOPMOST);
+                    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
                     SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOREDRAW);
                 } break;
 
@@ -478,7 +485,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else {
                         TOPMOST = 1; SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                     }
-                    WriteSettings(filename, size, TASKBAR, TOPMOST);
+                    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
                 } break;
 
                 /** Top left corner **/
@@ -531,8 +538,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          SWP_NOSIZE);
                 } break;
 
+                /** English **/
+                case 9: {
+                    LANGGIF = 0;
+                    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
+                } break;
+
+                /** Русский **/
+                case 10: {
+                    LANGGIF = 1;
+                    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
+                } break;
+
                 /** Exit **/
-                case 9: DESTROY_WINDOW = 1; break;
+                case 11: DESTROY_WINDOW = 1; break;
 
             }   break;
         }
@@ -600,7 +619,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             DeleteObject(hBrush);
             EndPaint(hwnd_2, &ps);
-
         }   break;
 
 
@@ -615,7 +633,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             SetBkMode(hdc_b, TRANSPARENT);
             HBRUSH hBrush = CreateSolidBrush(HOVERED ? RGB(225, 225, 225) : RGB(240, 240, 240));
             FillRect(hdc_b, &rect, hBrush);
-            DrawText(hdc_b, "           Save scale", -1, &rect, DT_VCENTER | DT_SINGLELINE);
+            DrawText(hdc_b, lang.saveGIF[LANGGIF], -1, &rect, DT_VCENTER | DT_SINGLELINE);
 
             DeleteObject(hBrush);
         }   break;

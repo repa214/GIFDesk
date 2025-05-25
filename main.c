@@ -36,6 +36,8 @@
 
         0.80: добавлена примитивная полоска загрузки анимации
         0.81: исправлена ошибка чтения несуществующей директории в файле настроек
+        0.82: добавлена поддержка русского языка
+        0.83: добавлено соответствие языку, которой пользуется система, при первом запуске утилиты
 
         Планы:
         - окно должно отвечать независимо от delay
@@ -44,12 +46,6 @@
 
         - увеличить лимит Scale до 1000%
           немного расширить окно с масштабом и добавить справа от ползунка TextBox
-
-        - добавить возможность менять режим отображения (GL_LINEAR или GL_NEAREST)
-
-        - добавить поддержку нескольких языков
-
-        - добавить полоску загрузки анимации
 
         - добавить поддержку WEBP, APNG, MNG, AVIF, JXL; пакета из PNG, JPG
 
@@ -126,6 +122,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                  SWP_NOMOVE);
 
     SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+    // const GLubyte* version = glGetString(GL_VERSION);
+    // printf("OpenGL Version: %s\n", version);
 
     while (1) {
         gettimeofday(&t_start, NULL);

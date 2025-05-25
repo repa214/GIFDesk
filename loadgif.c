@@ -121,7 +121,7 @@ void LoadTextures(const char *filename, int tran_lp)
         CheckFrames
 **/
 
-void CheckFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
+void CheckFrames(void *data, struct GIF_WHDR *whdr) {
     checkwidth = whdr->xdim;
     checkheight = whdr->ydim;
 }

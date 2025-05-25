@@ -3,6 +3,7 @@
 float size = 1;
 int TASKBAR = 1;
 int TOPMOST = 1;
+int LANGGIF = 0;
 
 char settings_path[MAX_PATH];
 char filename[MAX_PATH];
@@ -25,13 +26,14 @@ char* GetSettingsPath() {
         WriteSettings
 **/
 
-int WriteSettings(const char *filename, float size, int taskbar, int topmost)
+int WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang)
 {
     FILE *f = fopen(settings_path, "wb");
     fwrite(filename, sizeof(char), 261, f);
     fwrite(&size, sizeof(float), 1, f);
     fwrite(&taskbar, sizeof(int), 1, f);
     fwrite(&topmost, sizeof(int), 1, f);
+    fwrite(&lang, sizeof(int), 1, f);
 
     fclose(f);
 }
@@ -48,6 +50,7 @@ int ReadSettings(int fi)
         if (fread(&size, sizeof(float), 1, f) < 1) goto filename_init;
         if (fread(&TASKBAR, sizeof(float), 1, f) < 1) goto filename_init;
         if (fread(&TOPMOST, sizeof(float), 1, f) < 1) goto filename_init;
+        if (fread(&LANGGIF, sizeof(float), 1, f) < 1) goto filename_init;
     }
     else {
         goto filename_init;
@@ -70,7 +73,8 @@ int ReadSettings(int fi)
 
         if (GetOpenFileName(&ofn)) {
             if (CheckExtension((char const *)filename)) {
-                WriteSettings(filename, size, TASKBAR, TOPMOST);
+                if (GetUserDefaultUILanguage() == 1049) LANGGIF = 1;
+                WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
             }
             else {
                 MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
