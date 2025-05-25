@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1747694173 source:d:\projects\gifdesk\main.c
+1748187852 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 	"resource.h"
 
@@ -7,9 +7,11 @@
 	<stdint.h>
 	<stdlib.h>
 
-1747692037 source:d:\projects\gifdesk\loadgif.c
+1748186490 source:d:\projects\gifdesk\loadgif.c
 	"loadgif.h"
 	"opengl_proc.h"
+	"window_proc.h"
+	"settings.h"
 
 1746474591 d:\projects\gifdesk\gifdesk.h
 	"loadgif.h"
@@ -18,23 +20,23 @@
 	"window_proc.h"
 	"../Libraries/GIF_LOAD/gif_load.h"
 
-1747680308 source:d:\projects\gifdesk\opengl_proc.c
+1747819451 source:d:\projects\gifdesk\opengl_proc.c
 	"opengl_proc.h"
 	"loadgif.h"
 	"settings.h"
 	"window_proc.h"
 
-1746475710 source:d:\projects\gifdesk\settings.c
+1747753680 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 
-1747694127 source:d:\projects\gifdesk\window_proc.c
+1747951279 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
 	"loadgif.h"
 	"resource.h"
 
-1747653531 d:\projects\gifdesk\loadgif.h
+1747819258 d:\projects\gifdesk\loadgif.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -54,7 +56,7 @@
 	<commctrl.h>
 	"../Libraries/GIF_LOAD/gif_load.h"
 
-1747694268 d:\projects\gifdesk\settings.h
+1747951131 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -64,7 +66,7 @@
 	<commctrl.h>
 	"../Libraries/GIF_LOAD/gif_load.h"
 
-1747524536 d:\projects\gifdesk\window_proc.h
+1747946467 d:\projects\gifdesk\window_proc.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>

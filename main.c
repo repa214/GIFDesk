@@ -3,7 +3,7 @@
 
         0.50: первый релиз
         0.51: исправлена ошибка переполнения памяти при загрузке анимации с большим разрешением
-        0.52: отображенеие анимации соответствует её фреймрейту
+        0.52: отображение анимации соответствует её фреймрейту
         0.53: исправлено отображение анимаций с неявным значением Frame Blending Mode (1)
         0.54: исправлено отображение анимаций с неявным значением Frame Blending Mode (2)
         0.55: добавлена возможность показывать или скрывать окно приложения в панеле задач
@@ -32,15 +32,25 @@
         0.76: сильно оптимизирован предпросмотр анимации во время её масштабирования
         0.77: окно для масштабирования анимации не выходит за пределы экрана
         0.78: исправлено поведение ползунка для изменения масштаба анимации
+        0.79: добавлено автомасштабирвание на случай, если открытая анимация выходит за рамки экрана
 
+        0.80: добавлена примитивная полоска загрузки анимации
+        0.81: исправлена ошибка чтения несуществующей директории в файле настроек
 
         Планы:
-        - исправить, чтобы окно Scale не выходило за рамки экрана
-        - изменить предел Scale до 1000%
+        - окно должно отвечать независимо от delay
+
+        - перелопатить код
+
+        - увеличить лимит Scale до 1000%
+          немного расширить окно с масштабом и добавить справа от ползунка TextBox
+
         - добавить возможность менять режим отображения (GL_LINEAR или GL_NEAREST)
+
         - добавить поддержку нескольких языков
+
         - добавить полоску загрузки анимации
-        - добавить автомасштабирование на случай если загружаемая анимация выходит за пределы экрана
+
         - добавить поддержку WEBP, APNG, MNG, AVIF, JXL; пакета из PNG, JPG
 
 
@@ -70,8 +80,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (!ReadSettings(0)) { return 0; }
 
-    CheckExtension((const char*)filename, 1);
-    // printf("filename: %s\nsize: %.2f TASKBAR: %d TOPMOST: %d\n", filename, size, TASKBAR, TOPMOST);
+    frames = CheckExtension((const char*)filename, 1);
+    if (!frames) { if (!ReadSettings(1)) return 0; }
 
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                           "Window",
@@ -101,6 +111,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     DragAcceptFiles(hwnd, TRUE);
     EnableOpenGL(hwnd, &hdc, &hRC);
     LoadTextures((char const *)filename, 0);
+
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+    if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
+    SetWindowPos(hwnd,
+                 (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 0,
+                 0,
+                 (width * size < 10.0) ? 10.0 : width * size,
+                 (height * size < 10.0) ? 10.0 : height * size,
+                 SWP_NOMOVE);
 
     SetCursor(LoadCursor(NULL, IDC_ARROW));
 
@@ -138,3 +161,40 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     return 0;
 }
+
+/**
+
+
+    main.c:
+        int WINAPI WinMain
+
+    loadgif.c:
+        void WriteFrames
+        void LoadTextures
+        void CheckFrames
+        int CheckExtension
+
+    window_proc.c:
+        void DropFiles
+        void GetApplicationIcon
+        LRESULT CALLBACK WindowProc
+        LRESULT CALLBACK WindowProc_2
+        void WcexInit
+
+    settings.c:
+        char* GetSettingsPath()
+        int WriteSettings
+        int ReadSettings
+
+    opengl_proc.c:
+        void ShowFrame
+        void RenderThread
+        void EnableOpenGL
+        void DisableOpenGL
+
+**/
+
+
+
+
+

@@ -20,6 +20,7 @@ extern double *delays;
 extern int past_mode;
 extern int tran_lp;
 extern int tran_t;
+extern int frames;
 
 void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr);
 void LoadTextures(const char *filename, int tran_lp);

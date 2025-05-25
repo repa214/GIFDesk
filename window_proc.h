@@ -28,6 +28,7 @@ extern HMENU hSubMenu;
 extern LONG_PTR exStyle;
 extern FILE *file;
 extern HBITMAP appIcon;
+extern RECT res;
 
 extern HWND hwnd_2;
 extern WNDCLASSEX wcex_2;

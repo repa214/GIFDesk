@@ -3,10 +3,10 @@
 #include "settings.h"
 #include "window_proc.h"
 
-float vertex[] = {-1, -1, 0,  // ËÍ
-                   1, -1, 0,  // ÏÍ
-                   1,  1, 0,  // ÏÂ
-                  -1,  1, 0}; // ËÂ
+float vertex[] = {-1, -1, 0,
+                   1, -1, 0,
+                   1,  1, 0,
+                  -1,  1, 0};
 float texCoord[] = {0, 1,
                     1, 1,
                     1, 0,

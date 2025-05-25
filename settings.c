@@ -4,8 +4,8 @@ float size = 1;
 int TASKBAR = 1;
 int TOPMOST = 1;
 
-char settings_path[260];
-char filename[260];
+char settings_path[MAX_PATH];
+char filename[MAX_PATH];
 char str_size[11];
 
 /**
@@ -13,7 +13,7 @@ char str_size[11];
 **/
 
 char* GetSettingsPath() {
-    static char str[260] = "";
+    static char str[MAX_PATH] = "";
     GetModuleFileName(NULL, str, sizeof(str));
     char* ls = strrchr(str, '\\');
     if (ls) *(ls + 1) = '\0';

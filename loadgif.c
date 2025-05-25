@@ -1,5 +1,7 @@
 #include "loadgif.h"
 #include "opengl_proc.h"
+#include "window_proc.h"
+#include "settings.h"
 
 GLuint *textures;
 unsigned char *frame;
@@ -11,6 +13,7 @@ int fc = 0;
 double *delays;
 int past_mode = 0;
 int tran_t = 0;
+int frames = 0;
 
 /**
         WriteFrames
@@ -21,16 +24,9 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
     delays = (double *)realloc(delays, sizeof(double) * (fc + 1));
     *(delays + fc) = (whdr->time) ? (double)whdr->time / 100 : 0.1;
 
-
     if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, (width + 1) * (height + 1) * 4);
     else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, (width + 1) * (height + 1) * 4);
     else if (whdr->mode == GIF_PREV) memset(frame, 0, (width + 1) * (height + 1) * 4);
-
-    /*
-    if (whdr->mode == GIF_BKGD && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
-    else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, width * height * 4);
-    else if (whdr->mode == GIF_PREV) memset(frame, 0, width * height * 4);
-    */
 
     unsigned int index = (width * whdr->fryo) * 4;
 
@@ -75,6 +71,22 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, frame);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    BeginPaint(hwnd, &ps);
+
+    HBRUSH hBrush = CreateSolidBrush(RGB(190, 190, 190));
+    GetClientRect(hwnd, &rect);
+    SelectObject(hdc, hBrush);
+
+    Rectangle(hdc, -1, -1, width * size, 30);
+    hBrush = CreateSolidBrush(RGB(0, 255, 0));
+    SelectObject(hdc, hBrush);
+    Rectangle(hdc, -1, -1, (int)(((float)fc / (float)frames) * (float)width * size), 30);
+
+    DeleteObject(hBrush);
+    EndPaint(hwnd, &ps);
+
+    InvalidateRect(hwnd, NULL, FALSE);
 
     past_mode = whdr->mode;
     fc++;
@@ -133,12 +145,12 @@ int CheckExtension(const char *filename, int fs)
     fread(data, 1, size, file);
     fclose(file);
 
-    GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
+    int frame_count = GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
     free(data);
 
     if (checkwidth && checkheight) {
         width = checkwidth; height = checkheight;
-        return 1;
+        return frame_count;
     }
 
     return 0;

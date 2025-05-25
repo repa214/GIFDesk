@@ -21,6 +21,7 @@ FILE *file;
 HBITMAP appIcon;
 HBRUSH hBrushBk;
 HBRUSH hBrushHovered;
+RECT res;
 
 HWND hwnd_2;
 WNDCLASSEX wcex_2;
@@ -48,7 +49,8 @@ void DropFiles(HDROP hDrop) {
     char filename[MAX_PATH];
     DragQueryFile(hDrop, 0, filename, MAX_PATH);
 
-    if (CheckExtension((char const *)filename, 0)) {
+    frames = CheckExtension((char const *)filename, 0);
+    if (frames) {
         WriteSettings(filename, size, TASKBAR, TOPMOST);
 
         hwnd = FindWindow(NULL, APP_NAME);
@@ -85,6 +87,20 @@ void DropFiles(HDROP hDrop) {
 
         free(textures);
         LoadTextures((char const *)filename, 0);
+
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+        if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+        if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
+        SetWindowPos(hwnd,
+                     (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                     0,
+                     0,
+                     (width * size < 10.0) ? 10.0 : width * size,
+                     (height * size < 10.0) ? 10.0 : height * size,
+                     SWP_NOMOVE);
+
         if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
         else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
     }
@@ -133,8 +149,6 @@ void GetApplicationIcon() {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-
-
         case WM_DROPFILES: {
             DropFiles(wParam);
         } break;
@@ -234,7 +248,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, FALSE);
                     if (GetOpenFileName(&ofn)) {
-                        if (CheckExtension((char const *)filename, 0)) {
+                        frames = CheckExtension((char const *)filename, 0);
+                        if (frames) {
                             WriteSettings(filename, size, TASKBAR, TOPMOST);
 
                             hwnd = FindWindow(NULL, APP_NAME);
@@ -270,6 +285,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                             free(textures);
                             LoadTextures((char const *)filename, 0);
+
+                            SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+                            if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+                            if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
+                            SetWindowPos(hwnd,
+                                         (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                                         0,
+                                         0,
+                                         (width * size < 10.0) ? 10.0 : width * size,
+                                         (height * size < 10.0) ? 10.0 : height * size,
+                                         SWP_NOMOVE);
+
                             if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                             else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
                         }
@@ -318,7 +347,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, FALSE);
 
-                    RECT res;
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
                     if (p.x + 144 > res.right - res.left) { px = res.right - res.left - 164; }
@@ -525,10 +553,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case WM_CLOSE: {
             PostQuitMessage(0);
-        } break;
-
-        case WM_SETFOCUS: {
-            // SetFocus(hwnd_2);
         } break;
 
         case WM_LBUTTONDOWN: {
