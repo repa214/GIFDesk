@@ -41,16 +41,20 @@
         0.84: исправлена утечка памяти с хранением delays для анимаций
         0.85: исправлена утечка памяти с хранением иконки для утилиты
         0.86: исправлено много мелких недочётов в коде
+        0.87: добавлен элемент управления масштабом анимации
+        0.88: лимит масштаба увеличен до 1000%
+        0.89: исправлено мерцание кнопки "Сохранить"
+        0.90: исправлен перевод на русский
+        0.91: добавлен выход из окон клавишей Escape
 
         Планы:
+        - исправить поведение ползунка при первоначальном нажатии
+
         - окно должно отвечать независимо от delay
 
         - перелопатить код
 
-        - увеличить лимит Scale до 1000%
-          немного расширить окно с масштабом и добавить справа от ползунка TextBox
-
-        - добавить поддержку WEBP, APNG, MNG, AVIF, JXL; пакета из PNG, JPG
+        - добавить поддержку WEBP, APNG, MNG, AVIF, JXL
 
 
 **/
@@ -80,7 +84,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!ReadSettings(0)) { return 0; }
 
     frames = CheckExtension((const char*)filename);
-    if (!frames) { if (!ReadSettings(1)) return 0; }
+    if (!frames) { if (ReadSettings(1)) return 0; }
 
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                           "Window",

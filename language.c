@@ -1,7 +1,7 @@
 #include "language.h"
 
 struct LANG lang = {
-    {"This file is not a GIF-animation", "Файл не является GIF-анимацией"},
+    {"This file is not GIF-file", "Файл не является GIF-файлом"},
 
     {"Open file...", "Открыть файл..."},
     {"Scale (%.0f%%)", "Масштаб (%.0f%%)"},
@@ -12,11 +12,11 @@ struct LANG lang = {
     {"Exit", "Выйти"},
 
     {"Top left corner", "Левый верхний угол"},
-    {"Top right corner", "Левый правый угол"},
-    {"Bottom left corner", "Правый верхний угол"},
+    {"Top right corner", "Правый верхний угол"},
+    {"Bottom left corner", "Левый нижний угол"},
     {"Bottom right corner", "Правый нижний угол"},
 
-    {"           Save", "           Сохранить"},
+    {"         Save", "         Сохранить"},
 
     {"Select GIF-file", "Выберите GIF-файл"}
 };

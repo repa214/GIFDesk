@@ -9,11 +9,14 @@ int LANGGIF = 0;
 char settings_path[MAX_PATH];
 char filename[MAX_PATH];
 char str_size[11];
-const char OFNfilter[150] = "Image Files (*.gif; *.webp; *.png)\0*.gif;*.webp;*.png\0"
-                            "GIF Files (*.gif)\0*.gif\0"
-                            "WEBP Files (*.webp)\0*.webp\0"
-                            "PNG Files (*.png)\0*.png\0"
-                            "All Files (*.*)\0*.*\0";
+const char OFNfilter[200] = "GIF (*.gif)\0*.gif\0"
+                            "Поддерживают анимации\0*.gif; *.webp; *.png; *.mng; *.avif\0"
+                            "Все файлы\0*.*\0"
+                            "--- НЕ ПОДДЕРЖИВАЮТСЯ ---\0*.*\0"
+                            "WEBP (*.webp)\0*.webp\0"
+                            "APNG (*.png)\0*.png\0"
+                            "MNG (*.mng)\0*.mng\0"
+                            "AVIF (*.avif)\0*.avif\0";
 
 
 /**
@@ -66,6 +69,7 @@ int ReadSettings(int fi)
     return 1;
 
     filename_init:
+        printf("filename_init\n");
         fclose(f);
         OPENFILENAME ofn;
         ZeroMemory(&ofn, sizeof(ofn));
@@ -73,7 +77,6 @@ int ReadSettings(int fi)
         ofn.hwndOwner = NULL;
         ofn.lpstrFile = filename;
         ofn.lpstrFile[0] = '\0';
-        // ofn.lpstrFilter = "GIF Files (*.gif)\0*.gif\0All Files (*.*)\0*.*\0";
         ofn.lpstrFilter = OFNfilter;
         ofn.nMaxFile = sizeof(filename);
         ofn.lpstrTitle = "Select a GIF file to display";
@@ -84,13 +87,13 @@ int ReadSettings(int fi)
             if (frames) {
                 if (GetUserDefaultUILanguage() == 1049) LANGGIF = 1;
                 WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-                return 0;
+                return 1;
             }
             else {
                 MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
-                return 0;
+                return 1;
             }
         }
-        else return 0;
-        return 1;
+        else return 1;
+        return 0;
 }
