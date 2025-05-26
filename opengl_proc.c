@@ -25,7 +25,7 @@ double start, current;
 **/
 
 void gettimeofday(struct timeval* tp, void* tzp) {
-    (void)tzp; // Не используется
+    (void)tzp;
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
 
@@ -33,9 +33,7 @@ void gettimeofday(struct timeval* tp, void* tzp) {
     uli.LowPart = ft.dwLowDateTime;
     uli.HighPart = ft.dwHighDateTime;
 
-    // Преобразование в микросекунды (начиная с 1601-01-01)
     uli.QuadPart /= 10;
-    // Вычитаем смещение эпохи (1970-01-01)
     uli.QuadPart -= 11644473600000000ULL;
 
     tp->tv_sec = (long)(uli.QuadPart / 1000000);

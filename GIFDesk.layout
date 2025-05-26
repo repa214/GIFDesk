@@ -2,14 +2,82 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
-	<File name="resource.rc" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="language.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="78" topLine="0" />
+			<Cursor1 position="593" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="resource.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4577" topLine="15" />
+			<Cursor1 position="20" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="settings.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="477" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="..\Libraries\GIF_LOAD\gif_load.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="35" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="gifdesk.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="158" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="window_proc.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="23483" topLine="93" />
+		</Cursor>
+		<Folding>
+			<Collapse line="51" />
+			<Collapse line="119" />
+			<Collapse line="145" />
+			<Collapse line="149" />
+			<Collapse line="153" />
+			<Collapse line="157" />
+			<Collapse line="161" />
+			<Collapse line="165" />
+			<Collapse line="179" />
+			<Collapse line="231" />
+			<Collapse line="313" />
+			<Collapse line="400" />
+			<Collapse line="417" />
+			<Collapse line="434" />
+			<Collapse line="491" />
+			<Collapse line="509" />
+			<Collapse line="520" />
+			<Collapse line="531" />
+			<Collapse line="542" />
+			<Collapse line="556" />
+			<Collapse line="570" />
+			<Collapse line="576" />
+			<Collapse line="603" />
+			<Collapse line="607" />
+			<Collapse line="611" />
+			<Collapse line="616" />
+			<Collapse line="633" />
+			<Collapse line="650" />
+			<Collapse line="666" />
+			<Collapse line="719" />
+			<Collapse line="798" />
+		</Folding>
+	</File>
+	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5427" topLine="33" />
+		</Cursor>
+	</File>
+	<File name="opengl_proc.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="537" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="language.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="629" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="opengl_proc.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -20,65 +88,29 @@
 			<Collapse line="80" />
 		</Folding>
 	</File>
-	<File name="settings.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="43" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="window_proc.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8025" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="161" />
-			<Collapse line="446" />
-			<Collapse line="464" />
-			<Collapse line="475" />
-			<Collapse line="486" />
-			<Collapse line="497" />
-			<Collapse line="511" />
-			<Collapse line="525" />
-			<Collapse line="531" />
-		</Folding>
-	</File>
-	<File name="window_proc.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1266" topLine="26" />
-		</Cursor>
-	</File>
-	<File name="resource.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="20" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="loadgif.c" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3505" topLine="90" />
-		</Cursor>
-	</File>
-	<File name="..\Libraries\GIF_LOAD\gif_load.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="35" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="opengl_proc.h" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="537" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="settings.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="286" topLine="0" />
-		</Cursor>
-	</File>
 	<File name="loadgif.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="535" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="gifdesk.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="loadgif.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="158" topLine="0" />
+			<Cursor1 position="3505" topLine="105" />
+		</Cursor>
+	</File>
+	<File name="window_proc.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="485" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="settings.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="286" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="resource.rc" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="78" topLine="0" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

@@ -393,9 +393,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     hEdit = CreateWindowEx(0, "EDIT", str_size, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
                                     134, 43, 40, 22, hwnd_2, NULL, NULL, NULL);
-                    hButtonUp = CreateWindowEx(0, "BUTTON", "+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_OWNERDRAW,
+                    hButtonUp = CreateWindowEx(0, "BUTTON", "+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW,
                                  174, 43, 25, 11, hwnd_2, (HMENU)2, NULL, NULL);
-                    hButtonDown = CreateWindowEx(0, "BUTTON", "-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_OWNERDRAW,
+                    hButtonDown = CreateWindowEx(0, "BUTTON", "-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW | BS_NOTIFY,
                                  174, 54, 25, 11, hwnd_2, (HMENU)3, NULL, NULL);
 
                     hFont = CreateFont(16,
@@ -461,10 +461,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
                     ShowWindow(hwnd_2, SW_SHOWDEFAULT);
 
+                    // Для троллинга
+                    // SystemParametersInfo(SPI_SETDOUBLECLICKTIME, 15, NULL, 0);
+
                     while (GetMessage(&msg_2, NULL, 0, 0)) {
                         TranslateMessage(&msg_2);
                         DispatchMessage(&msg_2);
                     }
+
+                    SystemParametersInfo(SPI_SETDOUBLECLICKTIME, 500, NULL, 0);
 
                     DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
                     size = trackbar_size;
@@ -663,7 +668,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             EndPaint(hwnd_2, &ps);
         }   break;
 
-
         case WM_DRAWITEM: {
             SetCursor(LoadCursor(NULL, IDC_ARROW));
 
@@ -718,8 +722,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_COMMAND: {
-            if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE)
-            {
+            if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE) {
                 GetWindowText(hEdit, str_size, sizeof(str_size));
                 trackbar_size = atof(str_size) / 100;
 
@@ -755,43 +758,41 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
 
+            if (LOWORD(wParam) == (HMENU)2 && trackbar_size < 10) {
+                trackbar_size += 0.01;
+
+                sprintf(str_size, "%.0f", trackbar_size * 100);
+                SetWindowText(hEdit, str_size);
+                if (trackbar_size < 2) {
+
+                    texCoord[1] = 2 / ((float)trackbar_size);
+                    texCoord[2] = 2 / ((float)trackbar_size);
+                    texCoord[3] = 2 / ((float)trackbar_size);
+                    texCoord[4] = 2 / ((float)trackbar_size);
+
+                    SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
+                    if (!DRAWING) ShowFrame(k);
+                }
+            }
+
+            if (LOWORD(wParam) == (HMENU)3 && trackbar_size > 0.01) {
+                trackbar_size -= 0.01;
+
+                texCoord[1] = 2 / ((float)trackbar_size);
+                texCoord[2] = 2 / ((float)trackbar_size);
+                texCoord[3] = 2 / ((float)trackbar_size);
+                texCoord[4] = 2 / ((float)trackbar_size);
+
+                sprintf(str_size, "%.0f", trackbar_size * 100);
+                SetWindowText(hEdit, str_size);
+
+                SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
+                if (!DRAWING) ShowFrame(k);
+            }
+
             switch (wParam) {
                 case 1: {
                     SendMessage(hwnd_2, WM_CLOSE, 0, 0);
-                }   break;
-                case 2: {
-                    if (trackbar_size < 10) {
-                        trackbar_size += 0.01;
-
-                        sprintf(str_size, "%.0f", trackbar_size * 100);
-                        SetWindowText(hEdit, str_size);
-                        if (trackbar_size < 2) {
-
-                            texCoord[1] = 2 / ((float)trackbar_size / 100);
-                            texCoord[2] = 2 / ((float)trackbar_size / 100);
-                            texCoord[3] = 2 / ((float)trackbar_size / 100);
-                            texCoord[4] = 2 / ((float)trackbar_size / 100);
-
-                            SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
-                            if (!DRAWING) ShowFrame(k);
-                        }
-                    }
-                }   break;
-                case 3: {
-                    if (trackbar_size > 0.01) {
-                        trackbar_size -= 0.01;
-
-                        texCoord[1] = 2 / ((float)trackbar_size);
-                        texCoord[2] = 2 / ((float)trackbar_size);
-                        texCoord[3] = 2 / ((float)trackbar_size);
-                        texCoord[4] = 2 / ((float)trackbar_size);
-
-                        sprintf(str_size, "%.0f", trackbar_size * 100);
-                        SetWindowText(hEdit, str_size);
-
-                        SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
-                        if (!DRAWING) ShowFrame(k);
-                    }
                 }   break;
             }   break;
         }   break;
