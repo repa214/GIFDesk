@@ -12,7 +12,13 @@
 
 ![App Screenshot](https://psv4.userapi.com/s/v1/d/jyj5WL74WWoqXF2u-G0RQLxYHaOxyeGoxtKutB17adZDryDUsIrcxVITSRvMCejWG8lWXASg3NEOMKv4OTpNp-dPoIIx97D3AWGsHQFLIDZzJr9qyTZdtQ/demonstration.gif)
 
-> Видеокарта должна нативно поддерживать **_OpenGL_**
+## Системные требования
+
+> **ОС**: Windows 98
+> 
+> **Процессор**: Pentium III 500 МГц
+> 
+> **Видеокарта**: OpenGL 1.1 совместимые
 
 
 ## Авторы
