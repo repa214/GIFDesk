@@ -91,9 +91,9 @@ int ReadSettings(int fi)
             }
             else {
                 MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
-                return 1;
+                return 0;
             }
         }
-        else return 1;
+        else return 0;
         return 0;
 }

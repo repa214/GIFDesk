@@ -178,7 +178,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }   break;
 
         case WM_RBUTTONDOWN: {
-            if (!IsWindow(hwnd_2)) {
+            if (!IsWindow(hwnd_2) && !WAITING) {
                 SetCursor(LoadCursor(NULL, IDC_ARROW));
 
                 wglMakeCurrent(NULL, NULL);
@@ -228,7 +228,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_COMMAND: {
             switch (wParam) {
-                /** Change GIF **/
+                /** Open file... **/
                 case 1: {
                     OPENFILENAME ofn;
 
@@ -537,7 +537,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case 6: {
                     SetWindowPos(hwnd,
                          NULL,
-                         GetSystemMetrics(SM_CXSCREEN) - (width + 1) * size,
+                         GetSystemMetrics(SM_CXSCREEN) - (width - 1) * size,
                          0,
                          0,
                          0,
@@ -552,21 +552,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowPos(hwnd,
                          NULL,
                          0,
-                         res.bottom - res.top - (height) * size,
+                         res.bottom - res.top - (height - 1) * size,
                          0,
                          0,
                          SWP_NOSIZE);
                 }   break;
 
-                /** Bottom left corner **/
+                /** Bottom right corner **/
                 case 8: {
                     RECT res;
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
                     SetWindowPos(hwnd,
                          NULL,
-                         res.right - res.left - (width) * size,
-                         res.bottom - res.top - (height) * size,
+                         res.right - res.left - (width - 1) * size,
+                         res.bottom - res.top - (height - 1) * size,
                          0,
                          0,
                          SWP_NOSIZE);
@@ -758,7 +758,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
 
-            if (LOWORD(wParam) == (HMENU)2 && trackbar_size < 10) {
+            if (LOWORD(wParam) == 2 && trackbar_size < 10) {
                 trackbar_size += 0.01;
 
                 sprintf(str_size, "%.0f", trackbar_size * 100);
@@ -775,7 +775,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
 
-            if (LOWORD(wParam) == (HMENU)3 && trackbar_size > 0.01) {
+            if (LOWORD(wParam) == 3 && trackbar_size > 0.01) {
                 trackbar_size -= 0.01;
 
                 texCoord[1] = 2 / ((float)trackbar_size);

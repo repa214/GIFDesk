@@ -48,8 +48,12 @@
         0.91: добавлен выход из окон клавишей Escape
         0.92: исправлен предпросмотр анимации во время нажатия на кнопки +
         0.93: оптимизировано изменение масштаба стрелочками
+        0.94: исправлена логика поведения утилиты в случае повреждения файла с настройками
+        0.95: исправлено поведение окна во время выборки анимации
 
         Планы:
+        - добавить предупреждение, что 200+% может сильно повлиять на производительность
+
         - исправить поведение ползунка при первоначальном нажатии
 
         - окно должно отвечать независимо от delay
@@ -86,7 +90,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!ReadSettings(0)) { return 0; }
 
     frames = CheckExtension((const char*)filename);
-    if (!frames) { if (ReadSettings(1)) return 0; }
+    if (!frames) { if (!ReadSettings(1)) { return 0; } }
 
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                           "Window",

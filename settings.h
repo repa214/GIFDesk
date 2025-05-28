@@ -10,7 +10,7 @@
 #include <commctrl.h>
 #include "../Libraries/GIF_LOAD/gif_load.h"
 
-#define APP_NAME "GIFDesk 0.93"
+#define APP_NAME "GIFDesk 0.95"
 
 extern char settings_path[260];
 extern char filename[260];
