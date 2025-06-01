@@ -41,7 +41,6 @@ pthread_t render;
 int DESTROY_WINDOW = 0;
 int WAITING = 0;
 int HOVERED = 0, HOVERED_DOWN = 0, HOVERED_UP = 0;
-int SETTING_POS = 0;
 int pos = 0;
 float trackbar_size = 0;
 
@@ -53,8 +52,8 @@ void DropFiles(HDROP hDrop) {
     char filename[MAX_PATH];
     DragQueryFile(hDrop, 0, filename, MAX_PATH);
 
-    frames = CheckExtension((char const *)filename);
-    if (frames) {
+    filetype = CheckFile((char const *)filename);
+    if (filetype) {
         WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
         hwnd = FindWindow(NULL, APP_NAME);
@@ -89,7 +88,7 @@ void DropFiles(HDROP hDrop) {
 
         EnableOpenGL(hwnd, &hdc, &hRC);
 
-        LoadTextures((char const *)filename);
+        LoadFile((char const *)filename, GIF_FORMAT);
 
         SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
@@ -247,8 +246,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, FALSE);
                     if (GetOpenFileName(&ofn)) {
-                        frames = CheckExtension((char const *)filename);
-                        if (frames) {
+                        filetype = CheckFile((char const *)filename);
+                        if (filetype) {
                             SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
                             WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
@@ -264,8 +263,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                                   WS_POPUP | WS_VISIBLE,
                                                   rect.left,
                                                   rect.top,
-                                                  (width * size < 10.0) ? 10.0 : width * size,
-                                                  (height * size < 10.0) ? 10.0 : height * size,
+                                                  CollisionWidth(),
+                                                  CollisionHeight(),
                                                   NULL,
                                                   NULL,
                                                   hInstance,
@@ -283,23 +282,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                             EnableOpenGL(hwnd, &hdc, &hRC);
 
-                            LoadTextures((char const *)filename);
+                            LoadFile((char const *)filename, GIF_FORMAT);
 
                             SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
-                            if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+                            if (CollisionWidth() > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
                             if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
 
                             SetWindowPos(hwnd,
                                          (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
                                          0,
                                          0,
-                                         (width * size < 10.0) ? 10.0 : width * size,
-                                         (height * size < 10.0) ? 10.0 : height * size,
+                                         CollisionWidth(),
+                                         CollisionHeight(),
                                          SWP_NOMOVE);
-
-                            if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
-                            else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
 
                             SetCursor(LoadCursor(NULL, IDC_ARROW));
                         }
@@ -339,8 +335,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          NULL,
                          0,
                          0,
-                         (width * size < 10.0) ? 10.0 : width * size,
-                         (height * size < 10.0) ? 10.0 : height * size,
+                         CollisionWidth(),
+                         CollisionHeight(),
                          SWP_NOMOVE);
 
                     pthread_create(&render, NULL, &RenderThread, NULL);
@@ -480,8 +476,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                  (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
                                  0,
                                  0,
-                                 (width * size < 10.0) ? 10.0 : width * size,
-                                 (height * size < 10.0) ? 10.0 : height * size,
+                                 CollisionWidth(),
+                                 CollisionHeight(),
                                  SWP_NOMOVE);
 
                     texCoord[1] = 1;
@@ -537,7 +533,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case 6: {
                     SetWindowPos(hwnd,
                          NULL,
-                         GetSystemMetrics(SM_CXSCREEN) - (width - 1) * size,
+                         GetSystemMetrics(SM_CXSCREEN) - (width) * size - 1,
                          0,
                          0,
                          0,
@@ -552,7 +548,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowPos(hwnd,
                          NULL,
                          0,
-                         res.bottom - res.top - (height - 1) * size,
+                         res.bottom - res.top - (height) * size,
                          0,
                          0,
                          SWP_NOSIZE);
@@ -565,8 +561,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SetWindowPos(hwnd,
                          NULL,
-                         res.right - res.left - (width - 1) * size,
-                         res.bottom - res.top - (height - 1) * size,
+                         res.right - res.left - (width) * size,
+                         res.bottom - res.top - (height) * size,
                          0,
                          0,
                          SWP_NOSIZE);
@@ -798,8 +794,14 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_KEYDOWN: {
-            if (wParam == VK_ESCAPE) {
+            if (wParam == VK_ESCAPE || wParam == VK_RETURN) {
                 PostQuitMessage(0);
+            }
+            if (wParam == VK_UP || wParam == VK_NUMPAD8) {
+                SendMessage(hwnd_2, WM_COMMAND, 2, 0);
+            }
+            if (wParam == VK_DOWN || wParam == VK_NUMPAD2) {
+                SendMessage(hwnd_2, WM_COMMAND, 3, 0);
             }
         }   break;
 

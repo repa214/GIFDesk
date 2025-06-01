@@ -14,30 +14,47 @@ float texCoord[] = {0, 1,
 
 int k = 0;
 int DRAWING = 0;
+float inaccuracy = 0;
+int start_animating = 0;
+
+
 
 struct timeval t_start, t_current;
-double start, current;
+double start = 0, current = 0;
+
+int CollisionWidth() { return (width * size < 10.0) ? 10.0 : width * size + size; }
+int CollisionHeight() { return (height * size < 10.0) ? 10.0 : height * size + size; }
 
 /**
-
-        gettimeofday
-
+        Vsleep
 **/
 
-void gettimeofday(struct timeval* tp, void* tzp) {
-    (void)tzp;
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
+void VSleep(double s) {
+    current = GetTime();
 
-    ULARGE_INTEGER uli;
-    uli.LowPart = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
+    while (current < start + s + inaccuracy) {
+        if (current + 0.002 < start + s + inaccuracy) Sleep(1);
+        current = GetTime();
+    }
 
-    uli.QuadPart /= 10;
-    uli.QuadPart -= 11644473600000000ULL;
+    inaccuracy += s - (current - start);
+    if ((inaccuracy < 0 ? -inaccuracy : inaccuracy) > s * 10) inaccuracy = 0;
 
-    tp->tv_sec = (long)(uli.QuadPart / 1000000);
-    tp->tv_usec = (long)(uli.QuadPart % 1000000);
+    printf("%.2f | % 2.5f\n", s, inaccuracy);
+
+    start = GetTime();
+}
+
+
+/**
+        GetTime
+**/
+
+double GetTime() {
+    LARGE_INTEGER freq, counter;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / freq.QuadPart;
 }
 
 /**
@@ -92,7 +109,7 @@ void ShowFrame(int k)
     DRAWING = 1;
     wglMakeCurrent(hdc, hRC);
 
-    glViewport(0, 0, (width * size < 10.0) ? 10.0 : width * size, (height * size < 10.0) ? 10.0 : height * size);
+    glViewport(0, 0, CollisionWidth(), CollisionHeight());
     glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_TEXTURE_2D);
@@ -126,24 +143,11 @@ void ShowFrame(int k)
 **/
 
 void* RenderThread(void *arg) {
-    wglMakeCurrent(hdc, hRC);
     while (!DESTROY_WINDOW) {
-        gettimeofday(&t_start, NULL);
-        start = t_start.tv_sec + t_start.tv_usec / 1e6;
-
-        if (!SETTING_POS) ShowFrame(k);
-
-        gettimeofday(&t_current, NULL);
-        current = t_current.tv_sec + t_current.tv_usec / 1e6;
-
-        while (current < start + *(delays + k) - 0.002) {
-            if (current + 0.015 < start + *(delays + k)) Sleep(10);
-            gettimeofday(&t_current, NULL); current = t_current.tv_sec + t_current.tv_usec / 1e6;
-        }
+        ShowFrame(k); VSleep(*(delays + k));
 
         if (k >= fc - 1) k = 0;
         else k++;
     }
-    wglMakeCurrent(NULL, NULL);
     return NULL;
 }

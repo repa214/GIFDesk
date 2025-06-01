@@ -3,22 +3,63 @@
 #include "window_proc.h"
 #include "settings.h"
 
+void *filedata = NULL;
+long filesize = 0;
+int filetype = 0;
 GLuint *textures = NULL;
-unsigned char *frame;
+unsigned char *frame = NULL;
 int width = 0;
 int height = 0;
 int checkwidth = 0;
 int checkheight = 0;
 int fc = 0;
-double *delays;
+double *delays = NULL;
 int past_mode = 0;
 int frames = 0;
 
-/**
-        WriteFrames
-**/
+/**    Показывает полосу загрузки    **/
 
-void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
+void LoadProgress() {
+    BeginPaint(hwnd, &ps);
+
+    HBRUSH hBrush = CreateSolidBrush(RGB(190, 190, 190));
+    GetClientRect(hwnd, &rect);
+    SelectObject(hdc, hBrush);
+
+    Rectangle(hdc, -1, -1, width * size, 30);
+    hBrush = CreateSolidBrush(RGB(0, 255, 0));
+    SelectObject(hdc, hBrush);
+    Rectangle(hdc, -1, -1, (int)(((float)fc / (float)frames) * (float)width * size), 30);
+
+    DeleteObject(hBrush);
+    EndPaint(hwnd, &ps);
+
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+/**    Генерирует текстуру для кадра    **/
+
+void BindFrame() {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+
+    glGenTextures(1, &textures[fc]);
+    glBindTexture(GL_TEXTURE_2D, textures[fc]);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width + 1, height + 1,
+                                0, GL_RGBA, GL_UNSIGNED_BYTE, frame);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/**    Записывает кадры в память    **/
+
+void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr) {
     textures = (GLuint *)realloc(textures, sizeof(GLuint) * (fc + 1));
     delays = (double *)realloc(delays, sizeof(double) * (fc + 1));
     *(delays + fc) = (whdr->time) ? (double)whdr->time / 100 : 0.1;
@@ -27,7 +68,7 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
     else if (whdr->mode == GIF_CURR && past_mode == GIF_BKGD) memset(frame, 0, (width + 1) * (height + 1) * 4);
     else if (whdr->mode == GIF_PREV) memset(frame, 0, (width + 1) * (height + 1) * 4);
 
-    unsigned int index = (width * whdr->fryo) * 4;
+    unsigned int index = ((width + 1) * whdr->fryo) * 4;
 
     for (long y = 0; y < whdr->fryd; y++) {
         index += whdr->frxo * 4;
@@ -44,117 +85,79 @@ void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr) {
 
             index += 4;
         }
-        index += (width - whdr->frxd - whdr->frxo) * 4;
+        index += ((width + 1) - whdr->frxd - whdr->frxo) * 4;
     }
 
-    index = 0;
-    for (long y = 0; y < height; y++) {
-        for (long x = 0; x < width; x++) {
-            if (x >= width - 1 || y >= height - 1) frame[index + 3] = 0;
-            index += 4;
-        }
-    }
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
-
-    glGenTextures(1, &textures[fc]);
-    glBindTexture(GL_TEXTURE_2D, textures[fc]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-                                0, GL_RGBA, GL_UNSIGNED_BYTE, frame);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    BeginPaint(hwnd, &ps);
-
-    HBRUSH hBrush = CreateSolidBrush(RGB(190, 190, 190));
-    GetClientRect(hwnd, &rect);
-    SelectObject(hdc, hBrush);
-
-    Rectangle(hdc, -1, -1, width * size, 30);
-    hBrush = CreateSolidBrush(RGB(0, 255, 0));
-    SelectObject(hdc, hBrush);
-    Rectangle(hdc, -1, -1, (int)(((float)fc / (float)frames) * (float)width * size), 30);
-
-    DeleteObject(hBrush);
-    EndPaint(hwnd, &ps);
-
-    InvalidateRect(hwnd, NULL, FALSE);
+    BindFrame();
+    LoadProgress();
 
     past_mode = whdr->mode;
     fc++;
 }
 
-/**
-        LoadTextures
-**/
+void WriteWEBPFrames() {
 
-void LoadTextures(const char *filename)
+}
+
+/**   Check frames functions   **/
+
+void CheckGIFFrames(void *data, struct GIF_WHDR *whdr) {
+    width = whdr->xdim;
+    height = whdr->ydim;
+    frames++;
+}
+
+// void CheckWEBPFrames() {}
+
+
+/**   Loads file to memory   **/
+
+void LoadFile(const char *filename, int type)
 {
     if (delays != NULL) { free(delays); delays = NULL; }
     if (textures != NULL) { free(textures); textures = NULL; }
-
-    textures = (GLuint *)malloc(sizeof(GLuint));
     frame = (unsigned char *)malloc((width + 1) * (height + 1) * 4);
     memset(frame, 0, (width + 1) * (height + 1) * 4);
 
-    FILE *file = fopen(filename, "rb");
+    switch (type) {
+        case GIF_FORMAT: {
+            GIF_Load(filedata, filesize, WriteGIFFrames, NULL, NULL, 0);
+        }   break;
+        case WEBP_FORMAT: { WriteWEBPFrames(); } break;
+    }
 
-    fseek(file, 0, SEEK_END);
-    long size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    void *data = malloc(size);
-    fread(data, 1, size, file);
-    fclose(file);
-
-    GIF_Load(data, size, WriteFrames, NULL, NULL, 0);
-
-    if (data != NULL) { free(data); data = NULL; }
+    if (filedata != NULL) { free(filedata); filedata = NULL; }
     if (frame != NULL) { free(frame); frame = NULL; }
 }
 
-/**
-        CheckFrames
-**/
+/**   Check if extension exists and is correct format   **/
 
-void CheckFrames(void *data, struct GIF_WHDR *whdr) {
-    checkwidth = whdr->xdim;
-    checkheight = whdr->ydim;
-}
-
-/**
-        CheckExtension
-**/
-
-int CheckExtension(const char *filename)
+int CheckFile(const char *filename)
 {
-    checkwidth = 0; checkheight = 0;
-    void *data;
+    frames = 0;
 
     FILE *file = fopen(filename, "rb");
+    if (file == NULL) return 0;
 
     fseek(file, 0, SEEK_END);
-    long size = ftell(file);
+    filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    data = malloc(size);
-    fread(data, 1, size, file);
-    fclose(file);
+    filedata = malloc(filesize);
 
-    int frame_count = (int)GIF_Load(data, size, CheckFrames, NULL, NULL, 0);
-    free(data);
+    fread(filedata, 1, filesize, file);
+    fclose(file); file = NULL;
 
-    if (checkwidth && checkheight) {
-        width = checkwidth; height = checkheight;
-        return frame_count;
+    if (GIF_Load(filedata, filesize, CheckGIFFrames, NULL, NULL, 0)) {
+        return GIF_FORMAT;
     }
-
-    return 0;
+    else if (0) {
+        return WEBP_FORMAT;
+    }
+    else {
+        free(filedata); filedata = NULL;
+        return 0;
+    }
 }
+
+

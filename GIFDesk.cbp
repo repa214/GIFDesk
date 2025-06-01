@@ -30,14 +30,372 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-m64" />
+			<Add directory="../Libraries/libwebp/src" />
+			<Add directory="../Libraries/libwebp/sharpyuv" />
 		</Compiler>
 		<Linker>
+			<Add option="-m64" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="gdi32" />
 			<Add library="comdlg32" />
 		</Linker>
 		<Unit filename="../Libraries/GIF_LOAD/gif_load.h" />
+		<Unit filename="../Libraries/libwebp-main/src/dec/alpha_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/buffer_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/frame_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/idec_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/io_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/quant_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/tree_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/vp8_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/vp8l_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dec/webp_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/demux/anim_decode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/demux/demux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/alpha_processing.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/alpha_processing_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/alpha_processing_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/alpha_processing_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/alpha_processing_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cost.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cost_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cost_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cost_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cost_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/cpu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_clip_tables.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/dec_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/enc_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/filters.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/filters_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/filters_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/filters_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/filters_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_avx2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_avx2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_enc_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/lossless_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/rescaler_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/ssim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/ssim_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling_msa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/upsampling_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv_mips32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv_mips_dsp_r2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/dsp/yuv_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/alpha_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/analysis_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/backward_references_cost_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/backward_references_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/config_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/cost_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/filter_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/frame_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/histogram_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/iterator_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/near_lossless_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/picture_csp_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/picture_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/picture_psnr_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/picture_rescale_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/picture_tools_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/predictor_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/quant_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/syntax_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/token_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/tree_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/vp8l_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/enc/webp_enc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/mux/anim_encode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/mux/muxedit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/mux/muxinternal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/mux/muxread.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/bit_reader_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/bit_writer_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/color_cache_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/filters_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/huffman_encode_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/huffman_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/palette.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/quant_levels_dec_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/quant_levels_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/random_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/rescaler_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/thread_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../Libraries/libwebp-main/src/utils/utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="gifdesk.h" />
 		<Unit filename="language.c">
 			<Option compilerVar="CC" />

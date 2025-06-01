@@ -8,6 +8,8 @@
 #include <locale.h>
 #include <pthread.h>
 #include <commctrl.h>
+#include <unistd.h>
+#include <time.h>
 #include "../Libraries/GIF_LOAD/gif_load.h"
 
 extern HDC hdc;
@@ -19,10 +21,15 @@ extern int k;
 extern struct timeval t_start, t_current;
 extern double start, current;
 extern int DRAWING;
+extern int start_animating;
+extern float inaccuracy;
 
-void gettimeofday(struct timeval* tp, void* tzp);
+int CollisionWidth();
+int CollisionHeight();
+void VSleep(double s);
+double GetTime();
 void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC);
-void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC);
+void DisableOpenGL(HWND hwnd, HDC hdc, HGLRC hRC);
 void ShowFrame(int k);
 void* RenderThread(void *arg);
 

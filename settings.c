@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "loadgif.h"
+#include "language.h"
 
 float size = 1;
 int TASKBAR = 1;
@@ -9,8 +10,8 @@ int LANGGIF = 0;
 char settings_path[MAX_PATH];
 char filename[MAX_PATH];
 char str_size[11];
-const char OFNfilter[200] = "GIF (*.gif)\0*.gif\0"
-                            "Поддерживают анимации\0*.gif; *.webp; *.png; *.mng; *.avif\0"
+const char OFNfilter[200] = "Поддерживают анимации\0*.gif; *.webp; *.png; *.mng; *.avif\0"
+                            "GIF (*.gif)\0*.gif\0"
                             "Все файлы\0*.*\0"
                             "--- НЕ ПОДДЕРЖИВАЮТСЯ ---\0*.*\0"
                             "WEBP (*.webp)\0*.webp\0"
@@ -79,18 +80,18 @@ int ReadSettings(int fi)
         ofn.lpstrFile[0] = '\0';
         ofn.lpstrFilter = OFNfilter;
         ofn.nMaxFile = sizeof(filename);
-        ofn.lpstrTitle = "Select a GIF file to display";
+        ofn.lpstrTitle = lang.selectGIF[LANGGIF];
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
         if (GetOpenFileName(&ofn)) {
-            frames = CheckExtension((char const *)filename);
-            if (frames) {
+            filetype = CheckFile((char const *)filename);
+            if (filetype) {
                 if (GetUserDefaultUILanguage() == 1049) LANGGIF = 1;
                 WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
                 return 1;
             }
             else {
-                MessageBox(NULL, "This file is not a GIF-animation", APP_NAME, MB_ICONEXCLAMATION);
+                MessageBox(NULL, lang.notGIF[LANGGIF], APP_NAME, MB_ICONEXCLAMATION);
                 return 0;
             }
         }

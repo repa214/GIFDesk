@@ -6,6 +6,7 @@
 #include "settings.h"
 #include "window_proc.h"
 #include "language.h"
+#include "resource.h"
 
 #include "../Libraries/GIF_LOAD/gif_load.h"
 

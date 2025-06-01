@@ -47,11 +47,11 @@ extern pthread_t render;
 extern char str_size[11];
 extern int WAITING;
 extern int HOVERED;
-extern int SETTING_POS;
 
+void DropFiles(HDROP hDrop);
+void GetApplicationIcon();
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, WNDPROC Proc);
-void GetApplicationIcon();
 
 #endif // WINDOW_PROC_H_INCLUDED

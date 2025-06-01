@@ -50,6 +50,11 @@
         0.93: оптимизировано изменение масштаба стрелочками
         0.94: исправлена логика поведения утилиты в случае повреждения файла с настройками
         0.95: исправлено поведение окна во время выборки анимации
+        0.96: меню для масштаба реагирует на Enter, на стрелочки вверх/вниз, на Num 8/2
+        0.97: оптимизирована загрузка анимации
+        0.98: исправлен перевод на русский
+        0.99: снижена нагрузка на ЦП во время воспроизведения анимации
+        0.100: снижена погрешность скорости воспроизведения анимации
 
         Планы:
         - добавить предупреждение, что 200+% может сильно повлиять на производительность
@@ -58,15 +63,12 @@
 
         - окно должно отвечать независимо от delay
 
-        - перелопатить код
-
-        - добавить поддержку WEBP, APNG, MNG, AVIF, JXL
+        - добавить поддержку WEBP, APNG, MNG, AVIF
 
 
 **/
 
 #include "gifdesk.h"
-#include "resource.h"
 
 /**
 
@@ -89,8 +91,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (!ReadSettings(0)) { return 0; }
 
-    frames = CheckExtension((const char*)filename);
-    if (!frames) { if (!ReadSettings(1)) { return 0; } }
+    filetype = CheckFile((const char*)filename);
+    if (!filetype) { if (!ReadSettings(1)) { return 0; } }
+
+    printf("filename: %s | size: %.2f | taskbar: %d | topmost: %d | langgif: %d\n", filename, size, TASKBAR, TOPMOST, LANGGIF);
 
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                           "Window",
@@ -98,8 +102,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                           WS_POPUP | WS_VISIBLE,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
-                          (width * size < 10.0) ? 10.0 : width * size,
-                          (height * size < 10.0) ? 10.0 : height * size,
+                          CollisionHeight(),
+                          CollisionWidth(),
                           NULL,
                           NULL,
                           hInstance,
@@ -119,7 +123,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hwnd, SW_SHOWDEFAULT);
     DragAcceptFiles(hwnd, TRUE);
     EnableOpenGL(hwnd, &hdc, &hRC);
-    LoadTextures((char const *)filename);
+    LoadFile((char const *)filename, GIF_FORMAT);
 
     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
@@ -130,8 +134,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                  (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
                  0,
                  0,
-                 (width * size < 10.0) ? 10.0 : width * size,
-                 (height * size < 10.0) ? 10.0 : height * size,
+                 CollisionWidth(),
+                 CollisionHeight(),
                  SWP_NOMOVE);
 
     SetCursor(LoadCursor(NULL, IDC_ARROW));
@@ -139,30 +143,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     const GLubyte* version = glGetString(GL_VERSION);
     printf("OpenGL Version: %s\n", version);
 
+    start = GetTime();
+    start_animating = GetTime();
     while (1) {
-
-        gettimeofday(&t_start, NULL);
-        start = t_start.tv_sec + t_start.tv_usec / 1e6;
-
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessage(&msg); }
         else if (DESTROY_WINDOW) break;
         else {
-            wglMakeCurrent(NULL, NULL);
-
-            ShowFrame(k);
-
-            gettimeofday(&t_current, NULL);
-            current = t_current.tv_sec + t_current.tv_usec / 1e6;
-
-            while (current < start + *(delays + k) - 0.002) {
-                if (current + 0.015 < start + *(delays + k)) Sleep(10);
-                gettimeofday(&t_current, NULL); current = t_current.tv_sec + t_current.tv_usec / 1e6;
-            }
+            ShowFrame(k); VSleep(*(delays + k));
 
             if (k >= fc - 1) k = 0;
             else k++;
-
-            wglMakeCurrent(hdc, hRC);
         }
     }
 
@@ -175,54 +165,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     return 0;
 }
-
-/**
-
-
-    main.c:
-        int WINAPI WinMain
-
-    loadgif.c:
-        void WriteFrames
-        void LoadTextures
-        void CheckFrames
-        int CheckExtension
-
-        GLuint *textures;
-        unsigned char *frame;
-        int width;
-        int height;
-        int checkwidth;
-        int checkheight;
-        int fc;
-        double *delays;
-        int past_mode;
-        int frames;
-
-    window_proc.c:
-        void DropFiles
-        void GetApplicationIcon
-        LRESULT CALLBACK WindowProc
-        LRESULT CALLBACK WindowProc_2
-        void WcexInit
-
-    settings.c:
-        char* GetSettingsPath()
-        int WriteSettings
-        int ReadSettings
-
-    opengl_proc.c:
-        void ShowFrame
-        void RenderThread
-        void EnableOpenGL
-        void DisableOpenGL
-
-    language.c:
-        struct lang
-
-**/
-
-
-
-
-

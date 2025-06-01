@@ -9,7 +9,15 @@
 #include <pthread.h>
 #include <commctrl.h>
 #include "../Libraries/GIF_LOAD/gif_load.h"
+#include "../Libraries/WEBP_LOAD/jebp.h"
 
+#define GIF_FORMAT 1
+#define WEBP_FORMAT 2
+#define ANY_FORMAT 3
+
+extern void *filedata;
+extern long filesize;
+extern int filetype;
 extern GLuint *textures;
 extern int width;
 extern int height;
@@ -18,11 +26,12 @@ extern int checkheight;
 extern int fc;
 extern double *delays;
 extern int past_mode;
-extern int frames;
 
-void WriteFrames(void *anim __attribute__((unused)), struct GIF_WHDR *whdr);
-void LoadTextures(const char *filename);
-int CheckExtension(const char *filename);
-void* RenderThread(void *arg);
+void LoadProgress();
+void BindFrame();
+void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr);
+void CheckGIFFrames(void *data, struct GIF_WHDR *whdr);
+void LoadFile(const char *filename, int type);
+int CheckFile(const char *filename);
 
 #endif // LOADGIF_H_INCLUDED
