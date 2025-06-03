@@ -1,7 +1,7 @@
 #include "language.h"
 
 struct LANG lang = {
-    {"This file is not GIF-file", "Файл не является GIF-файлом"},
+    {"Incorrect file-type", "Неверный тип файла"},
 
     {"Open file...", "Открыть файл..."},
     {"Scale (%.0f%%)", "Масштаб (%.0f%%)"},
@@ -18,5 +18,5 @@ struct LANG lang = {
 
     {"         Save", "         Сохранить"},
 
-    {"Select GIF-file", "Выберите GIF-файл"}
+    {"Select file", "Выберите файл"}
 };

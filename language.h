@@ -2,7 +2,7 @@
 #define LANGUAGE_H_INCLUDED
 
 struct LANG {
-    const char notGIF[2][28];
+    const char notGIF[2][20];
 
     const char changeGIF[2][16];
     const char scaleGIF[2][17];
@@ -19,7 +19,7 @@ struct LANG {
 
     const char saveGIF[2][21];
 
-    const char selectGIF[2][18];
+    const char selectGIF[2][14];
 };
 
 extern struct LANG lang;

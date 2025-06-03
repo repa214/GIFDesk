@@ -10,14 +10,10 @@ int LANGGIF = 0;
 char settings_path[MAX_PATH];
 char filename[MAX_PATH];
 char str_size[11];
-const char OFNfilter[200] = "Поддерживают анимации\0*.gif; *.webp; *.png; *.mng; *.avif\0"
+const char OFNfilter[200] = "Анимированные изображения\0*.gif; *.webp;\0"
                             "GIF (*.gif)\0*.gif\0"
-                            "Все файлы\0*.*\0"
-                            "--- НЕ ПОДДЕРЖИВАЮТСЯ ---\0*.*\0"
                             "WEBP (*.webp)\0*.webp\0"
-                            "APNG (*.png)\0*.png\0"
-                            "MNG (*.mng)\0*.mng\0"
-                            "AVIF (*.avif)\0*.avif\0";
+                            "Все файлы (*.*)\0*.*\0";
 
 
 /**

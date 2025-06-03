@@ -15,12 +15,7 @@ float texCoord[] = {0, 1,
 int k = 0;
 int DRAWING = 0;
 float inaccuracy = 0;
-int start_animating = 0;
-
-
-
-struct timeval t_start, t_current;
-double start = 0, current = 0;
+double start_time = 0, current_time = 0;
 
 int CollisionWidth() { return (width * size < 10.0) ? 10.0 : width * size + size; }
 int CollisionHeight() { return (height * size < 10.0) ? 10.0 : height * size + size; }
@@ -30,19 +25,19 @@ int CollisionHeight() { return (height * size < 10.0) ? 10.0 : height * size + s
 **/
 
 void VSleep(double s) {
-    current = GetTime();
+    current_time = GetTime();
 
-    while (current < start + s + inaccuracy) {
-        if (current + 0.002 < start + s + inaccuracy) Sleep(1);
-        current = GetTime();
+    while (current_time < start_time + s + inaccuracy) {
+        if (current_time + 0.002 < start_time + s + inaccuracy) Sleep(1);
+        current_time = GetTime();
     }
 
-    inaccuracy += s - (current - start);
+    inaccuracy += s - (current_time - start_time);
     if ((inaccuracy < 0 ? -inaccuracy : inaccuracy) > s * 10) inaccuracy = 0;
 
-    printf("%.2f | % 2.5f\n", s, inaccuracy);
+    // printf("%.2f | % 2.5f\n", s, inaccuracy);
 
-    start = GetTime();
+    start_time = GetTime();
 }
 
 

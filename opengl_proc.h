@@ -10,7 +10,6 @@
 #include <commctrl.h>
 #include <unistd.h>
 #include <time.h>
-#include "../Libraries/GIF_LOAD/gif_load.h"
 
 extern HDC hdc;
 extern HGLRC hRC;
@@ -19,9 +18,8 @@ extern float texCoord[];
 extern int DESTROY_WINDOW;
 extern int k;
 extern struct timeval t_start, t_current;
-extern double start, current;
+extern double start_time, current_time;
 extern int DRAWING;
-extern int start_animating;
 extern float inaccuracy;
 
 int CollisionWidth();

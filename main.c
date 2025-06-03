@@ -55,6 +55,12 @@
         0.98: исправлен перевод на русский
         0.99: снижена нагрузка на ЦП во время воспроизведения анимации
         0.100: снижена погрешность скорости воспроизведения анимации
+        0.101: исправлен недочёт, из-за которого не работала замена анимации должным образом, если утилита запущена несколько раз
+        0.102: изменён принцип работы с окном во время загрузки анимации
+        0.103: добавлена поддежка WEBP
+        0.104: исправлено реагирование на кнопки, если фокус задан на менюшке с числом или на кнопках
+        0.105: исправлено поведение кнопок "Увеличить" и "Уменьшить", если до этого была нажата другая кнопка
+        0.106: исправлен мнимый Double-click кнопки "Уменьшить"
 
         Планы:
         - добавить предупреждение, что 200+% может сильно повлиять на производительность
@@ -63,7 +69,7 @@
 
         - окно должно отвечать независимо от delay
 
-        - добавить поддержку WEBP, APNG, MNG, AVIF
+        - добавить поддержку APNG, MNG, AVIF
 
 
 **/
@@ -81,70 +87,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     setlocale(LC_ALL, "Russian");
 
-    WcexInit(&wcex, "Window", (WNDPROC)WindowProc);
-    WcexInit(&wcex_2, "Window_2", (WNDPROC)WindowProc_2);
+    if (!WindowInit()) return 0;
 
-    if (!RegisterClassEx(&wcex)) return 0;
-    if (!RegisterClassEx(&wcex_2)) return 0;
-
-    strcpy(settings_path, GetSettingsPath());
-
-    if (!ReadSettings(0)) { return 0; }
-
-    filetype = CheckFile((const char*)filename);
-    if (!filetype) { if (!ReadSettings(1)) { return 0; } }
-
-    printf("filename: %s | size: %.2f | taskbar: %d | topmost: %d | langgif: %d\n", filename, size, TASKBAR, TOPMOST, LANGGIF);
-
-    hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
-                          "Window",
-                          APP_NAME,
-                          WS_POPUP | WS_VISIBLE,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          CollisionHeight(),
-                          CollisionWidth(),
-                          NULL,
-                          NULL,
-                          hInstance,
-                          NULL);
-
-    exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-
-    if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
-    SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-
-    SetWindowPos(hwnd, (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
-
-    SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
-
-    GetApplicationIcon();
-
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
-    DragAcceptFiles(hwnd, TRUE);
-    EnableOpenGL(hwnd, &hdc, &hRC);
-    LoadFile((char const *)filename, GIF_FORMAT);
-
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-
-    if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
-    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
-
-    SetWindowPos(hwnd,
-                 (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                 0,
-                 0,
-                 CollisionWidth(),
-                 CollisionHeight(),
-                 SWP_NOMOVE);
-
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-
-    const GLubyte* version = glGetString(GL_VERSION);
-    printf("OpenGL Version: %s\n", version);
-
-    start = GetTime();
-    start_animating = GetTime();
     while (1) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessage(&msg); }
         else if (DESTROY_WINDOW) break;
@@ -164,4 +108,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (textures != NULL) { free(textures); textures = NULL; }
 
     return 0;
+
 }

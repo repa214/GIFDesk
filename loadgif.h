@@ -8,12 +8,12 @@
 #include <locale.h>
 #include <pthread.h>
 #include <commctrl.h>
-#include "../Libraries/GIF_LOAD/gif_load.h"
-#include "../Libraries/WEBP_LOAD/jebp.h"
+#include "gif/gif_load.h"
+#include "webp/decode.h"
+#include "webp/demux.h"
 
 #define GIF_FORMAT 1
 #define WEBP_FORMAT 2
-#define ANY_FORMAT 3
 
 extern void *filedata;
 extern long filesize;

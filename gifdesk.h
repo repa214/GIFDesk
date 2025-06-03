@@ -8,6 +8,4 @@
 #include "language.h"
 #include "resource.h"
 
-#include "../Libraries/GIF_LOAD/gif_load.h"
-
 #endif // GIFDESK_H

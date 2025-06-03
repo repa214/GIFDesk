@@ -48,10 +48,15 @@ extern char str_size[11];
 extern int WAITING;
 extern int HOVERED;
 
+int WindowInit();
+int WindowReinit(int format);
 void DropFiles(HDROP hDrop);
 void GetApplicationIcon();
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ButtonUpProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ButtonDownProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, WNDPROC Proc);
 
 #endif // WINDOW_PROC_H_INCLUDED

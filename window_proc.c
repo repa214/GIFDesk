@@ -35,6 +35,9 @@ HDC hdc_b;
 HFONT hFont;
 HWND hEdit;
 HWND hButtonUp, hButtonDown;
+WNDPROC OrigEditProc = NULL;
+WNDPROC OrigButtonUpProc = NULL;
+WNDPROC OrigButtonDownProc = NULL;
 
 pthread_t render;
 
@@ -45,6 +48,125 @@ int pos = 0;
 float trackbar_size = 0;
 
 /**
+        WindowInit
+**/
+
+int WindowInit() {
+    WcexInit(&wcex, "Window", (WNDPROC)WindowProc);
+    WcexInit(&wcex_2, "Window_2", (WNDPROC)WindowProc_2);
+
+    if (!RegisterClassEx(&wcex)) return 0;
+    if (!RegisterClassEx(&wcex_2)) return 0;
+
+    strcpy(settings_path, GetSettingsPath());
+
+    if (!ReadSettings(0)) { return 0; }
+
+    filetype = CheckFile((const char*)filename);
+    if (!filetype) { if (!ReadSettings(1)) { return 0; } }
+
+    // printf("filename: %s | size: %.2f | taskbar: %d | topmost: %d | langgif: %d\n", filename, size, TASKBAR, TOPMOST, LANGGIF);
+
+    hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
+                          "Window",
+                          APP_NAME,
+                          WS_POPUP | WS_VISIBLE,
+                          CW_USEDEFAULT,
+                          CW_USEDEFAULT,
+                          CollisionHeight(),
+                          CollisionWidth(),
+                          NULL,
+                          NULL,
+                          hInstance,
+                          NULL);
+
+    exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+    if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
+
+    SetWindowPos(hwnd, (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
+
+    SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
+
+    GetApplicationIcon();
+
+    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    DragAcceptFiles(hwnd, TRUE);
+    EnableOpenGL(hwnd, &hdc, &hRC);
+    LoadFile((char const *)filename, filetype);
+
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+    if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
+    SetWindowPos(hwnd,
+                 (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 0,
+                 0,
+                 CollisionWidth(),
+                 CollisionHeight(),
+                 SWP_NOMOVE);
+
+    const GLubyte* version = glGetString(GL_VERSION);
+    printf("OpenGL Version: %s\n", version);
+
+    start_time = GetTime();
+
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+    return 1;
+}
+
+/**
+        WindowReinit
+**/
+
+int WindowReinit(int format) {
+    SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
+    WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
+
+    GetWindowRect(hwnd, &rect);
+    DisableOpenGL(hwnd, hdc, hRC);
+
+    fc = 0; k = 0;
+
+    exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+    if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
+
+    SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
+
+    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    DragAcceptFiles(hwnd, TRUE);
+
+    EnableOpenGL(hwnd, &hdc, &hRC);
+
+    SetWindowPos(hwnd,
+                 (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 0,
+                 0,
+                 CollisionWidth(),
+                 CollisionHeight(),
+                 SWP_NOMOVE);
+
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+
+    LoadFile((char const *)filename, format);
+
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+    if (CollisionWidth() > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
+    return 0;
+}
+
+/**
         DRAG AND DROP
 **/
 
@@ -53,61 +175,8 @@ void DropFiles(HDROP hDrop) {
     DragQueryFile(hDrop, 0, filename, MAX_PATH);
 
     filetype = CheckFile((char const *)filename);
-    if (filetype) {
-        WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-
-        hwnd = FindWindow(NULL, APP_NAME);
-        GetWindowRect(hwnd, &rect);
-        DisableOpenGL(hwnd, hdc, hRC);
-        DestroyWindow(hwnd);
-
-        fc = 0; k = 0;
-
-        hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
-                              "Window",
-                              APP_NAME,
-                              WS_POPUP | WS_VISIBLE,
-                              rect.left,
-                              rect.top,
-                              (width * size < 10.0) ? 10.0 : width * size,
-                              (height * size < 10.0) ? 10.0 : height * size,
-                              NULL,
-                              NULL,
-                              hInstance,
-                              NULL);
-
-        exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-
-        if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
-        SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-
-        SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
-
-        ShowWindow(hwnd, SW_SHOWDEFAULT);
-        DragAcceptFiles(hwnd, TRUE);
-
-        EnableOpenGL(hwnd, &hdc, &hRC);
-
-        LoadFile((char const *)filename, GIF_FORMAT);
-
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-
-        if (width * size > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
-        if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
-
-        SetWindowPos(hwnd,
-                     (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                     0,
-                     0,
-                     (width * size < 10.0) ? 10.0 : width * size,
-                     (height * size < 10.0) ? 10.0 : height * size,
-                     SWP_NOMOVE);
-
-        if (TOPMOST) SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
-        else SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
-    }
+    if (filetype) WindowReinit(filetype);
     else MessageBox(NULL, lang.notGIF[LANGGIF], APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
-
 
     DragFinish(hDrop);
 }
@@ -142,6 +211,10 @@ void GetApplicationIcon() {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+        case WM_DESTROY: {
+            DESTROY_WINDOW = 1; PostQuitMessage(0); DESTROY_WINDOW = 0;
+        }   break;
+
         case WM_DROPFILES: {
             DropFiles((HDROP)wParam);
         }   break;
@@ -248,56 +321,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (GetOpenFileName(&ofn)) {
                         filetype = CheckFile((char const *)filename);
                         if (filetype) {
-                            SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
-                            WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
-
-                            hwnd = FindWindow(NULL, APP_NAME);
-                            GetWindowRect(hwnd, &rect);
-                            DisableOpenGL(hwnd, hdc, hRC);
-                            DestroyWindow(hwnd);
-                            fc = 0; k = 0;
-
-                            hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
-                                                  "Window",
-                                                  APP_NAME,
-                                                  WS_POPUP | WS_VISIBLE,
-                                                  rect.left,
-                                                  rect.top,
-                                                  CollisionWidth(),
-                                                  CollisionHeight(),
-                                                  NULL,
-                                                  NULL,
-                                                  hInstance,
-                                                  NULL);
-
-                            exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-
-                            if (!TASKBAR) exStyle |= WS_EX_TOOLWINDOW;
-                            SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle);
-
-                            SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
-
-                            ShowWindow(hwnd, SW_SHOWDEFAULT);
-                            DragAcceptFiles(hwnd, TRUE);
-
-                            EnableOpenGL(hwnd, &hdc, &hRC);
-
-                            LoadFile((char const *)filename, GIF_FORMAT);
-
-                            SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-
-                            if (CollisionWidth() > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
-                            if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
-
-                            SetWindowPos(hwnd,
-                                         (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                         0,
-                                         0,
-                                         CollisionWidth(),
-                                         CollisionHeight(),
-                                         SWP_NOMOVE);
-
-                            SetCursor(LoadCursor(NULL, IDC_ARROW));
+                            WindowReinit(filetype);
                         }
                         else MessageBox(NULL, lang.notGIF[LANGGIF], APP_NAME, MB_ICONEXCLAMATION | MB_TOPMOST);
                     }
@@ -390,9 +414,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hEdit = CreateWindowEx(0, "EDIT", str_size, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
                                     134, 43, 40, 22, hwnd_2, NULL, NULL, NULL);
                     hButtonUp = CreateWindowEx(0, "BUTTON", "+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW,
-                                 174, 43, 25, 11, hwnd_2, (HMENU)2, NULL, NULL);
+                                    174, 43, 25, 11, hwnd_2, (HMENU)2, NULL, NULL);
                     hButtonDown = CreateWindowEx(0, "BUTTON", "-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW | BS_NOTIFY,
-                                 174, 54, 25, 11, hwnd_2, (HMENU)3, NULL, NULL);
+                                    174, 54, 25, 11, hwnd_2, (HMENU)3, NULL, NULL);
 
                     hFont = CreateFont(16,
                                        0,
@@ -449,6 +473,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SendMessage(hTrackbar, TBM_SETRANGE, TRUE, MAKELONG(1, 200));
                     SendMessage(hTrackbar, TBM_SETPOS, TRUE, trackbar_size * 100);
                     SendMessage(hTrackbar, TBM_SETTIC, 200, 0);
+
+                    OrigEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
+                    OrigButtonUpProc = (WNDPROC)SetWindowLongPtr(hButtonUp, GWLP_WNDPROC, (LONG_PTR)ButtonUpProc);
+                    OrigButtonDownProc = (WNDPROC)SetWindowLongPtr(hButtonDown, GWLP_WNDPROC, (LONG_PTR)ButtonDownProc);
+
                     pos = trackbar_size;
 
                     hRgn = CreateRoundRectRgn(0, 0, 204, 73, 5, 5);
@@ -457,15 +486,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
                     ShowWindow(hwnd_2, SW_SHOWDEFAULT);
 
-                    // Для троллинга
-                    // SystemParametersInfo(SPI_SETDOUBLECLICKTIME, 15, NULL, 0);
-
                     while (GetMessage(&msg_2, NULL, 0, 0)) {
                         TranslateMessage(&msg_2);
                         DispatchMessage(&msg_2);
                     }
-
-                    SystemParametersInfo(SPI_SETDOUBLECLICKTIME, 500, NULL, 0);
 
                     DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
                     size = trackbar_size;
@@ -754,7 +778,12 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
 
-            if (LOWORD(wParam) == 2 && trackbar_size < 10) {
+            GetWindowRect(hButtonUp, &res);
+            GetCursorPos(&p);
+            if (LOWORD(wParam) == 2 &&
+                trackbar_size < 10 &&
+                PtInRect(&res, p))
+            {
                 trackbar_size += 0.01;
 
                 sprintf(str_size, "%.0f", trackbar_size * 100);
@@ -771,7 +800,13 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
 
-            if (LOWORD(wParam) == 3 && trackbar_size > 0.01) {
+            GetWindowRect(hButtonDown, &res);
+            GetCursorPos(&p);
+            if (LOWORD(wParam) == 3 &&
+                trackbar_size > 0.01 &&
+                PtInRect(&res, p) &&
+                (GetAsyncKeyState(VK_LBUTTON) & 0x8001))
+            {
                 trackbar_size -= 0.01;
 
                 texCoord[1] = 2 / ((float)trackbar_size);
@@ -810,6 +845,49 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
+/**
+        H_EDIT WINDOW
+**/
+
+LRESULT CALLBACK EditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_KEYDOWN: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) PostQuitMessage(0);
+        }   break;
+        case WM_CHAR: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) return 0;
+        }   break;
+    }
+    return CallWindowProc(OrigEditProc, hwnd, uMsg, wParam, lParam);
+}
+
+/**
+        H_BUTTONS WINDOW
+**/
+
+LRESULT CALLBACK ButtonUpProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_KEYDOWN: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) PostQuitMessage(0);
+        }   break;
+        case WM_CHAR: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) return 0;
+        }   break;
+    }
+    return CallWindowProc(OrigButtonUpProc, hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ButtonDownProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_KEYDOWN: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) PostQuitMessage(0);
+        }   break;
+        case WM_CHAR: {
+            if (wParam == VK_RETURN || wParam == VK_ESCAPE) return 0;
+        }   break;
+    }
+    return CallWindowProc(OrigButtonDownProc, hwnd, uMsg, wParam, lParam);
+}
 
 /**
         WINDOW SETTINGS

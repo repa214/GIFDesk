@@ -1,38 +1,37 @@
 # depslib dependency file v1.0
-1748809405 source:d:\projects\gifdesk\main.c
+1748974957 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
-1748212941 d:\projects\libraries\gif_load\gif_load.h
+1748975699 d:\projects\libraries\gif_load\gif_load.h
 	<stdint.h>
 	<stdlib.h>
 
-1748713023 source:d:\projects\gifdesk\loadgif.c
+1748975804 source:d:\projects\gifdesk\loadgif.c
 	"loadgif.h"
 	"opengl_proc.h"
 	"window_proc.h"
 	"settings.h"
 
-1748648446 d:\projects\gifdesk\gifdesk.h
+1748975748 d:\projects\gifdesk\gifdesk.h
 	"loadgif.h"
 	"opengl_proc.h"
 	"settings.h"
 	"window_proc.h"
 	"language.h"
 	"resource.h"
-	"../Libraries/GIF_LOAD/gif_load.h"
 
-1748808989 source:d:\projects\gifdesk\opengl_proc.c
+1748876135 source:d:\projects\gifdesk\opengl_proc.c
 	"opengl_proc.h"
 	"loadgif.h"
 	"settings.h"
 	"window_proc.h"
 
-1748713263 source:d:\projects\gifdesk\settings.c
+1748971310 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 	"loadgif.h"
 	"language.h"
 
-1748795004 source:d:\projects\gifdesk\window_proc.c
+1748975080 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
@@ -40,7 +39,7 @@
 	"language.h"
 	"resource.h"
 
-1748710131 d:\projects\gifdesk\loadgif.h
+1748989951 d:\projects\gifdesk\loadgif.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -48,10 +47,11 @@
 	<locale.h>
 	<pthread.h>
 	<commctrl.h>
-	"../Libraries/GIF_LOAD/gif_load.h"
-	"../Libraries/WEBP_LOAD/jebp.h"
+	"GIF_LOAD/gif_load.h"
+	"webp/decode.h"
+	"webp/demux.h"
 
-1748804288 d:\projects\gifdesk\opengl_proc.h
+1748975748 d:\projects\gifdesk\opengl_proc.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -61,9 +61,8 @@
 	<commctrl.h>
 	<unistd.h>
 	<time.h>
-	"../Libraries/GIF_LOAD/gif_load.h"
 
-1748809459 d:\projects\gifdesk\settings.h
+1748975748 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -71,9 +70,8 @@
 	<locale.h>
 	<pthread.h>
 	<commctrl.h>
-	"../Libraries/GIF_LOAD/gif_load.h"
 
-1748650066 d:\projects\gifdesk\window_proc.h
+1748972778 d:\projects\gifdesk\window_proc.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -85,13 +83,13 @@
 
 1747524067 d:\projects\gifdesk\resource.h
 
-1747571657 source:d:\projects\gifdesk\resource.rc
+1748876295 source:d:\projects\gifdesk\resource.rc
 	"resource.h"
 
-1748271721 source:d:\projects\gifdesk\language.c
+1748900033 source:d:\projects\gifdesk\language.c
 	"language.h"
 
-1748271983 d:\projects\gifdesk\language.h
+1748900092 d:\projects\gifdesk\language.h
 
 1748706062 source:d:\projects\libraries\libwebp-main\src\dec\alpha_dec.c
 	<assert.h>
@@ -1465,4 +1463,44 @@
 	<stdlib.h>
 	<emmintrin.h>
 	<arm_neon.h>
+
+1747424802 d:\projects\libraries\libwebp\webp\decode.h
+	<stddef.h>
+	"./types.h"
+
+1747424802 d:\projects\libraries\libwebp\webp\types.h
+	<stddef.h>
+	<inttypes.h>
+
+1747424802 d:\projects\libraries\libwebp\webp\demux.h
+	<stddef.h>
+	"./decode.h"
+	"./mux_types.h"
+	"./types.h"
+
+1747424802 d:\projects\libraries\libwebp\webp\mux_types.h
+	<string.h>
+	"./types.h"
+
+1748975699 d:\projects\gifdesk\gif_load\gif_load.h
+	<stdint.h>
+	<stdlib.h>
+
+1747424802 d:\projects\gifdesk\webp\decode.h
+	<stddef.h>
+	"./types.h"
+
+1747424802 d:\projects\gifdesk\webp\types.h
+	<stddef.h>
+	<inttypes.h>
+
+1747424802 d:\projects\gifdesk\webp\demux.h
+	<stddef.h>
+	"./decode.h"
+	"./mux_types.h"
+	"./types.h"
+
+1747424802 d:\projects\gifdesk\webp\mux_types.h
+	<string.h>
+	"./types.h"
 
