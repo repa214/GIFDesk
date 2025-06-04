@@ -20,6 +20,8 @@ struct LANG {
     const char saveGIF[2][21];
 
     const char selectGIF[2][14];
+
+    const char previewGIF[2][37];
 };
 
 extern struct LANG lang;

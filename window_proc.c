@@ -46,6 +46,7 @@ int WAITING = 0;
 int HOVERED = 0, HOVERED_DOWN = 0, HOVERED_UP = 0;
 int pos = 0;
 float trackbar_size = 0;
+int OVERPREVIEW = 0;
 
 /**
         WindowInit
@@ -353,6 +354,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     sprintf(str_size, "%.0f", size * 100);
 
                     trackbar_size = size;
+                    if (trackbar_size > 2) OVERPREVIEW = 1;
                     size = 2;
 
                     SetWindowPos(hwnd,
@@ -378,8 +380,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                             WS_POPUP,
                                             px,
                                             p.y - 20,
-                                            204,
-                                            73,
+                                            230,
+                                            (OVERPREVIEW) ? 93 : 73,
                                             hwnd,
                                             NULL,
                                             hInstance,
@@ -391,7 +393,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                                WS_TABSTOP | WS_CHILD | WS_VISIBLE | TBS_NOTICKS | TBS_BOTH,
                                                -1,
                                                5,
-                                               206,
+                                               232,
                                                24,
                                                hwnd_2,
                                                NULL,
@@ -404,7 +406,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                              WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
                                              4,
                                              42,
-                                             126,
+                                             148,
                                              24,
                                              hwnd_2,
                                              (HMENU)1,
@@ -412,11 +414,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                              NULL);
 
                     hEdit = CreateWindowEx(0, "EDIT", str_size, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
-                                    134, 43, 40, 22, hwnd_2, NULL, NULL, NULL);
+                                    158, 43, 40, 22, hwnd_2, NULL, NULL, NULL);
                     hButtonUp = CreateWindowEx(0, "BUTTON", "+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW,
-                                    174, 43, 25, 11, hwnd_2, (HMENU)2, NULL, NULL);
+                                    200, 43, 25, 11, hwnd_2, (HMENU)2, NULL, NULL);
                     hButtonDown = CreateWindowEx(0, "BUTTON", "-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | BS_OWNERDRAW | BS_NOTIFY,
-                                    174, 54, 25, 11, hwnd_2, (HMENU)3, NULL, NULL);
+                                    200, 54, 25, 11, hwnd_2, (HMENU)3, NULL, NULL);
 
                     hFont = CreateFont(16,
                                        0,
@@ -452,7 +454,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-                    hFont = CreateFont(16,
+                    hFont = CreateFont(14,
                                        0,
                                        0,
                                        0,
@@ -463,9 +465,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                        DEFAULT_CHARSET,
                                        OUT_DEFAULT_PRECIS,
                                        CLIP_DEFAULT_PRECIS,
+                                       CLEARTYPE_QUALITY,
                                        DEFAULT_QUALITY,
-                                       DEFAULT_QUALITY,
-                                       "Segoe UI Symbol");
+                                       "Segoe UI");
 
                     SendMessage(hButtonUp, WM_SETFONT, (WPARAM)hFont, TRUE);
                     SendMessage(hButtonDown, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -480,7 +482,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     pos = trackbar_size;
 
-                    hRgn = CreateRoundRectRgn(0, 0, 204, 73, 5, 5);
+                    hRgn = CreateRoundRectRgn(0, 0, 230, (OVERPREVIEW) ? 93 : 73, 5, 5);
                     SetWindowRgn(hwnd_2, hRgn, TRUE);
 
                     SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
@@ -679,13 +681,22 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             HBRUSH hBrush = CreateSolidBrush(RGB(240, 240, 240));
             FillRect(hdc_2, &ps.rcPaint, hBrush);
 
-            RECT rect = {4, 37, 198, 38};
+            RECT rect = {4, 37, 224, 38};
 
             hBrush = CreateSolidBrush(RGB(210, 210, 210));
             FillRect(hdc_2, &rect, hBrush);
 
             DeleteObject(hBrush);
             EndPaint(hwnd_2, &ps);
+
+            if (OVERPREVIEW) {
+                RECT rect = {0, 72, 230, 123};
+                SetBkMode(hdc_2, TRANSPARENT);
+                HFONT hOldFont = (HFONT)SelectObject(hdc_2, hFont);
+                SetTextColor(hdc_2, RGB(50, 50, 50));
+                DrawText(hdc_2, lang.previewGIF[LANGGIF], -1, &rect, DT_CENTER);
+                SelectObject(hdc_2, hOldFont);
+            }
         }   break;
 
         case WM_DRAWITEM: {
@@ -742,7 +753,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_COMMAND: {
-            if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE) {
+            if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE && GetWindowTextLength(hEdit) != 0) {
                 GetWindowText(hEdit, str_size, sizeof(str_size));
                 trackbar_size = atof(str_size) / 100;
 
@@ -751,14 +762,21 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                     SetWindowText(hEdit, "1000");
                     MessageBeep(MB_ICONWARNING);
                 }
-
-                if (trackbar_size <= 0) {
+                else if (trackbar_size <= 0) {
                     trackbar_size = 0.01;
                     SetWindowText(hEdit, "1");
                     MessageBeep(MB_ICONWARNING);
                 }
 
-                if (trackbar_size < 2) {
+                if (trackbar_size <= 2) {
+                    OVERPREVIEW = 0;
+
+                    SetWindowPos(hwnd_2, HWND_NOTOPMOST, 0, 0, 230, 73, SWP_NOMOVE);
+
+                    hRgn = CreateRoundRectRgn(0, 0, 230, 73, 5, 5);
+                    SetWindowRgn(hwnd_2, hRgn, TRUE);
+                    SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
+
                     texCoord[1] = 2 / ((float)trackbar_size);
                     texCoord[2] = 2 / ((float)trackbar_size);
                     texCoord[3] = 2 / ((float)trackbar_size);
@@ -768,6 +786,14 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (!DRAWING) ShowFrame(k);
                 }
                 else {
+                    OVERPREVIEW = 1;
+
+                    SetWindowPos(hwnd_2, HWND_NOTOPMOST, 0, 0, 230, 93, SWP_NOMOVE);
+
+                    hRgn = CreateRoundRectRgn(0, 0, 230, 93, 5, 5);
+                    SetWindowRgn(hwnd_2, hRgn, TRUE);
+                    SetLayeredWindowAttributes(hwnd_2, 0x0, 0, LWA_COLORKEY);
+
                     texCoord[1] = 1;
                     texCoord[2] = 1;
                     texCoord[3] = 1;
@@ -780,10 +806,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             GetWindowRect(hButtonUp, &res);
             GetCursorPos(&p);
-            if (LOWORD(wParam) == 2 &&
-                trackbar_size < 10 &&
-                PtInRect(&res, p))
-            {
+            if (LOWORD(wParam) == 2 && trackbar_size < 10 && PtInRect(&res, p)) {
                 trackbar_size += 0.01;
 
                 sprintf(str_size, "%.0f", trackbar_size * 100);
@@ -802,11 +825,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             GetWindowRect(hButtonDown, &res);
             GetCursorPos(&p);
-            if (LOWORD(wParam) == 3 &&
-                trackbar_size > 0.01 &&
-                PtInRect(&res, p) &&
-                (GetAsyncKeyState(VK_LBUTTON) & 0x8001))
-            {
+            if (LOWORD(wParam) == 3 && trackbar_size > 0.01 && PtInRect(&res, p) && (GetAsyncKeyState(VK_LBUTTON) & 0x8001)) {
                 trackbar_size -= 0.01;
 
                 texCoord[1] = 2 / ((float)trackbar_size);

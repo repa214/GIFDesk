@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1748974957 source:d:\projects\gifdesk\main.c
+1749045306 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
 1748975699 d:\projects\libraries\gif_load\gif_load.h
@@ -31,7 +31,7 @@
 	"loadgif.h"
 	"language.h"
 
-1748975080 source:d:\projects\gifdesk\window_proc.c
+1749043993 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
@@ -39,7 +39,7 @@
 	"language.h"
 	"resource.h"
 
-1748989951 d:\projects\gifdesk\loadgif.h
+1748992742 d:\projects\gifdesk\loadgif.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -47,7 +47,7 @@
 	<locale.h>
 	<pthread.h>
 	<commctrl.h>
-	"GIF_LOAD/gif_load.h"
+	"gif/gif_load.h"
 	"webp/decode.h"
 	"webp/demux.h"
 
@@ -62,7 +62,7 @@
 	<unistd.h>
 	<time.h>
 
-1748975748 d:\projects\gifdesk\settings.h
+1749045356 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -86,10 +86,10 @@
 1748876295 source:d:\projects\gifdesk\resource.rc
 	"resource.h"
 
-1748900033 source:d:\projects\gifdesk\language.c
+1748996357 source:d:\projects\gifdesk\language.c
 	"language.h"
 
-1748900092 d:\projects\gifdesk\language.h
+1748994504 d:\projects\gifdesk\language.h
 
 1748706062 source:d:\projects\libraries\libwebp-main\src\dec\alpha_dec.c
 	<assert.h>
@@ -1503,4 +1503,8 @@
 1747424802 d:\projects\gifdesk\webp\mux_types.h
 	<string.h>
 	"./types.h"
+
+1748975699 d:\projects\gifdesk\gif\gif_load.h
+	<stdint.h>
+	<stdlib.h>
 

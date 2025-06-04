@@ -18,5 +18,7 @@ struct LANG lang = {
 
     {"         Save", "         Сохранить"},
 
-    {"Select file", "Выберите файл"}
+    {"Select file", "Выберите файл"},
+
+    {"Preview is available up to 200%", "Предпросмотр доступен только до 200%"}
 };
