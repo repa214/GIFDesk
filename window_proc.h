@@ -42,6 +42,12 @@ extern HWND hButton;
 extern HDC hdc_b;
 extern HFONT hFont;
 
+extern HWND hwnd_3;
+extern WNDCLASSEX wcex_3;
+extern HDC hdc_3;
+extern MSG msg_3;
+extern HWND hTrackbar_2;
+
 extern pthread_t render;
 
 extern char str_size[11];
@@ -54,6 +60,7 @@ void DropFiles(HDROP hDrop);
 void GetApplicationIcon();
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WindowProc_3(HWND hwnd_3, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ButtonUpProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ButtonDownProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

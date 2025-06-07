@@ -39,6 +39,12 @@ WNDPROC OrigEditProc = NULL;
 WNDPROC OrigButtonUpProc = NULL;
 WNDPROC OrigButtonDownProc = NULL;
 
+HWND hwnd_3;
+WNDCLASSEX wcex_3;
+HDC hdc_3;
+MSG msg_3;
+HWND hTrackbar_2;
+
 pthread_t render;
 
 int DESTROY_WINDOW = 0;
@@ -55,6 +61,7 @@ int OVERPREVIEW = 0;
 int WindowInit() {
     WcexInit(&wcex, "Window", (WNDPROC)WindowProc);
     WcexInit(&wcex_2, "Window_2", (WNDPROC)WindowProc_2);
+    WcexInit(&wcex_3, "Window_3", (WNDPROC)WindowProc_3);
 
     if (!RegisterClassEx(&wcex)) return 0;
     if (!RegisterClassEx(&wcex_2)) return 0;
@@ -145,6 +152,14 @@ int WindowReinit(int format) {
 
     EnableOpenGL(hwnd, &hdc, &hRC);
 
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+    if (CollisionWidth() > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
+    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
+
     SetWindowPos(hwnd,
                  (TOPMOST) ? HWND_TOPMOST : HWND_NOTOPMOST,
                  0,
@@ -153,15 +168,7 @@ int WindowReinit(int format) {
                  CollisionHeight(),
                  SWP_NOMOVE);
 
-    InvalidateRect(hwnd, NULL, TRUE);
-    UpdateWindow(hwnd);
-
     LoadFile((char const *)filename, format);
-
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-
-    if (CollisionWidth() > res.right - res.left) size = ((float)res.right - (float)res.left) / (float)width;
-    if (height * size > res.bottom - res.top) size = ((float)res.bottom - (float)res.top) / (float)height;
 
     SetCursor(LoadCursor(NULL, IDC_ARROW));
     return 0;
@@ -232,10 +239,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DESTROY_WINDOW = 1;
         }   break;
 
-        case WM_SIZE: {
-            InvalidateRect(hwnd, NULL, FALSE);
-        }   break;
-
         case WM_LBUTTONDOWN: {
             wglMakeCurrent(NULL, NULL);
             if (!IsWindow(hwnd_2)) {
@@ -283,6 +286,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetMenuItemInfo(hMenu, 1, FALSE, &mii);
 
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+                // AppendMenu(hMenu, MF_STRING, 12, "Debug");
                 AppendMenu(hMenu, MF_STRING, 1, lang.changeGIF[LANGGIF]);
                 AppendMenu(hMenu, MF_STRING, 2, str_size);
                 AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, lang.showiconGIF[LANGGIF]);
@@ -315,7 +319,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ofn.lpstrTitle = lang.selectGIF[LANGGIF];
                     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-                    if (TOPMOST) SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
+                    if (TOPMOST) SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
                     WAITING = 1;
 
                     DragAcceptFiles(hwnd, FALSE);
@@ -609,6 +613,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 /** Exit **/
                 case 11: DESTROY_WINDOW = 1; break;
 
+                /** Debug **/
+                case 12: {
+                    GetCursorPos(&p);
+                    int px = 0;
+
+                    if (!RegisterClassEx(&wcex_3));
+
+                    WAITING = 1;
+
+                    DragAcceptFiles(hwnd, FALSE);
+
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+                    if (p.x + 204 > res.right - res.left) { px = res.right - res.left - 204; }
+                    else { px = p.x; }
+
+                    hwnd_3 = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+                                            "Window_3",
+                                            APP_NAME,
+                                            WS_POPUP,
+                                            px,
+                                            p.y - 20,
+                                            230,
+                                            (OVERPREVIEW) ? 93 : 73,
+                                            hwnd,
+                                            NULL,
+                                            hInstance,
+                                            NULL);
+
+                    hTrackbar_2 = CreateWindowEx(0,
+                                               TRACKBAR_CLASS,
+                                               NULL,
+                                               WS_TABSTOP | WS_CHILD | WS_VISIBLE | TBS_TOOLTIPS,
+                                               -1,
+                                               5,
+                                               232,
+                                               24,
+                                               hwnd_3,
+                                               NULL,
+                                               NULL,
+                                               NULL);
+
+                    SendMessage(hTrackbar_2, TBM_SETRANGE, TRUE, MAKELONG(0, frames - 1));
+                    SendMessage(hTrackbar_2, TBM_SETPOS, TRUE, k);
+                    SendMessage(hTrackbar_2, TBM_SETTIC, frames - 1, 0);
+
+                    hRgn = CreateRoundRectRgn(0, 0, 230, (OVERPREVIEW) ? 93 : 73, 5, 5);
+                    SetWindowRgn(hwnd_3, hRgn, TRUE);
+
+                    SetLayeredWindowAttributes(hwnd_3, 0x0, 0, LWA_COLORKEY);
+                    ShowWindow(hwnd_3, SW_SHOWDEFAULT);
+
+                    while (GetMessage(&msg_3, NULL, 0, 0)) {
+                        TranslateMessage(&msg_3);
+                        DispatchMessage(&msg_3);
+                    }
+
+                    DestroyWindow(hwnd_3);
+
+                    DragAcceptFiles(hwnd, TRUE);
+                    WAITING = 0;
+                }   break;
             }   break;
         }
         case WM_KEYDOWN: {
@@ -860,6 +926,51 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         default: return DefWindowProc(hwnd_2, uMsg, wParam, lParam);
+    }
+    return 0;
+}
+
+/**
+        DEBUG WINDOW
+**/
+
+LRESULT CALLBACK WindowProc_3(HWND hwnd_3, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    hwnd = GetParent(hwnd_3);
+    switch (uMsg) {
+        case WM_LBUTTONDOWN: {
+            SetFocus(hwnd_3);
+            SendMessage(hwnd_3, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }   break;
+
+        case WM_PAINT: {
+            hdc_3 = BeginPaint(hwnd_3, &ps);
+
+            HBRUSH hBrush = CreateSolidBrush(RGB(240, 240, 240));
+            FillRect(hdc_3, &ps.rcPaint, hBrush);
+
+            RECT rect = {4, 37, 224, 38};
+
+            hBrush = CreateSolidBrush(RGB(210, 210, 210));
+            FillRect(hdc_3, &rect, hBrush);
+
+            DeleteObject(hBrush);
+            EndPaint(hwnd_3, &ps);
+        }   break;
+
+        case WM_HSCROLL: {
+            SetFocus(hwnd_3);
+            int f = SendMessage(hTrackbar_2, TBM_GETPOS, 0, 0);
+
+            ShowFrame(f);
+        }   break;
+
+        case WM_KEYDOWN: {
+            if (wParam == VK_ESCAPE || wParam == VK_RETURN) {
+                PostQuitMessage(0);
+            }
+        }   break;
+
+        default: return DefWindowProc(hwnd_3, uMsg, wParam, lParam);
     }
     return 0;
 }

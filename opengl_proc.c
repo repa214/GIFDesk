@@ -56,8 +56,7 @@ double GetTime() {
         EnableOpenGL
 **/
 
-void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC)
-{
+void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC) {
     PIXELFORMATDESCRIPTOR pfd;
 
     int iFormat;
@@ -87,8 +86,7 @@ void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC)
         DisableOpenGL
 **/
 
-void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC)
-{
+void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(hRC);
     ReleaseDC(hwnd, hdc);
@@ -99,8 +97,7 @@ void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC)
         ShowFrame
 **/
 
-void ShowFrame(int k)
-{
+void ShowFrame(int k) {
     DRAWING = 1;
     wglMakeCurrent(hdc, hRC);
 

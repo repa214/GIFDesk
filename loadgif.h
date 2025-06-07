@@ -11,9 +11,12 @@
 #include "gif/gif_load.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
+#include "apng/png.h"
 
 #define GIF_FORMAT 1
 #define WEBP_FORMAT 2
+#define PNG_FORMAT 3
+#define APNG_FORMAT 4
 
 extern void *filedata;
 extern long filesize;
@@ -26,6 +29,7 @@ extern int checkheight;
 extern int fc;
 extern double *delays;
 extern int past_mode;
+extern int frames;
 
 void LoadProgress();
 void BindFrame();

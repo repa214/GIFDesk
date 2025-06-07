@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1749045306 source:d:\projects\gifdesk\main.c
+1749156691 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
 1748975699 d:\projects\libraries\gif_load\gif_load.h
 	<stdint.h>
 	<stdlib.h>
 
-1748975804 source:d:\projects\gifdesk\loadgif.c
+1749315970 source:d:\projects\gifdesk\loadgif.c
 	"loadgif.h"
 	"opengl_proc.h"
 	"window_proc.h"
@@ -20,18 +20,18 @@
 	"language.h"
 	"resource.h"
 
-1748876135 source:d:\projects\gifdesk\opengl_proc.c
+1749157025 source:d:\projects\gifdesk\opengl_proc.c
 	"opengl_proc.h"
 	"loadgif.h"
 	"settings.h"
 	"window_proc.h"
 
-1748971310 source:d:\projects\gifdesk\settings.c
+1749059931 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 	"loadgif.h"
 	"language.h"
 
-1749043993 source:d:\projects\gifdesk\window_proc.c
+1749316150 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
@@ -39,7 +39,7 @@
 	"language.h"
 	"resource.h"
 
-1748992742 d:\projects\gifdesk\loadgif.h
+1749057728 d:\projects\gifdesk\loadgif.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -50,6 +50,7 @@
 	"gif/gif_load.h"
 	"webp/decode.h"
 	"webp/demux.h"
+	"apng/png.h"
 
 1748975748 d:\projects\gifdesk\opengl_proc.h
 	<windows.h>
@@ -62,7 +63,7 @@
 	<unistd.h>
 	<time.h>
 
-1749045356 d:\projects\gifdesk\settings.h
+1749315643 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -71,7 +72,7 @@
 	<pthread.h>
 	<commctrl.h>
 
-1748972778 d:\projects\gifdesk\window_proc.h
+1749131746 d:\projects\gifdesk\window_proc.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -1490,7 +1491,7 @@
 	<stddef.h>
 	"./types.h"
 
-1747424802 d:\projects\gifdesk\webp\types.h
+1749049078 d:\projects\gifdesk\webp\types.h
 	<stddef.h>
 	<inttypes.h>
 
@@ -1500,11 +1501,24 @@
 	"./mux_types.h"
 	"./types.h"
 
-1747424802 d:\projects\gifdesk\webp\mux_types.h
+1749049106 d:\projects\gifdesk\webp\mux_types.h
 	<string.h>
 	"./types.h"
 
 1748975699 d:\projects\gifdesk\gif\gif_load.h
 	<stdint.h>
 	<stdlib.h>
+
+1749051088 d:\projects\gifdesk\apng\png.h
+	"pnglibconf.h"
+	"pngconf.h"
+
+1748806838 d:\projects\gifdesk\apng\pnglibconf.h
+
+1748806838 d:\projects\gifdesk\apng\pngconf.h
+	<limits.h>
+	<stddef.h>
+	<stdio.h>
+	<setjmp.h>
+	<time.h>
 
