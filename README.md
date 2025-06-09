@@ -14,4 +14,6 @@
 
 ## Авторы
 
-***ВК:*** [@repa214](https://vk.com/id508102498)
+| **Artyom Repnin** | &ensp;&ensp;<a href="https://vk.com/id508102498" target="_blank"><img src="https://github.com/user-attachments/assets/bdd71ad8-7f1a-4188-ab0a-6cf8b13310cb" height="25"></a>&ensp;&ensp; | &ensp;&ensp;<a href="https://t.me/pod_salyami" target="_blank"><img src="https://github.com/user-attachments/assets/0f86710b-9c95-4612-b8cb-6393d8359325" height="25"></a>&ensp;&ensp;
+| ------------- | ------------- | ------------- |
+
