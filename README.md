@@ -10,7 +10,7 @@
 
 > Примеры анимаций лежат в папке **_examples_**
 
-![App Screenshot](https://psv4.userapi.com/s/v1/d/jyj5WL74WWoqXF2u-G0RQLxYHaOxyeGoxtKutB17adZDryDUsIrcxVITSRvMCejWG8lWXASg3NEOMKv4OTpNp-dPoIIx97D3AWGsHQFLIDZzJr9qyTZdtQ/demonstration.gif)
+![App Screenshot](https://github.com/user-attachments/assets/ad96a679-47fc-428f-afe2-9dd0701f5a67)
 
 ## Авторы
 
