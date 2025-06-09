@@ -8,15 +8,18 @@
 #include <locale.h>
 #include <pthread.h>
 #include <commctrl.h>
+#include <inttypes.h>
 #include "gif/gif_load.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
 #include "apng/png.h"
+#include "avif/avif.h"
 
 #define GIF_FORMAT 1
 #define WEBP_FORMAT 2
 #define PNG_FORMAT 3
 #define APNG_FORMAT 4
+#define AVIF_FORMAT 5
 
 extern void *filedata;
 extern long filesize;

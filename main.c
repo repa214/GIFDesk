@@ -68,9 +68,13 @@
         0.111: исправлено отображение GIF-анимаций с неявным значением Frame Blending Mode
         0.112: оптимизирован предпросмотр при масштабировании
         0.113: исправлено отображение WEBP-анимаций с неявным значением Alpha-канала
+        0.114: добавлена поддержка AVIF (DAV1D codec)
+        0.115: исправлено мигание курсора при взаимодействии с окном масштабирования
+        0.115: окно для масштабирования не выходит за пределы экрана
+        0.116: исправлена полоска загрузки при первоначальной загрузке утилиты
 
         Планы:
-        - добавить поддержку AVIF, MNG
+        - добавить поддержку MNG
 
 
 **/
@@ -84,6 +88,66 @@
 **/
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    /*
+    const char *filename = "D:/Animations/AVIF/konata-yuppie.avif";
+
+    // 1. Инициализация декодера
+    avifDecoder *decoder = avifDecoderCreate();
+    if (!decoder) {
+        printf("Failed to create AVIF decoder.\n");
+        return 1;
+    }
+
+    // 2. Настройка декодера для анимации
+    decoder->ignoreExif = AVIF_TRUE;
+    decoder->ignoreXMP = AVIF_TRUE;
+    decoder->allowProgressive = AVIF_TRUE;
+    decoder->allowIncremental = AVIF_TRUE;
+
+    // 3. Загрузка AVIF-файла
+    avifResult result = avifDecoderSetIOFile(decoder, filename);
+    if (result != AVIF_RESULT_OK) {
+        printf("Failed to open file: %s\n", avifResultToString(result));
+        avifDecoderDestroy(decoder);
+        return 1;
+    }
+
+    // 4. Парсинг AVIF (с получением информации о кадрах)
+    result = avifDecoderParse(decoder);
+    if (result != AVIF_RESULT_OK) {
+        printf("Failed to parse AVIF: %s\n", avifResultToString(result));
+        avifDecoderDestroy(decoder);
+        return 1;
+    }
+
+    // 5. Вывод общей информации
+    printf("AVIF Animation Info:\n");
+    printf("  Dimensions: %dx%d\n", decoder->image->width, decoder->image->height);
+    printf("  Frames: %d\n", decoder->imageCount);
+    printf("  Duration: %.2f sec\n", (double)decoder->duration / decoder->timescale);
+    printf("  Alpha: %s\n", decoder->alphaPresent ? "Yes" : "No");
+    printf("  Color Format: %s\n", avifPixelFormatToString(decoder->image->yuvFormat));
+
+    // 6. Вывод информации о каждом кадре
+    printf("\nFrame Details:\n");
+    for (int i = 0; i < decoder->imageCount; ++i) {
+        result = avifDecoderNextImage(decoder);
+        if (result != AVIF_RESULT_OK) {
+            printf("  Frame %d: [Error: %s]\n", i, avifResultToString(result));
+            continue;
+        }
+
+        printf("Frame %d:\n", i);
+        printf("    Duration: %.2f ms\n", (double)decoder->imageTiming.duration * 1000 / decoder->timescale);
+        printf("    Size: %dx%d\n", decoder->image->width, decoder->image->height);
+        printf("    Is Keyframe: %s\n", avifDecoderIsKeyframe(decoder, i) ? "Yes" : "No");
+    }
+
+    // 7. Очистка
+    avifDecoderDestroy(decoder);
+    return 0;
+    */
+
     SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
 
     setlocale(LC_ALL, "Russian");
@@ -109,5 +173,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (textures != NULL) { free(textures); textures = NULL; }
 
     return 0;
-
 }

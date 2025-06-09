@@ -81,8 +81,8 @@ int WindowInit() {
                           WS_POPUP | WS_VISIBLE,
                           CW_USEDEFAULT,
                           CW_USEDEFAULT,
-                          CollisionHeight(),
                           CollisionWidth(),
+                          CollisionHeight(),
                           NULL,
                           NULL,
                           hInstance,
@@ -122,7 +122,7 @@ int WindowInit() {
 
     start_time = GetTime();
 
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
+    SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
 
     return 1;
 }
@@ -132,7 +132,7 @@ int WindowInit() {
 **/
 
 int WindowReinit(int format) {
-    SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
+    SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_WAIT));
     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
     GetWindowRect(hwnd, &rect);
@@ -170,7 +170,7 @@ int WindowReinit(int format) {
 
     LoadFile((char const *)filename, format);
 
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
+    SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
     return 0;
 }
 
@@ -227,10 +227,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DropFiles((HDROP)wParam);
         }   break;
 
-        case WM_SETCURSOR: {
-            if (LOWORD(lParam) == HTCLIENT) SetCursor(LoadCursor(NULL, IDC_SIZEALL));
-        }   break;
-
         case WM_QUIT: {
             DESTROY_WINDOW = 1;
         }   break;
@@ -255,8 +251,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_RBUTTONDOWN: {
             if (!IsWindow(hwnd_2) && !WAITING) {
-                SetCursor(LoadCursor(NULL, IDC_ARROW));
-
                 wglMakeCurrent(NULL, NULL);
                 pthread_create(&render, NULL, RenderThread, NULL);
 
@@ -375,7 +369,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
-                    if (p.x + 204 > res.right - res.left) { px = res.right - res.left - 204; }
+                    if (p.x + 230 > res.right - res.left) { px = res.right - res.left - 230; }
                     else { px = p.x; }
 
                     hwnd_2 = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
@@ -708,7 +702,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_SETCURSOR: {
-            SetCursor(LoadCursor(NULL, IDC_ARROW));
             GetCursorPos(&p);
 
             GetWindowRect(hButton, &rect);
@@ -766,8 +759,6 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_DRAWITEM: {
-            SetCursor(LoadCursor(NULL, IDC_ARROW));
-
             LPDRAWITEMSTRUCT pDrawItem = (LPDRAWITEMSTRUCT)lParam;
 
             if (pDrawItem->hwndItem == hButton) {
@@ -1031,7 +1022,7 @@ void WcexInit(WNDCLASSEX *wcex, const char *lpszClassName, WNDPROC Proc) {
     (*wcex).cbWndExtra =       0;
     (*wcex).hInstance =        hInstance;
     (*wcex).hIcon =            (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
-    (*wcex).hCursor =          LoadCursor(NULL, IDC_ARROW);
+    (*wcex).hCursor =          LoadCursor(NULL, IDC_SIZEALL);
     (*wcex).hbrBackground =    (HBRUSH)GetStockObject(BLACK_BRUSH);
     (*wcex).lpszMenuName =     NULL;
     (*wcex).lpszClassName =    lpszClassName;

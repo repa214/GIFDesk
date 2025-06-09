@@ -34,10 +34,10 @@ void LoadProgress() {
     GetClientRect(hwnd, &rect);
     SelectObject(hdc, hBrush);
 
-    Rectangle(hdc, -1, -1, width * size, 30);
+    Rectangle(hdc, -1, -1, CollisionWidth(), 30);
     hBrush = CreateSolidBrush(RGB(0, 255, 0));
     SelectObject(hdc, hBrush);
-    Rectangle(hdc, -1, -1, (int)(((float)fc / (float)frames) * (float)width * size), 30);
+    Rectangle(hdc, -1, -1, (int)(((float)fc / (float)frames) * (float)CollisionWidth()), 30);
 
     DeleteObject(hBrush);
     EndPaint(hwnd, &ps);
@@ -581,6 +581,51 @@ void WriteAPNGFrames(const char *filename) {
     fclose(fp);
 }
 
+void WriteAVIFFrames() {
+    avifDecoder *decoder = avifDecoderCreate();
+    avifResult result = avifDecoderSetIOMemory(decoder, (uint8_t *)filedata, filesize);
+    result = avifDecoderParse(decoder);
+
+    avifRGBImage rgb;
+    // rgb.format = AVIF_RGB_FORMAT_RGBA;
+
+    for (int i = 0; i < decoder->imageCount; i++) {
+        textures = (GLuint *)realloc(textures, sizeof(GLuint) * (i + 1));
+        delays = (double *)realloc(delays, sizeof(double) * (i + 1));
+
+        result = avifDecoderNextImage(decoder);
+
+        avifRGBImageSetDefaults(&rgb, decoder->image);
+        rgb.format = AVIF_RGB_FORMAT_RGBA;
+
+        result = avifRGBImageAllocatePixels(&rgb);
+        result = avifImageYUVToRGB(decoder->image, &rgb);
+        if (result != AVIF_RESULT_OK) {
+            break;
+        }
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int src_idx = 4 * (y * width + x);
+                int dst_idx = 4 * (y * (width + 1) + x);
+
+                frame[dst_idx] = rgb.pixels[src_idx] ? rgb.pixels[src_idx] : 1;
+                frame[dst_idx + 1] = rgb.pixels[src_idx + 1] ? rgb.pixels[src_idx + 1] : 1;
+                frame[dst_idx + 2] = rgb.pixels[src_idx + 2] ? rgb.pixels[src_idx + 2] : 1;
+                frame[dst_idx + 3] = rgb.pixels[src_idx + 3] ? 255 : 0;
+            }
+        }
+
+        BindFrame();
+        LoadProgress();
+        *(delays + i) = (double)decoder->imageTiming.duration;
+        fc++;
+    }
+
+    avifRGBImageFreePixels(&rgb);
+    avifDecoderDestroy(decoder);
+}
+
 /**   Check frames functions   **/
 
 void CheckGIFFrames(void *data, struct GIF_WHDR *whdr) {
@@ -658,6 +703,28 @@ int CheckAPNGFrames(const char *filename) {
     return is_apng ? APNG_FORMAT : PNG_FORMAT;
 }
 
+int CheckAVIFFrames() {
+    avifDecoder *decoder = avifDecoderCreate();
+    if (decoder == NULL) {
+        return 0;
+    }
+
+    avifResult result = avifDecoderSetIOMemory(decoder, (uint8_t *)filedata, filesize);
+    if (result != AVIF_RESULT_OK) {
+        return 0;
+    }
+
+    result = avifDecoderParse(decoder);
+    if (result != AVIF_RESULT_OK) {
+        return 0;
+    }
+    frames = decoder->imageCount;
+    width = decoder->image->width;
+    height = decoder->image->height;
+
+    avifDecoderDestroy(decoder);
+    return 1;
+}
 
 /**   Loads file to memory   **/
 
@@ -683,6 +750,9 @@ void LoadFile(const char *filename, int type) {
         case APNG_FORMAT: {
             WriteAPNGFrames(filename);
         }   break;
+        case AVIF_FORMAT: {
+            WriteAVIFFrames();
+        }   break;
     }
 
     if (filedata != NULL) { free(filedata); filedata = NULL; }
@@ -694,9 +764,8 @@ void LoadFile(const char *filename, int type) {
 
 int CheckFile(const char *filename) {
     int type = CheckAPNGFrames(filename);
-    if (type) {
-        return type;
-    }
+    if (type) return type;
+
     frames = 0;
 
     FILE *file = fopen(filename, "rb");
@@ -717,8 +786,8 @@ int CheckFile(const char *filename) {
     else if (CheckWEBPFrames()) {
         return WEBP_FORMAT;
     }
-    else if (0) { // AVIF
-        return 0;
+    else if (CheckAVIFFrames()) { // AVIF
+        return AVIF_FORMAT;
     }
     else if (0) { // MNG
         return 0;

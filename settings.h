@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include <commctrl.h>
 
-#define APP_NAME "GIFDesk 0.113"
+#define APP_NAME "GIFDesk 0.116"
 
 extern char settings_path[260];
 extern char filename[260];
@@ -17,7 +17,7 @@ extern char str_size[11];
 extern float size;
 extern int TASKBAR;
 extern int TOPMOST;
-extern const char OFNfilter[200];
+extern const char OFNfilter[190];
 
 char* GetSettingsPath();
 void WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang);

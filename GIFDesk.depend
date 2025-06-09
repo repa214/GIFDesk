@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1749156691 source:d:\projects\gifdesk\main.c
+1749484489 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
 1748975699 d:\projects\libraries\gif_load\gif_load.h
 	<stdint.h>
 	<stdlib.h>
 
-1749315970 source:d:\projects\gifdesk\loadgif.c
+1749484445 source:d:\projects\gifdesk\loadgif.c
 	"loadgif.h"
 	"opengl_proc.h"
 	"window_proc.h"
@@ -26,12 +26,12 @@
 	"settings.h"
 	"window_proc.h"
 
-1749059931 source:d:\projects\gifdesk\settings.c
+1749484780 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 	"loadgif.h"
 	"language.h"
 
-1749316150 source:d:\projects\gifdesk\window_proc.c
+1749484610 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
@@ -39,7 +39,7 @@
 	"language.h"
 	"resource.h"
 
-1749057728 d:\projects\gifdesk\loadgif.h
+1749480525 d:\projects\gifdesk\loadgif.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -47,10 +47,12 @@
 	<locale.h>
 	<pthread.h>
 	<commctrl.h>
+	<inttypes.h>
 	"gif/gif_load.h"
 	"webp/decode.h"
 	"webp/demux.h"
 	"apng/png.h"
+	"avif/avif.h"
 
 1748975748 d:\projects\gifdesk\opengl_proc.h
 	<windows.h>
@@ -63,7 +65,7 @@
 	<unistd.h>
 	<time.h>
 
-1749315643 d:\projects\gifdesk\settings.h
+1749484937 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>
@@ -1521,4 +1523,8 @@
 	<stdio.h>
 	<setjmp.h>
 	<time.h>
+
+1749154831 d:\projects\gifdesk\avif\avif.h
+	<stddef.h>
+	<stdint.h>
 

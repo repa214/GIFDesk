@@ -38,8 +38,10 @@
 			<Add library="glu32" />
 			<Add library="gdi32" />
 			<Add library="comdlg32" />
-			<Add library="webp/libwebp-decoder64.a" />
-			<Add library="apng/libapng-minimal64.a" />
+			<Add library="webp/libwebp-decoder32.a" />
+			<Add library="apng/libapng-minimal32.a" />
+			<Add library="avif/libavif-minimal32.a" />
+			<Add library="avif/libdav1d32.a" />
 			<Add directory="webp" />
 			<Add directory="apng" />
 		</Linker>
@@ -61,6 +63,9 @@
 		<Unit filename="apng/zconf.h" />
 		<Unit filename="apng/zlib.h" />
 		<Unit filename="apng/zutil.h" />
+		<Unit filename="avif/avif.h" />
+		<Unit filename="avif/avif_cxx.h" />
+		<Unit filename="avif/internal.h" />
 		<Unit filename="gif/gif_load.h" />
 		<Unit filename="gifdesk.h" />
 		<Unit filename="language.c">
