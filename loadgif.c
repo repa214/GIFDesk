@@ -15,8 +15,6 @@ int checkwidth = 0;
 int checkheight = 0;
 int fc = 0;
 double *delays = NULL;
-int *dispose_m = NULL;
-int *blend_m = NULL;
 int past_mode = 0;
 int past_frxo = 0;
 int past_fryo = 0;
@@ -401,8 +399,6 @@ void WriteAPNGFrames(const char *filename) {
             dispose_op = next_dispose_op; blend_op = next_blend_op;
         }
 
-        // printf("Frame: %03d Dispose: %d Blend: %d", fc, dispose_op, blend_op);
-
         *(delays + i) = (delay_den == 0) ? 0.1 : (double)delay_num / delay_den;
 
         png_bytep* row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
@@ -587,7 +583,6 @@ void WriteAVIFFrames() {
     result = avifDecoderParse(decoder);
 
     avifRGBImage rgb;
-    // rgb.format = AVIF_RGB_FORMAT_RGBA;
 
     for (int i = 0; i < decoder->imageCount; i++) {
         textures = (GLuint *)realloc(textures, sizeof(GLuint) * (i + 1));

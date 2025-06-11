@@ -73,8 +73,6 @@ int WindowInit() {
     filetype = CheckFile((const char*)filename);
     if (!filetype) { if (!ReadSettings(1)) { return 0; } }
 
-    // printf("filename: %s | size: %.2f | taskbar: %d | topmost: %d | langgif: %d\n", filename, size, TASKBAR, TOPMOST, LANGGIF);
-
     hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST,
                           "Window",
                           APP_NAME,
@@ -117,12 +115,11 @@ int WindowInit() {
                  CollisionHeight(),
                  SWP_NOMOVE);
 
-    const GLubyte* version = glGetString(GL_VERSION);
-    printf("OpenGL Version: %s\n", version);
-
     start_time = GetTime();
 
     SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
+
+    ShowFrame(1); pthread_create(&render, NULL, RenderThread, NULL);
 
     return 1;
 }
@@ -132,6 +129,8 @@ int WindowInit() {
 **/
 
 int WindowReinit(int format) {
+    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
     SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_WAIT));
     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
 
@@ -171,6 +170,9 @@ int WindowReinit(int format) {
     LoadFile((char const *)filename, format);
 
     SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
+
+    ShowFrame(1); pthread_create(&render, NULL, RenderThread, NULL);
+
     return 0;
 }
 
@@ -220,7 +222,7 @@ void GetApplicationIcon() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_DESTROY: {
-            DESTROY_WINDOW = 1; PostQuitMessage(0); DESTROY_WINDOW = 0;
+            DESTROY_WINDOW = 1; pthread_join(render, NULL); PostQuitMessage(0);
         }   break;
 
         case WM_DROPFILES: {
@@ -228,31 +230,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }   break;
 
         case WM_QUIT: {
-            DESTROY_WINDOW = 1;
+            DESTROY_WINDOW = 1; pthread_join(render, NULL); PostQuitMessage(0);
         }   break;
 
         case WM_CLOSE: {
-            DESTROY_WINDOW = 1;
+            DESTROY_WINDOW = 1; pthread_join(render, NULL); PostQuitMessage(0);
         }   break;
 
         case WM_LBUTTONDOWN: {
-            wglMakeCurrent(NULL, NULL);
-            if (!IsWindow(hwnd_2)) {
-                pthread_create(&render, NULL, &RenderThread, NULL);
-
-                SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-
-                DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
-            }
-            else {
-                SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-            }
+            SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
         }   break;
 
         case WM_RBUTTONDOWN: {
             if (!IsWindow(hwnd_2) && !WAITING) {
                 wglMakeCurrent(NULL, NULL);
-                pthread_create(&render, NULL, RenderThread, NULL);
 
                 hMenu = CreatePopupMenu();
                 hSubMenu = CreatePopupMenu();
@@ -292,8 +283,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_LEFTALIGN, p.x, p.y, 0, hwnd, NULL);
 
                 DestroyMenu(hMenu);
-
-                DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
             }
         }   break;
 
@@ -301,6 +290,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             switch (wParam) {
                 /** Open file... **/
                 case 1: {
+                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
                     OPENFILENAME ofn;
 
                     ZeroMemory(&ofn, sizeof(ofn));
@@ -327,6 +318,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else ReadSettings(0);
                     WAITING = 0;
                     ZeroMemory(&ofn, sizeof(ofn));
+
+                    ShowFrame(1); pthread_create(&render, NULL, RenderThread, NULL);
                 }   break;
 
                 /** Scale (%.0f%%) **/
@@ -337,13 +330,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (!RegisterClassEx(&wcex_2));
 
                     wglMakeCurrent(NULL, NULL);
-                    pthread_create(&render, NULL, &RenderThread, NULL);
 
                     WAITING = 1;
 
                     SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
-                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
 
                     texCoord[1] = 2 / ((size > 2) ? 2 : size);
                     texCoord[2] = 2 / ((size > 2) ? 2 : size);
@@ -362,8 +352,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          CollisionWidth(),
                          CollisionHeight(),
                          SWP_NOMOVE);
-
-                    pthread_create(&render, NULL, &RenderThread, NULL);
 
                     DragAcceptFiles(hwnd, FALSE);
 
@@ -492,6 +480,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
 
                     DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
                     size = trackbar_size;
                     DestroyWindow(hwnd_2);
                     WriteSettings(filename, size, TASKBAR, TOPMOST, LANGGIF);
@@ -511,6 +500,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, TRUE);
                     WAITING = 0;
+
+                    ShowFrame(k); pthread_create(&render, NULL, RenderThread, NULL);
                 }   break;
 
                 /** Show taskbar icon **/
@@ -605,10 +596,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }   break;
 
                 /** Exit **/
-                case 11: DESTROY_WINDOW = 1; break;
+                case 11: {
+                    DESTROY_WINDOW = 1; pthread_join(render, NULL); PostQuitMessage(0);
+                }   break;
 
                 /** Debug **/
                 case 12: {
+                    DESTROY_WINDOW = 1; pthread_join(render, NULL); DESTROY_WINDOW = 0;
+
                     GetCursorPos(&p);
                     int px = 0;
 
@@ -668,6 +663,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     DragAcceptFiles(hwnd, TRUE);
                     WAITING = 0;
+
+                    ShowFrame(k); pthread_create(&render, NULL, RenderThread, NULL);
                 }   break;
             }   break;
         }
@@ -676,6 +673,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DESTROY_WINDOW = 1;
             }
         }   break;
+
         default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
     return 0;
@@ -810,6 +808,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
         }   break;
 
         case WM_COMMAND: {
+            /** Изменение TextBox **/
             if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE && GetWindowTextLength(hEdit) != 0) {
                 GetWindowText(hEdit, str_size, sizeof(str_size));
                 trackbar_size = atof(str_size) / 100;
@@ -863,7 +862,9 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             GetWindowRect(hButtonUp, &res);
             GetCursorPos(&p);
-            if (LOWORD(wParam) == 2 && trackbar_size < 10 && PtInRect(&res, p)) {
+            /** Добавить **/
+            if ((LOWORD(wParam) == 2 && trackbar_size < 10 && PtInRect(&res, p))
+                || LOWORD(wParam) == 4) {
                 trackbar_size += 0.01;
 
                 sprintf(str_size, "%.0f", trackbar_size * 100);
@@ -882,7 +883,9 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             GetWindowRect(hButtonDown, &res);
             GetCursorPos(&p);
-            if (LOWORD(wParam) == 3 && trackbar_size > 0.01 && PtInRect(&res, p) && (GetAsyncKeyState(VK_LBUTTON) & 0x8001)) {
+            /** Убавить **/
+            if ((LOWORD(wParam) == 3 && trackbar_size > 0.01 && PtInRect(&res, p) && (GetAsyncKeyState(VK_LBUTTON) & 0x8001))
+                || LOWORD(wParam) == 5) {
                 trackbar_size -= 0.01;
 
                 texCoord[1] = 2 / ((float)trackbar_size);
@@ -898,6 +901,7 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
 
             switch (wParam) {
+                /** Сохранить **/
                 case 1: {
                     SendMessage(hwnd_2, WM_CLOSE, 0, 0);
                 }   break;
@@ -909,10 +913,10 @@ LRESULT CALLBACK WindowProc_2(HWND hwnd_2, UINT uMsg, WPARAM wParam, LPARAM lPar
                 PostQuitMessage(0);
             }
             if (wParam == VK_UP || wParam == VK_NUMPAD8) {
-                SendMessage(hwnd_2, WM_COMMAND, 2, 0);
+                SendMessage(hwnd_2, WM_COMMAND, 4, 0);
             }
             if (wParam == VK_DOWN || wParam == VK_NUMPAD2) {
-                SendMessage(hwnd_2, WM_COMMAND, 3, 0);
+                SendMessage(hwnd_2, WM_COMMAND, 5, 0);
             }
         }   break;
 
@@ -950,9 +954,9 @@ LRESULT CALLBACK WindowProc_3(HWND hwnd_3, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case WM_HSCROLL: {
             SetFocus(hwnd_3);
-            int f = SendMessage(hTrackbar_2, TBM_GETPOS, 0, 0);
+            k = SendMessage(hTrackbar_2, TBM_GETPOS, 0, 0);
 
-            ShowFrame(f);
+            ShowFrame(k);
         }   break;
 
         case WM_KEYDOWN: {

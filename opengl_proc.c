@@ -28,6 +28,7 @@ void VSleep(double s) {
     current_time = GetTime();
 
     while (current_time < start_time + s + inaccuracy) {
+        if (DESTROY_WINDOW) return;
         if (current_time + 0.002 < start_time + s + inaccuracy) Sleep(1);
         current_time = GetTime();
     }
@@ -138,8 +139,7 @@ void* RenderThread(void *arg) {
     while (!DESTROY_WINDOW) {
         ShowFrame(k); VSleep(*(delays + k));
 
-        if (k >= fc - 1) k = 0;
-        else k++;
+        k = (k + 1) % fc;
     }
     return NULL;
 }
