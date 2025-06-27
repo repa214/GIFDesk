@@ -71,8 +71,6 @@ void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr) {
 
     /** GIF_NONE = 0, GIF_CURR = 1, GIF_BKGD = 2, GIF_PREV = 3 **/
 
-    // printf("Frame: %d  mode: %d\n", fc, whdr->mode);
-
     switch (whdr->mode) {
         case GIF_NONE: {
             // memset(frame, 0, (width + 1) * (height * 1) * 4);
