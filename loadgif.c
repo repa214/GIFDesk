@@ -46,9 +46,6 @@ void LoadProgress() {
 /**    Генерирует текстуру для кадра    **/
 
 void BindFrame() {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glGenTextures(1, &textures[fc]);
     glBindTexture(GL_TEXTURE_2D, textures[fc]);
 
@@ -74,9 +71,11 @@ void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr) {
 
     /** GIF_NONE = 0, GIF_CURR = 1, GIF_BKGD = 2, GIF_PREV = 3 **/
 
+    // printf("Frame: %d  mode: %d\n", fc, whdr->mode);
+
     switch (whdr->mode) {
         case GIF_NONE: {
-            memset(frame, 0, (width + 1) * (height * 1) * 4);
+            // memset(frame, 0, (width + 1) * (height * 1) * 4);
             for (long y = 0; y < whdr->fryd; y++) {
                 index += whdr->frxo * 4;
                 for (long x = 0; x < whdr->frxd; x++) {
@@ -724,6 +723,7 @@ int CheckAVIFFrames() {
 /**   Loads file to memory   **/
 
 void LoadFile(const char *filename, int type) {
+    if (fc) { glDeleteTextures(fc + 1, textures); } fc = 0;
     if (delays != NULL) { free(delays); delays = NULL; }
     if (textures != NULL) { free(textures); textures = NULL; }
 
@@ -781,7 +781,7 @@ int CheckFile(const char *filename) {
     else if (CheckWEBPFrames()) {
         return WEBP_FORMAT;
     }
-    else if (CheckAVIFFrames()) { // AVIF
+    else if (CheckAVIFFrames()) {
         return AVIF_FORMAT;
     }
     else if (0) { // MNG

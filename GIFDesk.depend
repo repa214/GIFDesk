@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1749681574 source:d:\projects\gifdesk\main.c
+1749684904 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
 1748975699 d:\projects\libraries\gif_load\gif_load.h
 	<stdint.h>
 	<stdlib.h>
 
-1749680332 source:d:\projects\gifdesk\loadgif.c
+1751057791 source:d:\projects\gifdesk\loadgif.c
 	"loadgif.h"
 	"opengl_proc.h"
 	"window_proc.h"
@@ -20,7 +20,7 @@
 	"language.h"
 	"resource.h"
 
-1749681679 source:d:\projects\gifdesk\opengl_proc.c
+1751057871 source:d:\projects\gifdesk\opengl_proc.c
 	"opengl_proc.h"
 	"loadgif.h"
 	"settings.h"
@@ -31,7 +31,7 @@
 	"loadgif.h"
 	"language.h"
 
-1749681602 source:d:\projects\gifdesk\window_proc.c
+1751058012 source:d:\projects\gifdesk\window_proc.c
 	"window_proc.h"
 	"opengl_proc.h"
 	"settings.h"
@@ -65,7 +65,7 @@
 	<unistd.h>
 	<time.h>
 
-1749681811 d:\projects\gifdesk\settings.h
+1751058177 d:\projects\gifdesk\settings.h
 	<windows.h>
 	<gl/gl.h>
 	<stdio.h>

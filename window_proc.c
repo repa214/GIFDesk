@@ -118,6 +118,7 @@ int WindowInit() {
     start_time = GetTime();
 
     SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
+    DragAcceptFiles(hwnd, TRUE);
 
     ShowFrame(1); pthread_create(&render, NULL, RenderThread, NULL);
 
@@ -137,7 +138,7 @@ int WindowReinit(int format) {
     GetWindowRect(hwnd, &rect);
     DisableOpenGL(hwnd, hdc, hRC);
 
-    fc = 0; k = 0;
+    k = 0;
 
     exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 
@@ -271,7 +272,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetMenuItemInfo(hMenu, 1, FALSE, &mii);
 
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-                // AppendMenu(hMenu, MF_STRING, 12, "Debug");
+                AppendMenu(hMenu, MF_STRING, 12, "Debug");
                 AppendMenu(hMenu, MF_STRING, 1, lang.changeGIF[LANGGIF]);
                 AppendMenu(hMenu, MF_STRING, 2, str_size);
                 AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, lang.showiconGIF[LANGGIF]);

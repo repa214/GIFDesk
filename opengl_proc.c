@@ -100,18 +100,22 @@ void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {
 
 void ShowFrame(int k) {
     DRAWING = 1;
+    printf("%d |", k);
     wglMakeCurrent(hdc, hRC);
 
     glViewport(0, 0, CollisionWidth(), CollisionHeight());
-    glClear(GL_COLOR_BUFFER_BIT);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0, 0, 0, 0); glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_TEXTURE_2D);
-
     glBindTexture(GL_TEXTURE_2D, textures[k]);
 
     glColor4f(1, 1, 1, 1);
-    glPushMatrix();
 
+    glPushMatrix();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -139,7 +143,8 @@ void* RenderThread(void *arg) {
     while (!DESTROY_WINDOW) {
         ShowFrame(k); VSleep(*(delays + k));
 
-        k = (k + 1) % fc;
+        if (k >= fc - 1) k = 0;
+        else k++;
     }
     return NULL;
 }
