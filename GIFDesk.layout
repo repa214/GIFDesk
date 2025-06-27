@@ -1,25 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
-	<ActiveTarget name="Debug" />
-	<File name="opengl_proc.c" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<ActiveTarget name="Release" />
+	<File name="webp\demux.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2589" topLine="65" />
+			<Cursor1 position="11918" topLine="244" />
 		</Cursor>
-		<Folding>
-			<Collapse line="48" />
-			<Collapse line="59" />
-			<Collapse line="89" />
-		</Folding>
 	</File>
-	<File name="loadgif.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="language.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2050" topLine="39" />
+			<Cursor1 position="581" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="resource.rc" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="44" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="avif\avif.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4676" topLine="105" />
+		</Cursor>
+	</File>
+	<File name="window_proc.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1469" topLine="30" />
+		</Cursor>
+	</File>
+	<File name="apng\png.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="90236" topLine="2055" />
+		</Cursor>
+	</File>
+	<File name="loadgif.c" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1535" topLine="21" />
 		</Cursor>
 		<Folding>
 			<Collapse line="27" />
 			<Collapse line="64" />
-			<Collapse line="94" />
 			<Collapse line="194" />
 			<Collapse line="246" />
 			<Collapse line="311" />
@@ -37,24 +56,34 @@
 			<Collapse line="757" />
 		</Folding>
 	</File>
-	<File name="avif\avif.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="opengl_proc.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4676" topLine="105" />
+			<Cursor1 position="1036" topLine="19" />
 		</Cursor>
+		<Folding>
+			<Collapse line="49" />
+			<Collapse line="60" />
+			<Collapse line="90" />
+		</Folding>
+	</File>
+	<File name="settings.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2823" topLine="3" />
+		</Cursor>
+		<Folding>
+			<Collapse line="24" />
+			<Collapse line="38" />
+			<Collapse line="54" />
+		</Folding>
 	</File>
 	<File name="language.c" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="649" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="resource.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="settings.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="20" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8722" topLine="63" />
+			<Cursor1 position="247" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="loadgif.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -62,24 +91,9 @@
 			<Cursor1 position="517" topLine="14" />
 		</Cursor>
 	</File>
-	<File name="apng\pngconf.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="20789" topLine="549" />
-		</Cursor>
-	</File>
-	<File name="apng\png.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="90236" topLine="2055" />
-		</Cursor>
-	</File>
-	<File name="language.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="581" topLine="0" />
-		</Cursor>
-	</File>
 	<File name="window_proc.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2289" topLine="75" />
+			<Cursor1 position="1346" topLine="53" />
 		</Cursor>
 		<Folding>
 			<Collapse line="130" />
@@ -129,44 +143,29 @@
 			<Collapse line="1020" />
 		</Folding>
 	</File>
-	<File name="settings.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="opengl_proc.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="242" topLine="0" />
+			<Cursor1 position="253" topLine="0" />
 		</Cursor>
-	</File>
-	<File name="resource.rc" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="44" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="window_proc.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1469" topLine="30" />
-		</Cursor>
-	</File>
-	<File name="webp\demux.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="11918" topLine="244" />
-		</Cursor>
-	</File>
-	<File name="settings.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2823" topLine="3" />
-		</Cursor>
-		<Folding>
-			<Collapse line="24" />
-			<Collapse line="38" />
-			<Collapse line="54" />
-		</Folding>
 	</File>
 	<File name="gifdesk.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="181" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="opengl_proc.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="apng\pngconf.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="253" topLine="0" />
+			<Cursor1 position="20789" topLine="549" />
+		</Cursor>
+	</File>
+	<File name="resource.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="20" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8966" topLine="68" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

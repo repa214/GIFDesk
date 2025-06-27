@@ -36,6 +36,7 @@ void VSleep(double s) {
     inaccuracy += s - (current_time - start_time);
     if ((inaccuracy < 0 ? -inaccuracy : inaccuracy) > s * 10) inaccuracy = 0;
 
+
     // printf("%.2f | % 2.5f\n", s, inaccuracy);
 
     start_time = GetTime();

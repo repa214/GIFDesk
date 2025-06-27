@@ -69,7 +69,6 @@ int WindowInit() {
     strcpy(settings_path, GetSettingsPath());
 
     if (!ReadSettings(0)) { return 0; }
-
     filetype = CheckFile((const char*)filename);
     if (!filetype) { if (!ReadSettings(1)) { return 0; } }
 
