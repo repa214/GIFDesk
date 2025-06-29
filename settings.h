@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include <commctrl.h>
 
-#define APP_NAME "GIFDesk 0.121"
+#define APP_NAME "GIFDesk 0.123"
 
 
 extern char settings_path[260];

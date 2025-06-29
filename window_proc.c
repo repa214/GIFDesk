@@ -181,7 +181,6 @@ int WindowReinit(int format) {
 **/
 
 void DropFiles(HDROP hDrop) {
-    char filename[MAX_PATH];
     DragQueryFile(hDrop, 0, filename, MAX_PATH);
 
     filetype = CheckFile((char const *)filename);
@@ -271,7 +270,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetMenuItemInfo(hMenu, 1, FALSE, &mii);
 
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-                AppendMenu(hMenu, MF_STRING, 12, "Debug");
+                // AppendMenu(hMenu, MF_STRING, 12, "Debug");
                 AppendMenu(hMenu, MF_STRING, 1, lang.changeGIF[LANGGIF]);
                 AppendMenu(hMenu, MF_STRING, 2, str_size);
                 AppendMenu(hMenu, MF_STRING | (TASKBAR) ? MF_CHECKED : 0, 3, lang.showiconGIF[LANGGIF]);

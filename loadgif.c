@@ -71,6 +71,8 @@ void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr) {
 
     /** GIF_NONE = 0, GIF_CURR = 1, GIF_BKGD = 2, GIF_PREV = 3 **/
 
+    // printf("Frame: %d | mode: %d\n", fc, whdr->mode);
+
     switch (whdr->mode) {
         case GIF_NONE: {
             // memset(frame, 0, (width + 1) * (height * 1) * 4);
@@ -93,6 +95,23 @@ void WriteGIFFrames(void *anim, struct GIF_WHDR *whdr) {
             }
         }   break;
         case GIF_CURR: {
+            for (long y = 0; y < whdr->fryd; y++) {
+                index += whdr->frxo * 4;
+                for (long x = 0; x < whdr->frxd; x++) {
+
+                    uint8_t i = whdr->bptr[y * whdr->frxd + x];
+
+                    if (whdr->tran != i) {
+                        buff[index] = (whdr->cpal[i].R) ? whdr->cpal[i].R : whdr->cpal[i].R + 1;
+                        buff[index + 1] = (whdr->cpal[i].G) ? whdr->cpal[i].G : whdr->cpal[i].G + 1;
+                        buff[index + 2] = (whdr->cpal[i].B) ? whdr->cpal[i].B : whdr->cpal[i].B + 1;
+                        buff[index + 3] = 255;
+                    }
+
+                    index += 4;
+                }
+                index += ((width + 1) - whdr->frxd - whdr->frxo) * 4;
+            }
             if (past_mode == GIF_BKGD) {
                 if (past_fryo + past_fryd == whdr->fryo + whdr->fryd ||
                     past_frxo + past_frxd > whdr->frxo + whdr->frxd) {

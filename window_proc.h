@@ -8,7 +8,7 @@
 #include <locale.h>
 #include <pthread.h>
 #include <commctrl.h>
-#include "../Libraries/GIF_LOAD/gif_load.h"
+#include "gif/gif_load.h"
 
 extern int DESTROY_WINDOW;
 

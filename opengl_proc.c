@@ -101,7 +101,7 @@ void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {
 
 void ShowFrame(int k) {
     DRAWING = 1;
-    printf("%d |", k);
+    // printf("%d | ", k);
     wglMakeCurrent(hdc, hRC);
 
     glViewport(0, 0, CollisionWidth(), CollisionHeight());
