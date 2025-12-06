@@ -10,7 +10,8 @@
 
 > Примеры анимаций лежат в папке **_examples_**
 
-![App Screenshot](https://github.com/user-attachments/assets/6cd87de8-48e8-4a9e-b251-10dc3bd414ef)
+<!-- ![App Screenshot](https://github.com/user-attachments/assets/6cd87de8-48e8-4a9e-b251-10dc3bd414ef) -->
+<img width="600" height="450" alt="ezgif com-optipng" src="https://github.com/user-attachments/assets/1bc61492-11b8-411f-bb80-f8966b99057e" />
 
 
 ## Автор
