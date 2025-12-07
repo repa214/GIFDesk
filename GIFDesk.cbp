@@ -3,6 +3,7 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="GIFDesk" />
+		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -29,7 +30,6 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Os" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
@@ -37,12 +37,12 @@
 			<Add library="glu32" />
 			<Add library="gdi32" />
 			<Add library="comdlg32" />
-			<Add library="webp/libwebp-decoder32.a" />
-			<Add library="apng/libapng-minimal32.a" />
-			<Add library="avif/libavif-minimal32.a" />
-			<Add library="avif/libdav1d32.a" />
-			<Add directory="webp" />
-			<Add directory="apng" />
+			<Add library="apng/libapng.a" />
+			<Add library="webp/libwebp.a" />
+			<Add library="gif/libgif.a" />
+			<Add library="comctl32" />
+			<Add library="avif/libavif.a" />
+			<Add library="avif/libdav1d.a" />
 		</Linker>
 		<Unit filename="apng/crc32.h" />
 		<Unit filename="apng/deflate.h" />
@@ -65,24 +65,28 @@
 		<Unit filename="avif/avif.h" />
 		<Unit filename="avif/avif_cxx.h" />
 		<Unit filename="avif/internal.h" />
-		<Unit filename="gif/gif_load.h" />
+		<Unit filename="data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="data.h" />
+		<Unit filename="dialogs.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="gif/getarg.h" />
+		<Unit filename="gif/gif_hash.h" />
+		<Unit filename="gif/gif_lib.h" />
+		<Unit filename="gif/gif_lib_private.h" />
+		<Unit filename="gifdesk.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="gifdesk.h" />
-		<Unit filename="language.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="language.h" />
-		<Unit filename="loadgif.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="loadgif.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="opengl_proc.c">
+		<Unit filename="render.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="opengl_proc.h" />
-		<Unit filename="resource.h" />
+		<Unit filename="render.h" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
@@ -90,12 +94,17 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="settings.h" />
+		<Unit filename="types.h" />
 		<Unit filename="webp/decode.h" />
 		<Unit filename="webp/demux.h" />
-		<Unit filename="window_proc.c">
+		<Unit filename="webp/format_constants.h" />
+		<Unit filename="webp/mux.h" />
+		<Unit filename="webp/mux_types.h" />
+		<Unit filename="webp/types.h" />
+		<Unit filename="window.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="window_proc.h" />
+		<Unit filename="window.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

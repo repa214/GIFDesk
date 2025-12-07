@@ -1,4 +1,3 @@
-#include "resource.h"
+#include "types.h"
 
 IDI_ICON ICON "icon.ico"
-MENU_ICON ICON "menu.ico"

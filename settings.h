@@ -1,27 +1,22 @@
 #ifndef SETTINGS_H_INCLUDED
 #define SETTINGS_H_INCLUDED
 
-#include <windows.h>
-#include <gl/gl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <locale.h>
-#include <pthread.h>
-#include <commctrl.h>
+#include "types.h"
+#include "render.h"
+#include "data.h"
 
-#define APP_NAME "GIFDesk 0.123"
+void GetSettingsPath(Settings* st);
 
+//void* _LoadSettings(void* arg);
+DWORD WINAPI _LoadSettings(LPVOID arg);
+void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* rd);
 
-extern char settings_path[260];
-extern char filename[260];
-extern char str_size[11];
-extern float size;
-extern int TASKBAR;
-extern int TOPMOST;
-extern const char OFNfilter[190];
+uint8_t GetSettings(Settings* st);
+uint8_t SetSettings(Window* window, Settings* st, Data* dt);
+void SwapFilenames(Settings* st);
 
-char* GetSettingsPath();
-void WriteSettings(const char *filename, float size, int taskbar, int topmost, int lang);
-int ReadSettings(int fi);
+void WriteSettings(Settings* st);
+
+void ShowSettings(Settings* st);
 
 #endif // SETTINGS_H_INCLUDED
