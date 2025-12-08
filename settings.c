@@ -25,7 +25,6 @@ void GetSettingsPath(Settings* st)
     strcpy(st->settings_path, str);
 }
 
-//void* _LoadSettings(void* arg)
 DWORD WINAPI _LoadSettings(LPVOID arg)
 {
     RenderPtr* rptr = (RenderPtr*)arg;

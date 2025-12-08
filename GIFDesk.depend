@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1765123379 source:d:\projects\gifdesk\main.c
+1765148596 source:d:\projects\gifdesk\main.c
 	<windows.h>
 	"gifdesk.h"
 
@@ -25,12 +25,12 @@
 1765119887 source:d:\projects\gifdesk\window.c
 	"window.h"
 
-1763306837 d:\projects\gifdesk\settings.h
+1765126251 d:\projects\gifdesk\settings.h
 	"types.h"
 	"render.h"
 	"data.h"
 
-1763331220 source:d:\projects\gifdesk\settings.c
+1765127725 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 
 1763331591 d:\projects\gifdesk\data.h
@@ -101,7 +101,7 @@
 	"window.h"
 	"settings.h"
 
-1765123692 source:d:\projects\gifdesk\render.c
+1765188639 source:d:\projects\gifdesk\render.c
 	"render.h"
 
 1571412343 d:\projects\gifdesk\gif\gif_lib.h

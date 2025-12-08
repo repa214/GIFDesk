@@ -7,7 +7,6 @@
 
 void GetSettingsPath(Settings* st);
 
-//void* _LoadSettings(void* arg);
 DWORD WINAPI _LoadSettings(LPVOID arg);
 void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* rd);
 

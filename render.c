@@ -62,8 +62,6 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
 
 void Loop(RenderPtr* rptr)
 {
-    ShowSettings(rptr->st);
-
     MSG msg;
     rptr->rd->frame = 0;
     rptr->rd->render_thread = 1;
@@ -134,7 +132,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                         NULL
                     );
 
-            if (!IsWindow(rptr.popup_window->hwnd)) SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            if (!rptr.popup_window->isactive) SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 
             rptr.rd->render_thread = 0;
             WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
@@ -394,6 +392,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             DragAcceptFiles(rptr.window->hwnd, TRUE);
             WriteSettings(rptr.st);
 
+            rptr.popup_window->isactive = 0;
             PostQuitMessage(0);
         }   break;
 
@@ -655,11 +654,12 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                              0, 0, 0, 0,
                              SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
-                if (ts) {
+                if (!ts && rptr.st->taskbar) {
                     ShowWindow(rptr.window->hwnd, SW_HIDE);
                     ShowWindow(rptr.window->hwnd, SW_SHOW);
                     ts = 1;
                 }
+                else ts = 1;
                 SetFocus(rptr.popup_window->hwnd);
 
                 WriteSettings(rptr.st);
@@ -672,6 +672,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
                     SetFocus(rptr.popup_window->hwnd);
                 }   break;
+
                 case 7: {
                     if (rptr.st->sfu)
                         rptr.st->sfu = 0;
@@ -681,6 +682,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     SetFocus(rptr.popup_window->hwnd);
                     InvalidateRect(rptr.sfp_button->hwnd, NULL, TRUE);
                 }   break;
+
                 case 9: {
                     if (rptr.st->topmost)
                         rptr.st->topmost = 0;
