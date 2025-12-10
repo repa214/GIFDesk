@@ -11,11 +11,11 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                int xoffset, int yoffset, int width, int height,
                int settb, int settm, int setdaf, int setgl);
 
-void LoadTrackBar(Window* window, Window* main_window,
+void LoadTrackBar(Trackbar* trackbar, Window* main_window,
                   int xoffset, int yoffset, int width, int height, int tooltip,
                   int vfrom, int vto, int sp, int id);
 
-void LoadButton(Window* window, Window* main_window,
+void LoadButton(Button* button, Window* main_window,
                 int xoffset, int yoffset, int width, int height, int rgn,
                 const char* text, int menu);
 

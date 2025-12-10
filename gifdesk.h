@@ -11,38 +11,36 @@ typedef struct
 {
     Window window;
     Window popup_window;
+    Window mwt_window;
     Window debug_window;
 
     /** trackbars **/
-    Window scale_trackbar;
-    Window frames_trackbar;
+    Trackbar scale_trackbar;
+    Trackbar frames_trackbar;
 
     /** buttons **/
-    Window title_button;
-    Window openfile_button;
+    Button title_button;
+    Button openfile_button;
 
-    Window scale_button;
-    Window addscale_button;
-    Window decscale_button;
+    Button scale_button;
+    Button addscale_button;
+    Button decscale_button;
 
-    Window pause_button;
+    Button pause_button;
 
-    Window sfp_button;
-    Window sti_button;
-    Window aot_button;
+    Button sfp_button;
+    Button sti_button;
+    Button aot_button;
 
-    Window mwt_button;
-    Window tlc_button;
-    Window trc_button;
-    Window cnr_button;
-    Window blc_button;
-    Window brc_button;
+    Button mwt_button;
+    Button tlc_button;
+    Button trc_button;
+    Button cnr_button;
+    Button blc_button;
+    Button brc_button;
 
-    Window language_button;
-
-    Window exit_button;
-
-    Window mwt_window;
+    Button language_button;
+    Button exit_button;
 
     Settings settings;
     Data data;

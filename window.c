@@ -55,11 +55,11 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     return 0;
 }
 
-void LoadTrackBar(Window* window, Window* main_window,
+void LoadTrackBar(Trackbar* trackbar, Window* main_window,
                   int xoffset, int yoffset, int width, int height, int tooltip,
                   int vfrom, int vto, int sp, int id)
 {
-    window->hwnd = CreateWindowEx(0,
+    trackbar->hwnd = CreateWindowEx(0,
                                   TRACKBAR_CLASS,
                                   NULL,
                                   WS_TABSTOP | WS_CHILD | WS_VISIBLE | (tooltip ? TBS_TOOLTIPS : 0),
@@ -72,17 +72,17 @@ void LoadTrackBar(Window* window, Window* main_window,
                                   NULL,
                                   NULL);
 
-    SendMessage(window->hwnd, TBM_SETRANGE, TRUE, MAKELONG(vfrom, vto));
-    SendMessage(window->hwnd, TBM_SETPOS, TRUE, sp);
-    SendMessage(window->hwnd, TBM_SETTIC, vto, 0);
+    SendMessage(trackbar->hwnd, TBM_SETRANGE, TRUE, MAKELONG(vfrom, vto));
+    SendMessage(trackbar->hwnd, TBM_SETPOS, TRUE, sp);
+    SendMessage(trackbar->hwnd, TBM_SETTIC, vto, 0);
 
 }
 
-void LoadButton(Window* window, Window* main_window,
+void LoadButton(Button* button, Window* main_window,
                 int xoffset, int yoffset, int width, int height, int rgn,
                 const char* text, int menu)
 {
-    window->hwnd = CreateWindowEx(0,
+    button->hwnd = CreateWindowEx(0,
                                   "BUTTON",
                                   text,
                                   WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
@@ -110,10 +110,10 @@ void LoadButton(Window* window, Window* main_window,
                             DEFAULT_QUALITY,
                             "Segoe UI");
 
-    SendMessage(window->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
+    SendMessage(button->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
 
     HRGN hrgn = CreateRoundRectRgn(0, 0, width, height, rgn, rgn);
-    SetWindowRgn(window->hwnd, hrgn, TRUE);
+    SetWindowRgn(button->hwnd, hrgn, TRUE);
 }
 
 void ReloadWindow(Window* window, Settings* st, Data* dt)

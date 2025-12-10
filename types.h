@@ -20,7 +20,7 @@
 #include "webp/demux.h"
 #include "avif/avif.h"
 
-#define APP_NAME "GIFDesk 1.0b"
+#define APP_NAME "GIFDesk 1.0.1"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -38,15 +38,35 @@ typedef struct
     HWND hwnd;
     HDC hdc;
     HGLRC hrc;
-    MSG msg;
     WNDCLASSEX wcex;
     HINSTANCE hinstance;
-    HBITMAP appicon;
 
     int hovered;
     int isactive;
 
 } Window;
+
+typedef struct
+{
+    HWND hwnd;
+    HDC hdc;
+    HGLRC hrc;
+    HFONT font;
+    HFONT arrow;
+
+    int hovered;
+    int isactive;
+} Button;
+
+typedef struct
+{
+    HWND hwnd;
+    HDC hdc;
+    HGLRC hrc;
+
+    int hovered;
+    int isactive;
+} Trackbar;
 
 typedef struct
 {

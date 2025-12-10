@@ -22,37 +22,36 @@ extern HANDLE thread;
 
 typedef struct
 {
+    /** windows **/
     Window* window;
     Window* popup_window;
     Window* debug_window;
+    Window* mwt_window;
 
     /** trackbars **/
-    Window* scale_trackbar;
-    Window* frames_trackbar;
+    Trackbar* scale_trackbar;
+    Trackbar* frames_trackbar;
 
     /** buttons **/
-    Window* title_button;
-    Window* openfile_button;
-    Window* scale_button;
-    Window* addscale_button;
-    Window* decscale_button;
-    Window* pause_button;
-    Window* sfp_button;
-    Window* sti_button;
-    Window* aot_button;
+    Button* title_button;
+    Button* openfile_button;
+    Button* scale_button;
+    Button* addscale_button;
+    Button* decscale_button;
+    Button* pause_button;
+    Button* sfp_button;
+    Button* sti_button;
+    Button* aot_button;
 
-    Window* mwt_button;
-    Window* tlc_button;
-    Window* trc_button;
-    Window* cnr_button;
-    Window* blc_button;
-    Window* brc_button;
+    Button* mwt_button;
+    Button* tlc_button;
+    Button* trc_button;
+    Button* cnr_button;
+    Button* blc_button;
+    Button* brc_button;
 
-    Window* language_button;
-
-    Window* exit_button;
-
-    Window* mwt_window;
+    Button* language_button;
+    Button* exit_button;
 
     Data* dt;
     Render* rd;
@@ -63,15 +62,15 @@ typedef struct
 extern RenderPtr rptr;
 
 void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
-              Window* window, Window* popup_window, Window* debug_window,
+              Window* window, Window* popup_window, Window* debug_window, Window* mwt_window,
 
-              Window* scale_trackbar, Window* frames_trackbar,
+              Trackbar* scale_trackbar, Trackbar* frames_trackbar,
 
-              Window* title_button, Window* openfile_button, Window* scale_button,
-              Window* addscale_button, Window* decscale_button, Window* pause_button,
-              Window* sfp_button, Window* sti_button, Window* aot_button, Window* mwt_button,
-              Window* tlc_button, Window* trc_button, Window* cnr_button, Window* blc_button,
-              Window* brc_button, Window* language_button, Window* exit_button, Window* mwt_window);
+              Button* title_button, Button* openfile_button, Button* scale_button,
+              Button* addscale_button, Button* decscale_button, Button* pause_button,
+              Button* sfp_button, Button* sti_button, Button* aot_button, Button* mwt_button,
+              Button* tlc_button, Button* trc_button, Button* cnr_button, Button* blc_button,
+              Button* brc_button, Button* language_button, Button* exit_button);
 
 void Loop(RenderPtr* rptr);
 
@@ -84,17 +83,17 @@ LRESULT CALLBACK BusyWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-void _InvalidateButton(LPDRAWITEMSTRUCT item, Window* window,
+void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
                        const char* text, int left, int activated, int arrow);
-void _InvalidateTrackBar(LPDRAWITEMSTRUCT item, Window* window, Window* cf_window);
+/// void _InvalidateTrackBar(LPDRAWITEMSTRUCT item, Window* window, Window* cf_window);
 
-int _IsButtonHovered(Window* window, POINT* p, int arrowed);
-void _IsTrackBarHovered(Window* window, Window* cf_window, POINT* p);
+int _IsButtonHovered(Button* button, POINT* p, int arrowed);
+/// void _IsTrackBarHovered(Window* window, Window* cf_window, POINT* p);
 
 int _GetCollisionSize(int n, float size);
 
 void _ChangeScaleTrackBar(Window* window, Window* popup_window,
-                          Window* scale_trackbar, Window* scale_button,
+                          Trackbar* scale_trackbar, Button* scale_button,
                           Settings* st, Data* dt,
                           Render* rd, int pos);
 

@@ -11,7 +11,7 @@ int Run(GIFDesk* gf)
     GetSettingsPath(&gf->settings); DataInit(&gf->data); GetSettings(&gf->settings);
 
     RptrInit(&rptr, &gf->settings, &gf->data, &gf->rd,
-             &gf->window, &gf->popup_window, &gf->debug_window,
+             &gf->window, &gf->popup_window, &gf->debug_window, &gf->mwt_window,
 
              &gf->scale_trackbar, &gf->frames_trackbar,
 
@@ -19,7 +19,7 @@ int Run(GIFDesk* gf)
              &gf->decscale_button, &gf->pause_button, &gf->sfp_button,
              &gf->sti_button, &gf->aot_button, &gf->mwt_button, &gf->tlc_button, &gf->trc_button,
              &gf->cnr_button, &gf->blc_button, &gf->brc_button, &gf->language_button,
-             &gf->exit_button, &gf->mwt_window);
+             &gf->exit_button);
 
     LoadWindow(&gf->window, &gf->settings, NULL, "Window", 0, 0, 1, 1, MAIN_WINDOW);
 
