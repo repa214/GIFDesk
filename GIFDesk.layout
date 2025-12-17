@@ -1,10 +1,102 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
-	<ActiveTarget name="Release" />
-	<File name="types.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<ActiveTarget name="Debug" />
+	<File name="resource.rc" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="410" topLine="3" />
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="data.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="664" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="render.c" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="34865" topLine="304" />
+		</Cursor>
+		<Folding>
+			<Collapse line="136" />
+			<Collapse line="142" />
+			<Collapse line="151" />
+			<Collapse line="169" />
+			<Collapse line="264" />
+			<Collapse line="283" />
+			<Collapse line="307" />
+			<Collapse line="325" />
+			<Collapse line="344" />
+			<Collapse line="349" />
+			<Collapse line="376" />
+			<Collapse line="381" />
+			<Collapse line="397" />
+			<Collapse line="416" />
+			<Collapse line="423" />
+			<Collapse line="461" />
+			<Collapse line="505" />
+			<Collapse line="540" />
+			<Collapse line="569" />
+			<Collapse line="579" />
+			<Collapse line="596" />
+			<Collapse line="605" />
+			<Collapse line="611" />
+			<Collapse line="620" />
+			<Collapse line="635" />
+			<Collapse line="649" />
+			<Collapse line="657" />
+			<Collapse line="669" />
+			<Collapse line="702" />
+			<Collapse line="718" />
+			<Collapse line="725" />
+			<Collapse line="793" />
+			<Collapse line="798" />
+			<Collapse line="803" />
+			<Collapse line="810" />
+			<Collapse line="831" />
+			<Collapse line="851" />
+			<Collapse line="868" />
+			<Collapse line="876" />
+			<Collapse line="886" />
+			<Collapse line="911" />
+			<Collapse line="961" />
+			<Collapse line="966" />
+			<Collapse line="971" />
+			<Collapse line="978" />
+			<Collapse line="999" />
+			<Collapse line="1010" />
+			<Collapse line="1031" />
+			<Collapse line="1048" />
+			<Collapse line="1056" />
+			<Collapse line="1066" />
+			<Collapse line="1091" />
+			<Collapse line="1100" />
+			<Collapse line="1111" />
+			<Collapse line="1122" />
+			<Collapse line="1135" />
+			<Collapse line="1148" />
+			<Collapse line="1171" />
+			<Collapse line="1349" />
+			<Collapse line="1374" />
+			<Collapse line="1389" />
+			<Collapse line="1466" />
+			<Collapse line="1494" />
+			<Collapse line="1509" />
+			<Collapse line="1517" />
+		</Folding>
+	</File>
+	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1222" topLine="9" />
+		</Cursor>
+	</File>
+	<File name="gif\gif_lib.h" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5636" topLine="177" />
+		</Cursor>
+	</File>
+	<File name="apng\pngconf.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="20805" topLine="551" />
 		</Cursor>
 	</File>
 	<File name="webp\types.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -12,19 +104,24 @@
 			<Cursor1 position="602" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="types.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2160" topLine="21" />
+			<Cursor1 position="412" topLine="10" />
 		</Cursor>
 	</File>
 	<File name="dialogs.rc" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1420" topLine="10" />
+			<Cursor1 position="1420" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="window.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="444" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="data.c" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1768" topLine="0" />
+			<Cursor1 position="3797" topLine="27" />
 		</Cursor>
 		<Folding>
 			<Collapse line="3" />
@@ -50,7 +147,7 @@
 	</File>
 	<File name="gifdesk.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="344" topLine="48" />
+			<Cursor1 position="773" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="gif\gif_lib_private.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -58,108 +155,49 @@
 			<Cursor1 position="0" topLine="38" />
 		</Cursor>
 	</File>
-	<File name="apng\png.h" open="0" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="settings.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="18389" topLine="424" />
+			<Cursor1 position="5190" topLine="68" />
+		</Cursor>
+		<Folding>
+			<Collapse line="5" />
+			<Collapse line="28" />
+			<Collapse line="131" />
+			<Collapse line="157" />
+		</Folding>
+	</File>
+	<File name="gifdesk.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1686" topLine="48" />
+		</Cursor>
+	</File>
+	<File name="render.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="242" topLine="130" />
+		</Cursor>
+	</File>
+	<File name="apng\pngpriv.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="13655" topLine="344" />
 		</Cursor>
 	</File>
 	<File name="window.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1884" topLine="35" />
+			<Cursor1 position="57" topLine="0" />
 		</Cursor>
 		<Folding>
+			<Collapse line="23" />
+			<Collapse line="60" />
+			<Collapse line="83" />
+			<Collapse line="119" />
 			<Collapse line="131" />
 			<Collapse line="148" />
 			<Collapse line="174" />
 		</Folding>
 	</File>
-	<File name="gifdesk.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="apng\png.h" open="0" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="160" topLine="21" />
-		</Cursor>
-	</File>
-	<File name="window.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="388" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="render.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="380" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="render.c" open="1" top="1" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="29097" topLine="162" />
-		</Cursor>
-		<Folding>
-			<Collapse line="26" />
-			<Collapse line="111" />
-			<Collapse line="116" />
-			<Collapse line="124" />
-			<Collapse line="141" />
-			<Collapse line="288" />
-			<Collapse line="307" />
-			<Collapse line="330" />
-			<Collapse line="348" />
-			<Collapse line="367" />
-			<Collapse line="371" />
-			<Collapse line="398" />
-			<Collapse line="403" />
-			<Collapse line="420" />
-			<Collapse line="439" />
-			<Collapse line="445" />
-			<Collapse line="510" />
-			<Collapse line="539" />
-			<Collapse line="578" />
-			<Collapse line="588" />
-			<Collapse line="604" />
-			<Collapse line="610" />
-			<Collapse line="621" />
-			<Collapse line="632" />
-			<Collapse line="637" />
-			<Collapse line="668" />
-			<Collapse line="675" />
-			<Collapse line="685" />
-			<Collapse line="700" />
-			<Collapse line="704" />
-			<Collapse line="710" />
-			<Collapse line="770" />
-			<Collapse line="774" />
-			<Collapse line="778" />
-			<Collapse line="785" />
-			<Collapse line="805" />
-			<Collapse line="817" />
-			<Collapse line="838" />
-			<Collapse line="852" />
-			<Collapse line="857" />
-			<Collapse line="866" />
-			<Collapse line="888" />
-			<Collapse line="893" />
-			<Collapse line="969" />
-			<Collapse line="991" />
-			<Collapse line="995" />
-			<Collapse line="1009" />
-			<Collapse line="1030" />
-			<Collapse line="1089" />
-			<Collapse line="1098" />
-			<Collapse line="1106" />
-			<Collapse line="1131" />
-			<Collapse line="1146" />
-			<Collapse line="1223" />
-			<Collapse line="1251" />
-			<Collapse line="1266" />
-			<Collapse line="1274" />
-		</Folding>
-	</File>
-	<File name="data.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="664" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="apng\pngconf.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="20805" topLine="551" />
+			<Cursor1 position="18389" topLine="424" />
 		</Cursor>
 	</File>
 	<File name="settings.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -171,31 +209,5 @@
 		<Cursor>
 			<Cursor1 position="5471" topLine="153" />
 		</Cursor>
-	</File>
-	<File name="gif\gif_lib.h" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5636" topLine="177" />
-		</Cursor>
-	</File>
-	<File name="apng\pngpriv.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="13655" topLine="344" />
-		</Cursor>
-	</File>
-	<File name="resource.rc" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="settings.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5190" topLine="102" />
-		</Cursor>
-		<Folding>
-			<Collapse line="5" />
-			<Collapse line="28" />
-			<Collapse line="131" />
-			<Collapse line="157" />
-		</Folding>
 	</File>
 </CodeBlocks_layout_file>

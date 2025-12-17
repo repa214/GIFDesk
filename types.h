@@ -20,7 +20,7 @@
 #include "webp/demux.h"
 #include "avif/avif.h"
 
-#define APP_NAME "GIFDesk 1.0.1"
+#define APP_NAME "GIFDesk 1.0.2"
 
 #define IDI_ICON 1
 #define MENU_ICON 2

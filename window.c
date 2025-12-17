@@ -80,7 +80,7 @@ void LoadTrackBar(Trackbar* trackbar, Window* main_window,
 
 void LoadButton(Button* button, Window* main_window,
                 int xoffset, int yoffset, int width, int height, int rgn,
-                const char* text, int menu)
+                const char* text, int menu, const char* font_name)
 {
     button->hwnd = CreateWindowEx(0,
                                   "BUTTON",
@@ -108,7 +108,7 @@ void LoadButton(Button* button, Window* main_window,
                             CLIP_DEFAULT_PRECIS,
                             DEFAULT_QUALITY,
                             DEFAULT_QUALITY,
-                            "Segoe UI");
+                            font_name);
 
     SendMessage(button->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
 

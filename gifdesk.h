@@ -10,37 +10,116 @@
 typedef struct
 {
     Window window;
-    Window popup_window;
-    Window mwt_window;
-    Window debug_window;
+    Window window_popup;
+    Window window_debug;
 
-    /** trackbars **/
-    Trackbar scale_trackbar;
-    Trackbar frames_trackbar;
+    Window window_pb;
+    Window window_im;
+    Window window_wc;
+    Window window_pw;
+    Window window_mwt;
 
-    /** buttons **/
-    Button title_button;
-    Button openfile_button;
+    /** Popup Menu **/
 
-    Button scale_button;
-    Button addscale_button;
-    Button decscale_button;
+    Button btn_title;
+    Button btn_openfile;
 
-    Button pause_button;
+    /// Playback
+    Button label_playback;
+/**
+        Frame: 1/39
+          |<     ||     >|
+        |------------------|
+**/
+        Button label_frames;
+        Button btn_prev_frame;
+        Button btn_play;
+        Button btn_next_frame;
 
-    Button sfp_button;
-    Button sti_button;
-    Button aot_button;
+        Trackbar trackbar_frames;
 
-    Button mwt_button;
-    Button tlc_button;
-    Button trc_button;
-    Button cnr_button;
-    Button blc_button;
-    Button brc_button;
+/**
+        Speed: [0.25x-2.0x]
+          ||<  |<  >|  >||
+        |------------------|
+**/
+        Button label_speed;
+        Button btn_slow_rewind;
+        Button btn_fast_rewind;
+        Button btn_slow_wind;
+        Button btn_fast_wind;
 
-    Button language_button;
-    Button exit_button;
+        Trackbar trackbar_speed;
+
+/**
+        Show frame updates (GIF, PNG)
+**/
+        Button btn_frame_updates;
+
+    /// Interaction
+    Button label_interaction;
+/**
+        Enable Drag n` Drop
+        Only tray icon (disable RMB)
+        Ignore all input (except Esc)
+**/
+        Button btn_enable_dnd;
+        Button btn_only_tray;
+        Button btn_ignore_input;
+
+    /// Window
+    Button label_window_scale;
+/**
+        Scale [1-1000%] +  -
+        |------------------|
+**/
+        Button label_scale;
+        Button btn_add_scale;
+        Button btn_subtract_scale;
+
+        Trackbar trackbar_scale;
+/**
+        Transparency [1-100%]
+        |------------------|
+**/
+        Button label_transparency;
+
+        Trackbar trackbar_transparency;
+
+/**
+        Show taskbar icon
+**/
+        Button btn_taskbar;
+
+    /// Pin window
+    Button label_pin_window;
+
+/**
+        Default
+        Always on top
+        Always on bottom
+**/
+        Button btn_pin_default;
+        Button btn_pin_top;
+        Button btn_pin_bottom;
+
+    /// Move window to
+    Button label_move_window;
+/**
+        Top left corner
+        Top right corner
+        Center
+        Bottom left corner
+        Bottom right corner
+**/
+        Button btn_move_topleft;
+        Button btn_move_topright;
+        Button btn_move_center;
+        Button btn_move_left;
+        Button btn_move_right;
+
+    /// Close window
+    Button btn_close_window;
 
     Settings settings;
     Data data;

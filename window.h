@@ -17,7 +17,7 @@ void LoadTrackBar(Trackbar* trackbar, Window* main_window,
 
 void LoadButton(Button* button, Window* main_window,
                 int xoffset, int yoffset, int width, int height, int rgn,
-                const char* text, int menu);
+                const char* text, int menu, const char* font_name);
 
 void ReloadWindow(Window* window, Settings* st, Data* dt);
 void ReleaseWindow(Window* window);
