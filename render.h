@@ -7,8 +7,9 @@
 
 #define BTN_TEXT_COLOR RGB(30, 30, 30)
 #define BTN_MARLETT_COLOR RGB(90, 90, 90)
- #define BTN_HOVERED RGB(242, 242, 242)
-//#define BTN_HOVERED RGB(190, 190, 190)
+#define BTN_MARLETT_FLAG_COLOR RGB(90, 90, 90)
+#define BTN_HOVERED RGB(242, 242, 242)
+// #define BTN_HOVERED RGB(190, 190, 190)
 #define BTN_NOT_HOVERED RGB(250, 250, 250)
 
 /// for 2560x1440 res
@@ -149,8 +150,19 @@ LRESULT CALLBACK PWProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// 
 LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Move window to
 
 void ReleaseHover(RenderPtr* rptr, HWND hwnd);
+
+/**
+        0b00000001 - activated
+        0b00000010 - arrow
+        0b00000100 - slow_left_rewind
+        0b00001000 - slow_right_rewind
+        0b00010000 - pause
+        0b00100000 - fast_left_rewind
+        0b01000000 - fast_right_rewind
+
+**/
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
-                       const char* text, int left, int activated, int arrow);
+                       const char* text, int left, uint8_t flag);
 /// void _InvalidateTrackBar(LPDRAWITEMSTRUCT item, Window* window, Window* cf_window);
 
 int _IsButtonHovered(Button* button, POINT* p, int arrowed);

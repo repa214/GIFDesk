@@ -112,8 +112,8 @@ void LoadButton(Button* button, Window* main_window,
 
     SendMessage(button->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
 
-    HRGN hrgn = CreateRoundRectRgn(0, 0, width, height, rgn, rgn);
-    SetWindowRgn(button->hwnd, hrgn, TRUE);
+//    HRGN hrgn = CreateRoundRectRgn(0, 0, width, height, rgn, rgn);
+//    SetWindowRgn(button->hwnd, hrgn, TRUE);
 }
 
 void ReloadWindow(Window* window, Settings* st, Data* dt)

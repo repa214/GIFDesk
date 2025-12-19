@@ -176,8 +176,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             GetCursorPos(&p);
             SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
 
-            if (p.x + POPUP_WIDTH > rect.right - rect.left) { p.x = rect.right - rect.left - POPUP_WIDTH; }
-            if (p.y + POPUP_HEIGHT > rect.bottom - rect.top) { p.y = rect.bottom - rect.top - POPUP_HEIGHT; }
+            if (p.x + POPUP_WIDTH > rect.right - rect.left) { p.x -= POPUP_WIDTH; }
+            if (p.y + POPUP_HEIGHT > rect.bottom - rect.top) { p.y -= POPUP_HEIGHT; }
 
             /** Resize Window **/
 
@@ -447,11 +447,11 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     GetWindowRect(rptr.window_popup->hwnd, &rect);
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    int offset = 59;
                     int popup_left = rect.left + POPUP_WIDTH;
-                    int popup_top = rect.top + 59;
-                    if (rptr.dt->count == 1) popup_top -= 55;
-                    if (popup_left + PB_WIDTH + 5 > res.right) popup_left = rect.left - POPUP_WIDTH + 24;
-                    if (popup_top + PB_HEIGHT + 5 > res.bottom) popup_top = res.bottom - 229;
+                    int popup_top = rect.top + offset;
+                    if (popup_left + PB_WIDTH > res.right) popup_left = rect.left - PB_WIDTH;
+                    if (popup_top + PB_HEIGHT > res.bottom) popup_top = res.bottom - PB_HEIGHT;
 
                     LoadWindow(rptr.window_pb, rptr.st, NULL, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, 0, 0, 0, 0);
 
@@ -477,7 +477,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                " ", 4, "Marlett");
 
                     LoadTrackBar(rptr.trackbar_frames, rptr.window_pb,
-                         10, y += 27, PB_WIDTH - 20, 24, 0,
+                         13, y += 27, PB_WIDTH - 26, 24, 0,
                          1, rptr.dt->count, rptr.rd->frame - 1, 5);
 
                     LoadButton(rptr.btn_frame_updates, rptr.window_pb,
@@ -517,11 +517,11 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     GetWindowRect(rptr.window_popup->hwnd, &rect);
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    int offset = 84;
                     int popup_left = rect.left + POPUP_WIDTH;
-                    int popup_top = rect.top + 84;
-                    if (rptr.dt->count == 1) popup_top -= 55;
-                    if (popup_left + WC_WIDTH + 5 > res.right) popup_left = rect.left - POPUP_WIDTH + 24;
-                    if (popup_top + WC_HEIGHT + 5 > res.bottom) popup_top = res.bottom - 229;
+                    int popup_top = rect.top + offset;
+                    if (popup_left + WC_WIDTH > res.right) popup_left = rect.left - WC_WIDTH;
+                    if (popup_top + WC_HEIGHT > res.bottom) popup_top = res.bottom - WC_HEIGHT;
 
                     LoadWindow(rptr.window_wc, rptr.st, NULL, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, 0, 0, 0, 0);
 
@@ -543,7 +543,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                " ", 3, "Segoe UI");
 
                     LoadTrackBar(rptr.trackbar_scale, rptr.window_wc,
-                         10, y += 27, WC_WIDTH - 20, 24, 0,
+                         13, y += 27, WC_WIDTH - 27, 24, 0,
                          1, 200, (int)(rptr.st->trackbar_size * 100), 4);
 
                     LoadButton(rptr.btn_taskbar, rptr.window_wc,
@@ -558,11 +558,11 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     GetWindowRect(rptr.window_popup->hwnd, &rect);
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    int offset = 109;
                     int popup_left = rect.left + POPUP_WIDTH;
-                    int popup_top = rect.top + 109;
-                    if (rptr.dt->count == 1) popup_top -= 55;
-                    if (popup_left + PW_WIDTH + 5 > res.right) popup_left = rect.left - POPUP_WIDTH + 24;
-                    if (popup_top + PW_HEIGHT + 5 > res.bottom) popup_top = res.bottom - 229;
+                    int popup_top = rect.top + offset;
+                    if (popup_left + PW_WIDTH > res.right) popup_left = rect.left - PW_WIDTH;
+                    if (popup_top + PW_HEIGHT > res.bottom) popup_top = res.bottom - PW_HEIGHT;
 
                     LoadWindow(rptr.window_pw, rptr.st, NULL, "window_pw", popup_left, popup_top, PW_WIDTH, PW_HEIGHT, 0, 0, 0, 0);
 
@@ -587,11 +587,11 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     GetWindowRect(rptr.window_popup->hwnd, &rect);
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    int offset = 134;
                     int popup_left = rect.left + POPUP_WIDTH;
-                    int popup_top = rect.top + 134;
-                    if (rptr.dt->count == 1) popup_top -= 55;
-                    if (popup_left + MWT_WIDTH + 5 > res.right) popup_left = rect.left - POPUP_WIDTH + 24;
-                    if (popup_top + MWT_HEIGHT + 5 > res.bottom) popup_top = res.bottom - 229;
+                    int popup_top = rect.top + offset;
+                    if (popup_left + MWT_WIDTH > res.right) popup_left = rect.left - MWT_WIDTH;
+                    if (popup_top + MWT_HEIGHT > res.bottom) popup_top = res.bottom - MWT_HEIGHT;
 
                     LoadWindow(rptr.window_mwt, rptr.st, NULL, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, 0, 0, 0, 0);
 
@@ -668,28 +668,28 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 //          _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
 //                     const char* text, int left, int activated, int arrow)
             if (item->hwndItem == rptr.btn_title->hwnd)
-                _InvalidateButton(item, rptr.btn_title, APP_NAME, 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_title, APP_NAME, 35, 0);
 
             else if (item->hwndItem == rptr.btn_openfile->hwnd)
-                _InvalidateButton(item, rptr.btn_openfile, "Open file...", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_openfile, "Open file...", 35, 0);
 
             else if (item->hwndItem == rptr.label_playback->hwnd)
-                _InvalidateButton(item, rptr.label_playback, "Playback", 35, 0, 1);
+                _InvalidateButton(item, rptr.label_playback, "Playback", 35, 0x2);
 
             else if (item->hwndItem == rptr.label_interaction->hwnd)
-                _InvalidateButton(item, rptr.label_interaction, "Interaction", 35, 0, 1);
+                _InvalidateButton(item, rptr.label_interaction, "Interaction", 35, 0x2);
 
             else if (item->hwndItem == rptr.label_window_scale->hwnd)
-                _InvalidateButton(item, rptr.label_window_scale, "Window", 35, 0, 1);
+                _InvalidateButton(item, rptr.label_window_scale, "Window", 35, 0x2);
 
             else if (item->hwndItem == rptr.label_pin_window->hwnd)
-                _InvalidateButton(item, rptr.label_pin_window, "Pin window", 35, 0, 1);
+                _InvalidateButton(item, rptr.label_pin_window, "Pin window", 35, 0x2);
 
             else if (item->hwndItem == rptr.label_move_window->hwnd)
-                _InvalidateButton(item, rptr.label_move_window, "Move window to", 35, 0, 1);
+                _InvalidateButton(item, rptr.label_move_window, "Move window to", 35, 0x2);
 
             else if (item->hwndItem == rptr.btn_close_window->hwnd)
-                _InvalidateButton(item, rptr.btn_close_window, "Close window", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_close_window, "Close window", 35, 0);
 
         }   break;
 
@@ -963,19 +963,19 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.label_frames->hwnd) {
-                _InvalidateButton(item, rptr.label_frames, "Frames", 35, 0, 0);
+                _InvalidateButton(item, rptr.label_frames, "Frames", 35, 0);
             }
             if (item->hwndItem == rptr.btn_prev_frame->hwnd) {
-                _InvalidateButton(item, rptr.btn_prev_frame, "3", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_prev_frame, "", 30, 0x4);
             }
             if (item->hwndItem == rptr.btn_play->hwnd) {
-                _InvalidateButton(item, rptr.btn_play, "g", 27, 0, 0);
+                _InvalidateButton(item, rptr.btn_play, "", 28, 0x10);
             }
             if (item->hwndItem == rptr.btn_next_frame->hwnd) {
-                _InvalidateButton(item, rptr.btn_next_frame, "4", 25, 0, 0);
+                _InvalidateButton(item, rptr.btn_next_frame, "", 21, 0x8);
             }
             if (item->hwndItem == rptr.btn_frame_updates->hwnd) {
-                _InvalidateButton(item, rptr.btn_frame_updates, "Show frame updates", 35, rptr.st->sfu, 0);
+                _InvalidateButton(item, rptr.btn_frame_updates, "Show frame updates", 35, (uint8_t)rptr.st->sfu);
             }
         }   break;
 
@@ -1173,7 +1173,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_ignore_input->hwnd) {
-                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input (except ESC)", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input (except ESC)", 35, 0);
             }
         }   break;
 
@@ -1322,17 +1322,17 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
             if (item->hwndItem == rptr.label_scale->hwnd) {
                 sprintf(rptr.st->str_size, "Scale (%.0f%%)", rptr.st->trackbar_size * 100);
-                _InvalidateButton(item, rptr.label_scale, rptr.st->str_size, 35, 0, 0);
+                _InvalidateButton(item, rptr.label_scale, rptr.st->str_size, 35, 0);
             }
 
             if (item->hwndItem == rptr.btn_add_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_add_scale, "+", 12, 0, 0);
+                _InvalidateButton(item, rptr.btn_add_scale, "+", 12, 0);
 
             if (item->hwndItem == rptr.btn_subtract_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, 0, 0);
+                _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, 0);
 
             if (item->hwndItem == rptr.btn_taskbar->hwnd)
-                _InvalidateButton(item, rptr.btn_taskbar, "Show taskbar icon", 35, rptr.st->taskbar, 0);
+                _InvalidateButton(item, rptr.btn_taskbar, "Show taskbar icon", 35, (uint8_t)rptr.st->taskbar);
         }   break;
 
         /// -------------------
@@ -1551,10 +1551,10 @@ LRESULT CALLBACK PWProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_pin_default->hwnd)
-                _InvalidateButton(item, rptr.btn_pin_default, "Default", 35, !rptr.st->topmost, 0);
+                _InvalidateButton(item, rptr.btn_pin_default, "Default", 35, (uint8_t)!rptr.st->topmost);
 
             if (item->hwndItem == rptr.btn_pin_top->hwnd)
-                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, rptr.st->topmost, 0);
+                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, (uint8_t)rptr.st->topmost);
         }   break;
 
         /** Checks whether window should exist **/
@@ -1722,19 +1722,19 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_move_topleft->hwnd)
-                _InvalidateButton(item, rptr.btn_move_topleft, "Top left corner", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_move_topleft, "Top left corner", 35, 0);
 
             if (item->hwndItem == rptr.btn_move_topright->hwnd)
-                _InvalidateButton(item, rptr.btn_move_topright, "Top right corner", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_move_topright, "Top right corner", 35, 0);
 
             if (item->hwndItem == rptr.btn_move_center->hwnd)
-                _InvalidateButton(item, rptr.btn_move_center, "Center", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_move_center, "Center", 35, 0);
 
             if (item->hwndItem == rptr.btn_move_left->hwnd)
-                _InvalidateButton(item, rptr.btn_move_left, "Bottom left corner", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_move_left, "Bottom left corner", 35, 0);
 
             if (item->hwndItem == rptr.btn_move_right->hwnd)
-                _InvalidateButton(item, rptr.btn_move_right, "Bottom right corner", 35, 0, 0);
+                _InvalidateButton(item, rptr.btn_move_right, "Bottom right corner", 35, 0);
         }   break;
 
         /** Checks whether window should exist **/
@@ -1986,7 +1986,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd)
 }
 
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
-                       const char* text, int left, int activated, int arrow)
+                       const char* text, int left, uint8_t flag)
 {
     static HDC hdc = NULL;
     static HFONT font = NULL;
@@ -2004,37 +2004,116 @@ void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
     rect.left = left;
     DrawText(hdc, text, -1, &rect, DT_VCENTER | DT_SINGLELINE);
 
-    if (activated) {
-        int size = 20;
+    int size = 20;
+    font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+    if (flag & 0x1) {
         int x = rect.left - 27;
         int y = rect.top + (rect.bottom - rect.top - size) / 2;
 
-        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
         SelectObject(hdc, font);
-        SetTextColor(hdc, BTN_MARLETT_COLOR);
         SetBkMode(hdc, TRANSPARENT);
-
+        SetTextColor(hdc, BTN_MARLETT_COLOR);
         TextOutW(hdc, x, y, L"a", 1);
 
         DeleteObject(font);
     }
-    if (arrow) {
-        int size = 20;
-        int x = rect.left + 178;
+
+    if (flag & 0x2) {
+        int x = rect.left + 176;
         int y = rect.top + (rect.bottom - rect.top - size) / 2;
 
-        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
         SelectObject(hdc, font);
-        SetTextColor(hdc, BTN_MARLETT_COLOR);
         SetBkMode(hdc, TRANSPARENT);
-
+        SetTextColor(hdc, BTN_MARLETT_COLOR);
         TextOutW(hdc, x, y, L"8", 1);
         SetTextColor(hdc, BTN_NOT_HOVERED);
         TextOutW(hdc, x - 2, y, L"8", 1);
+
+        DeleteObject(font);
+    }
+
+    if (flag & 0x4) {
+        size = 15;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+        int x = rect.left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2 - 1;
+
+        SelectObject(hdc, font);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+
+        TextOutW(hdc, x, y, L"g", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_NOT_HOVERED);
+        TextOutW(hdc, x + 2, y, L"g", 1);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+
+        size = 20;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        SelectObject(hdc, font);
+        y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        TextOutW(hdc, x + 2, y, L"3", 1);
+
+        DeleteObject(font);
+    }
+
+    if (flag & 0x8) {
+        size = 15;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+        int x = rect.left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2 - 1;
+
+        SelectObject(hdc, font);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+
+        TextOutW(hdc, x + 6, y, L"g", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_NOT_HOVERED);
+        TextOutW(hdc, x + 4, y, L"g", 1);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+
+        size = 20;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        SelectObject(hdc, font);
+        y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        TextOutW(hdc, x, y, L"4", 1);
+
+        DeleteObject(font);
+    }
+
+    if (flag & 0x10) {
+        int x = rect.left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        size = 18;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        SelectObject(hdc, font);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+        TextOutW(hdc, x, y, L"g", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_NOT_HOVERED);
+        TextOutW(hdc, x + 3, y, L"g", 1);
+        SetTextColor(hdc, BTN_MARLETT_FLAG_COLOR);
+        TextOutW(hdc, x + 6, y, L"g", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_NOT_HOVERED);
+        TextOutW(hdc, x + 9, y, L"g", 1);
 
         DeleteObject(font);
     }
