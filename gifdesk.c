@@ -78,7 +78,7 @@ int Run(GIFDesk* gf)
         WriteSettings(&gf->settings);
     }
 
-    ReloadWindow(&gf->window, &gf->settings, &gf->data);
+    ReloadWindow(&gf->window, &gf->settings, &gf->data, 0);
 
     Loop(&rptr);
 

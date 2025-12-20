@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1766186557 source:d:\projects\gifdesk\main.c
+1766252492 source:d:\projects\gifdesk\main.c
 	<windows.h>
 	"gifdesk.h"
 
@@ -8,7 +8,7 @@
 
 1763034321 d:\projects\gifdesk\resource.h
 
-1765926013 source:d:\projects\gifdesk\gifdesk.c
+1766252936 source:d:\projects\gifdesk\gifdesk.c
 	"gifdesk.h"
 
 1765924785 d:\projects\gifdesk\gifdesk.h
@@ -18,11 +18,11 @@
 	"data.h"
 	"render.h"
 
-1765930180 d:\projects\gifdesk\window.h
+1766252631 d:\projects\gifdesk\window.h
 	"types.h"
 	"render.h"
 
-1766183108 source:d:\projects\gifdesk\window.c
+1766252625 source:d:\projects\gifdesk\window.c
 	"window.h"
 
 1765126251 d:\projects\gifdesk\settings.h
@@ -30,14 +30,14 @@
 	"render.h"
 	"data.h"
 
-1765127725 source:d:\projects\gifdesk\settings.c
+1766252936 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 
 1763331591 d:\projects\gifdesk\data.h
 	"types.h"
 	"render.h"
 
-1763340384 source:d:\projects\gifdesk\data.c
+1766253094 source:d:\projects\gifdesk\data.c
 	"data.h"
 
 1762457676 d:\projects\gifdesk\gif\gif_load.h
@@ -80,7 +80,7 @@
 	<string.h>
 	"./types.h"
 
-1765932142 d:\projects\gifdesk\types.h
+1766251569 d:\projects\gifdesk\types.h
 	<stdint.h>
 	<stdio.h>
 	<stdlib.h>
@@ -101,7 +101,7 @@
 	"window.h"
 	"settings.h"
 
-1766186755 source:d:\projects\gifdesk\render.c
+1766252935 source:d:\projects\gifdesk\render.c
 	"render.h"
 
 1571412343 d:\projects\gifdesk\gif\gif_lib.h

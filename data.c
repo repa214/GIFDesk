@@ -306,7 +306,7 @@ static void _pngr(png_structp png_ptr, png_bytep data, png_size_t length)
     *data_ptr = current_pos + length;
 }
 
-uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt)
+uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 {
     uint8_t png_error = 0;
 
@@ -337,7 +337,6 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt)
 
     dt->width = png_get_image_width(png_ptr, info_ptr);
     dt->height = png_get_image_height(png_ptr, info_ptr);
-    ReloadWindow(window, st, dt);
 
     png_byte color_type = png_get_color_type(png_ptr, info_ptr);
     png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
@@ -398,161 +397,202 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt)
     png_byte mode, blend;
 
     png_byte prev_mode = 0;
+    if (num > 1) {
+        for (int i = 0; i < num; i++) {
+            dt->count++;
 
-    for (int i = 0; i < num; i++) {
-        dt->count++;
-
-        switch (prev_mode)
-        {
-            /// APNG_DISPOSE_OP_NONE: no disposal is done on this frame before
-            /// rendering the next; the contents of the output buffer are left as is
-
-            /// APNG_DISPOSE_OP_BACKGROUND:
-            /// the frame's region of the output buffer is to be cleared
-            /// to fully transparent black before rendering the next frame
-            case PNG_DISPOSE_OP_BACKGROUND:
+            switch (prev_mode)
             {
-                unsigned long index = ((dt->width + 1) * fryo) * 4;
-                for (long y = 0; y < fryd; y++) {
-                    index += frxo * 4;
-                    for (long x = 0; x < frxd; x++) {
-                        memset(&dt->frame[index], 0, 4);
+                /// APNG_DISPOSE_OP_NONE: no disposal is done on this frame before
+                /// rendering the next; the contents of the output buffer are left as is
 
-                        index += 4;
+                /// APNG_DISPOSE_OP_BACKGROUND:
+                /// the frame's region of the output buffer is to be cleared
+                /// to fully transparent black before rendering the next frame
+                case PNG_DISPOSE_OP_BACKGROUND:
+                {
+                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    for (long y = 0; y < fryd; y++) {
+                        index += frxo * 4;
+                        for (long x = 0; x < frxd; x++) {
+                            memset(&dt->frame[index], 0, 4);
+
+                            index += 4;
+                        }
+                        index += ((dt->width + 1) - frxd - frxo) * 4;
                     }
-                    index += ((dt->width + 1) - frxd - frxo) * 4;
-                }
-            }   break;
-            /// APNG_DISPOSE_OP_PREVIOUS: the frame's region of the output
-            /// buffer is to be reverted to the previous contents before
-            /// rendering the next frame
-            case PNG_DISPOSE_OP_PREVIOUS:
+                }   break;
+                /// APNG_DISPOSE_OP_PREVIOUS: the frame's region of the output
+                /// buffer is to be reverted to the previous contents before
+                /// rendering the next frame
+                case PNG_DISPOSE_OP_PREVIOUS:
+                {
+                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    for (long y = 0; y < fryd; y++) {
+                        index += frxo * 4;
+                        for (long x = 0; x < frxd; x++) {
+                            memcpy(&dt->frame[index], &dt->buff[index], 4);
+
+                            index += 4;
+                        }
+                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                    }
+                }   break;
+                default: break;
+            }
+
+            png_read_frame_head(png_ptr, info_ptr);
+            png_get_next_frame_fcTL(png_ptr, info_ptr, &frxd, &fryd,
+                                    &frxo, &fryo, &delay, &den,
+                                    &mode, &blend);
+
+            png_read_image(png_ptr, row_pointers);
+            row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+
+            if (!den) den = 100;
+            dt->delays = (float *)realloc(dt->delays, sizeof(float) * dt->count);
+            if (dt->delays == NULL) { png_error = 15; goto _loadpng_release; }
+            dt->delays[i] = (den == 0) ? 0.1 : (float)delay / (float)den;
+
+            switch (blend)
             {
-                unsigned long index = ((dt->width + 1) * fryo) * 4;
-                for (long y = 0; y < fryd; y++) {
-                    index += frxo * 4;
-                    for (long x = 0; x < frxd; x++) {
-                        memcpy(&dt->frame[index], &dt->buff[index], 4);
+                /// APNG_BLEND_OP_SOURCE all color components of the frame,
+                /// including alpha, overwrite the current contents of the frame's
+                /// output buffer region
+                case PNG_BLEND_OP_SOURCE:
+                {
+                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    for (long y = 0; y < fryd; y++) {
+                        index += frxo * 4;
 
-                        index += 4;
+                        for (long x = 0; x < frxd; x++) {
+                            dt->frame[index]     = row_pointers[y][x * 4];
+                            dt->frame[index + 1] = row_pointers[y][x * 4 + 1];
+                            dt->frame[index + 2] = row_pointers[y][x * 4 + 2];
+                            dt->frame[index + 3] = row_pointers[y][x * 4 + 3];
+
+                            /// RGBA(0, 0, 0, >0) -> RGBA(1, 1, 1, >0) for compatibility with OpenGL
+                            if (dt->frame[index]     == 0 && dt->frame[index + 3]) dt->frame[index]++;
+                            if (dt->frame[index + 1] == 0 && dt->frame[index + 3]) dt->frame[index + 1]++;
+                            if (dt->frame[index + 2] == 0 && dt->frame[index + 3]) dt->frame[index + 2]++;
+
+                            index += 4;
+                        }
+                        index += ((dt->width + 1) - frxd - frxo) * 4;
                     }
-                    index += ((dt->width + 1) - frxd - frxo) * 4;
-                }
-            }   break;
-            default: break;
+                }   break;
+                /// APNG_BLEND_OP_OVER the frame should be composited onto the output
+                /// buffer based on its alpha, using a simple OVER operation
+                case PNG_BLEND_OP_OVER:
+                {
+                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    for (long y = 0; y < fryd; y++) {
+                        index += frxo * 4;
+                        png_bytep row = row_pointers[y];
+
+                        for (int x = 0; x < frxd; x++) {
+                            png_bytep px = &(row[x * 4]);
+
+                            float src_r = (float)px[0];
+                            float src_g = (float)px[1];
+                            float src_b = (float)px[2];
+                            float src_a = (float)px[3] / 255.0f;
+
+                            float dst_r = (float)dt->frame[index];
+                            float dst_g = (float)dt->frame[index + 1];
+                            float dst_b = (float)dt->frame[index + 2];
+                            float dst_a = (float)dt->frame[index + 3] / 255.0f;
+
+                            float out_a = src_a + dst_a * (1.0f - src_a);
+
+                            if (out_a > 0.0f) {
+                                unsigned char r = (unsigned char)((src_r * src_a + dst_r * dst_a * (1.0f - src_a)) / out_a);
+                                unsigned char g = (unsigned char)((src_g * src_a + dst_g * dst_a * (1.0f - src_a)) / out_a);
+                                unsigned char b = (unsigned char)((src_b * src_a + dst_b * dst_a * (1.0f - src_a)) / out_a);
+
+                                if (r > 255) r = 255;
+                                if (g > 255) g = 255;
+                                if (b > 255) b = 255;
+
+                                dt->frame[index]     = r;
+                                dt->frame[index + 1] = g;
+                                dt->frame[index + 2] = b;
+                            } else {
+                                dt->frame[index]     = 0;
+                                dt->frame[index + 1] = 0;
+                                dt->frame[index + 2] = 0;
+                            }
+
+                            dt->frame[index + 3] = (unsigned char)(out_a * 255.0f);
+
+                            /// RGBA(0, 0, 0, >0) -> RGBA(1, 1, 1, >0) for compatibility with OpenGL
+                            if (dt->frame[index]     == 0 && dt->frame[index + 3] > 0) dt->frame[index]++;
+                            if (dt->frame[index + 1] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 1]++;
+                            if (dt->frame[index + 2] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 2]++;
+
+                            index += 4;
+                        }
+                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                    }
+                }   break;
+            }
+
+            /// Writing data into buff.
+            /// It will be used to return last frame when current is PNG_DISPOSE_OP_PREVIOUS
+            memcpy(dt->buff, dt->frame, pixcount);
+
+            dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
+            if (dt->frame_points == NULL) { png_error = 15; goto _loadpng_release; }
+            dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 0.9999f;
+            dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 0.9999f );
+            dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 1.0001f;
+            dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 1.0001f );
+
+            _GLImage(window, dt);
+            ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
+
+            prev_mode = mode;
         }
-
-        png_read_frame_head(png_ptr, info_ptr);
-        png_get_next_frame_fcTL(png_ptr, info_ptr, &frxd, &fryd,
-                                &frxo, &fryo, &delay, &den,
-                                &mode, &blend);
+    }
+    else {
+        dt->count++;
 
         png_read_image(png_ptr, row_pointers);
         row_bytes = png_get_rowbytes(png_ptr, info_ptr);
 
-        if (!den) den = 100;
+        den = 100;
         dt->delays = (float *)realloc(dt->delays, sizeof(float) * dt->count);
         if (dt->delays == NULL) { png_error = 15; goto _loadpng_release; }
-        dt->delays[i] = (den == 0) ? 0.1 : (float)delay / (float)den;
+        dt->delays[0] = 0.1;
 
-        switch (blend)
-        {
-            /// APNG_BLEND_OP_SOURCE all color components of the frame,
-            /// including alpha, overwrite the current contents of the frame's
-            /// output buffer region
-            case PNG_BLEND_OP_SOURCE:
-            {
-                unsigned long index = ((dt->width + 1) * fryo) * 4;
-                for (long y = 0; y < fryd; y++) {
-                    index += frxo * 4;
+        unsigned long index = 0;
+        for (long y = 0; y < dt->height; y++) {
+            png_bytep row = row_pointers[y];
 
-                    for (long x = 0; x < frxd; x++) {
-                        dt->frame[index]     = row_pointers[y][x * 4];
-                        dt->frame[index + 1] = row_pointers[y][x * 4 + 1];
-                        dt->frame[index + 2] = row_pointers[y][x * 4 + 2];
-                        dt->frame[index + 3] = row_pointers[y][x * 4 + 3];
+            for (long x = 0; x < dt->width; x++) {
+                dt->frame[index]     = row[x * 4];
+                dt->frame[index + 1] = row[x * 4 + 1];
+                dt->frame[index + 2] = row[x * 4 + 2];
+                dt->frame[index + 3] = row[x * 4 + 3];
 
-                        /// RGBA(0, 0, 0, >0) -> RGBA(1, 1, 1, >0) for compatibility with OpenGL
-                        if (dt->frame[index]     == 0 && dt->frame[index + 3]) dt->frame[index]++;
-                        if (dt->frame[index + 1] == 0 && dt->frame[index + 3]) dt->frame[index + 1]++;
-                        if (dt->frame[index + 2] == 0 && dt->frame[index + 3]) dt->frame[index + 2]++;
+                if (dt->frame[index]     == 0 && dt->frame[index + 3] > 0) dt->frame[index]++;
+                if (dt->frame[index + 1] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 1]++;
+                if (dt->frame[index + 2] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 2]++;
 
-                        index += 4;
-                    }
-                    index += ((dt->width + 1) - frxd - frxo) * 4;
-                }
-            }   break;
-            /// APNG_BLEND_OP_OVER the frame should be composited onto the output
-            /// buffer based on its alpha, using a simple OVER operation
-            case PNG_BLEND_OP_OVER:
-            {
-                unsigned long index = ((dt->width + 1) * fryo) * 4;
-                for (long y = 0; y < fryd; y++) {
-                    index += frxo * 4;
-                    png_bytep row = row_pointers[y];
-
-                    for (int x = 0; x < frxd; x++) {
-                        png_bytep px = &(row[x * 4]);
-
-                        float src_r = (float)px[0];
-                        float src_g = (float)px[1];
-                        float src_b = (float)px[2];
-                        float src_a = (float)px[3] / 255.0f;
-
-                        float dst_r = (float)dt->frame[index];
-                        float dst_g = (float)dt->frame[index + 1];
-                        float dst_b = (float)dt->frame[index + 2];
-                        float dst_a = (float)dt->frame[index + 3] / 255.0f;
-
-                        float out_a = src_a + dst_a * (1.0f - src_a);
-
-                        if (out_a > 0.0f) {
-                            unsigned char r = (unsigned char)((src_r * src_a + dst_r * dst_a * (1.0f - src_a)) / out_a);
-                            unsigned char g = (unsigned char)((src_g * src_a + dst_g * dst_a * (1.0f - src_a)) / out_a);
-                            unsigned char b = (unsigned char)((src_b * src_a + dst_b * dst_a * (1.0f - src_a)) / out_a);
-
-                            if (r > 255) r = 255;
-                            if (g > 255) g = 255;
-                            if (b > 255) b = 255;
-
-                            dt->frame[index]     = r;
-                            dt->frame[index + 1] = g;
-                            dt->frame[index + 2] = b;
-                        } else {
-                            dt->frame[index]     = 0;
-                            dt->frame[index + 1] = 0;
-                            dt->frame[index + 2] = 0;
-                        }
-
-                        dt->frame[index + 3] = (unsigned char)(out_a * 255.0f);
-
-                        /// RGBA(0, 0, 0, >0) -> RGBA(1, 1, 1, >0) for compatibility with OpenGL
-                        if (dt->frame[index]     == 0 && dt->frame[index + 3] > 0) dt->frame[index]++;
-                        if (dt->frame[index + 1] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 1]++;
-                        if (dt->frame[index + 2] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 2]++;
-
-                        index += 4;
-                    }
-                    index += ((dt->width + 1) - frxd - frxo) * 4;
-                }
-            }   break;
+                index += 4;
+            }
+            index += 4;
         }
-
-        /// Writing data into buff.
-        /// It will be used to return last frame when current is PNG_DISPOSE_OP_PREVIOUS
-        memcpy(dt->buff, dt->frame, pixcount);
 
         dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
         if (dt->frame_points == NULL) { png_error = 15; goto _loadpng_release; }
-        dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 0.9999f;
-        dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 0.9999f );
-        dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 1.0001f;
-        dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 1.0001f );
+        dt->frame_points[0] = -0.9999f;
+        dt->frame_points[1] = 0.9999f;
+        dt->frame_points[2] = 1.0001f;
+        dt->frame_points[3] = -1.0001f;
 
         _GLImage(window, dt);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
-
-        prev_mode = mode;
     }
 
     /// Free buffers
@@ -650,8 +690,6 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
     dt->width = anim_info.canvas_width;
     dt->height = anim_info.canvas_height;
     int num = anim_info.frame_count;
-
-    ReloadWindow(window, st, dt);
 
     long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
     if (dt->frame == NULL) {
@@ -811,8 +849,6 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
     dt->height = decoder->image->height;
     int num = decoder->imageCount;
 
-    ReloadWindow(window, st, dt);
-
     long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
@@ -897,8 +933,8 @@ void _GLImage(Window* window, Data* dt)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width + 1, dt->height + 1,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, dt->frame);

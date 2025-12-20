@@ -130,7 +130,7 @@ void Loop(RenderPtr* rptr)
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     static POINT p;
-    static RECT rect;
+    static RECT rect, res;
     static HRGN hrgn = NULL;
 
     switch (msg)
@@ -299,6 +299,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                              SWP_NOMOVE | SWP_NOSIZE);
                     break;
                 case 3:
+                    printf("WM_USER: 3 |");
+
                     SetWindowPos(rptr.window->hwnd,
                              (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
                              0,
@@ -307,6 +309,23 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                              _GetCollisionSize(rptr.dt->height, rptr.st->size),
                              SWP_NOMOVE);
                     break;
+                case 4:
+                    printf("WM_USER: 4 |");
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+
+                    if (_GetCollisionSize(rptr.dt->width, rptr.st->size) > res.right / 2)
+                        rptr.st->size = (float)res.right / 2 / (float)rptr.dt->width;
+
+                    if (_GetCollisionSize(rptr.dt->height, rptr.st->size) > res.bottom / 2)
+                        rptr.st->size = (float)res.bottom / 2 / (float)rptr.dt->height;
+
+                    SetWindowPos(rptr.window->hwnd,
+                             (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                             0,
+                             0,
+                             _GetCollisionSize(rptr.dt->width, rptr.st->size),
+                             _GetCollisionSize(rptr.dt->height, rptr.st->size),
+                             SWP_NOMOVE);
             }
         }   break;
 
@@ -336,8 +355,7 @@ LRESULT CALLBACK BusyWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     static POINT p;
-    static RECT rect, wcrect, pbrect;
-    static RECT res;
+    static RECT rect, wcrect, pbrect, res;
     static HBRUSH brush = NULL;
     static PAINTSTRUCT ps;
     static HDC hdc = NULL;
@@ -438,7 +456,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
         case WM_SETCURSOR: {
             GetCursorPos(&p);
 
-    /// int _IsButtonHovered(Button* button, POINT* p, int arrowed)
+        /// int _IsButtonHovered(Button* button, POINT* p, int arrowed)
             _IsButtonHovered(rptr.btn_title, &p, 0);
             _IsButtonHovered(rptr.btn_openfile, &p, 0);
 

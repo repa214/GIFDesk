@@ -116,9 +116,9 @@ void LoadButton(Button* button, Window* main_window,
 //    SetWindowRgn(button->hwnd, hrgn, TRUE);
 }
 
-void ReloadWindow(Window* window, Settings* st, Data* dt)
+void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling)
 {
-    PostMessage(window->hwnd, WM_USER, 3, 0);
+    PostMessage(window->hwnd, WM_USER, (autoscaling) ? 4 : 3, 0);
 }
 
 void ReleaseWindow(Window* window)
