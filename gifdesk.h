@@ -39,7 +39,7 @@ typedef struct
         Trackbar trackbar_frames;
 
 /**
-        Speed: [0.25x-2.0x]
+        Speed: [0.25x-2.0x] [+- 0.05x]
           ||<  |<  >|  >||
         |------------------|
 **/
@@ -87,8 +87,10 @@ typedef struct
         Trackbar trackbar_transparency;
 
 /**
+        Always on top
         Show taskbar icon
 **/
+        Button btn_pin_top;
         Button btn_taskbar;
 
     /// Pin window
@@ -100,7 +102,6 @@ typedef struct
         Always on bottom
 **/
         Button btn_pin_default;
-        Button btn_pin_top;
         Button btn_pin_bottom;
 
     /// Move window to

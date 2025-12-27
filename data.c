@@ -12,6 +12,12 @@ void DataInit(Data* dt)
     dt->count = 0; dt->size = 0;
     dt->width = 0; dt->height = 0;
     dt->error = 0;
+
+    dt->prev_mode = 0;
+    dt->prev_frxo = 0;
+    dt->prev_fryo = 0;
+    dt->prev_frxd = 0;
+    dt->prev_fryd = 0;
 }
 
 /// Just checking their headers
@@ -933,8 +939,8 @@ void _GLImage(Window* window, Data* dt)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width + 1, dt->height + 1,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, dt->frame);

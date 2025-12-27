@@ -18,25 +18,25 @@
 #define POPUP_WIDTH 250
 #define POPUP_HEIGHT 206
 
-#define PB_WIDTH 225
-#define PB_HEIGHT 117
+#define PB_WIDTH 223
+#define PB_HEIGHT 192
 
-#define IM_WIDTH 225
+#define IM_WIDTH 223
 #define IM_HEIGHT 36
 
-#define WC_WIDTH 225
-#define WC_HEIGHT 92
+#define WC_WIDTH 223
+#define WC_HEIGHT 127 // 182
 
-#define PW_WIDTH 225
+#define PW_WIDTH 223
 #define PW_HEIGHT 62
 
-#define MWT_WIDTH 225
+#define MWT_WIDTH 223
 #define MWT_HEIGHT 137
 
 #define MAIN_WINDOW 1, 1, 1, 1
 #define POPUP_MENU 0, 1, 0, 0
 
-#define WM_UPDATE_ALPHA (WM_USER + 100)
+#define WM_UPDATE_ALPHA (WM_USER + 1)
 
 extern HANDLE thread;
 
@@ -141,7 +141,7 @@ void Loop(RenderPtr* rptr);
 INT_PTR CALLBACK DlgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-LRESULT CALLBACK BusyWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK EscapeWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Playback
 LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Interaction
@@ -191,6 +191,6 @@ void* ShowLowerPopupThread(LPVOID arg);
 **/
 
 double GetTime();
-uint8_t ChangeFrame(Data* dt, Render* rd);
+uint8_t ChangeFrame(Data* dt, Render* rd, Settings* st);
 
 #endif // RENDER_H_INCLUDED

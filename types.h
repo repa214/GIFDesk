@@ -20,7 +20,7 @@
 #include "webp/demux.h"
 #include "avif/avif.h"
 
-#define APP_NAME "GIFDesk 1.0.4"
+#define APP_NAME "GIFDesk 1.1b"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -75,6 +75,9 @@ typedef struct
     char buff_filename[MAX_PATH];
     const char ofnfilter[233];
     char str_size[32];
+    char str_frame[32];
+    char str_transparency[32];
+    char str_speed[32];
 
     float size;
     int taskbar;
@@ -83,7 +86,10 @@ typedef struct
 
     /** doesn`t contains in file **/
 
-    int sfu; /// show frame updates
+    uint8_t transparency;   /// Window transparency
+    uint8_t speed;          /// Speed play
+    int sfu;                /// Show frame updates
+    int dnd;                /// Enable Drag n` Drop
 
     /** for temporary changes **/
 

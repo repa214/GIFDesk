@@ -4,7 +4,7 @@
 #include "types.h"
 #include "render.h"
 
-int WindowInit(Window* window, const char* lpszClassName, WNDPROC Proc);
+int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc);
 
 int LoadWindow(Window* window, Settings* st, Window* parent,
                const char* classname,
@@ -22,7 +22,7 @@ void LoadButton(Button* button, Window* main_window,
 void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling);
 void ReleaseWindow(Window* window);
 
-void WcexInit(WNDCLASSEX* wcex, const char *lpszClassName, WNDPROC Proc, HINSTANCE hInstance);
+void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTANCE hinstance);
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

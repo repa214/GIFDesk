@@ -8,6 +8,9 @@ void GetSettingsPath(Settings* st)
     st->taskbar = 1;
     st->topmost = 1;
     st->lang = 0;
+    st->sfu = 0;
+    st->transparency = 255;
+    st->speed = 16;
     const char filter[] =
         "Animations (*.gif, *.webp, *.png, *.avif)\0*.gif; *.webp; *.png; *.apng; *.avif; *.avifs\0"
         "GIF (*.gif)\0*.gif\0"
@@ -36,7 +39,7 @@ DWORD WINAPI _LoadSettings(LPVOID arg)
 
 void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* rd)
 {
-    window->wcex.lpfnWndProc = BusyWindowProc;
+    window->wcex.lpfnWndProc = EscapeWindowProc;
 
     if (drop != NULL) {
         DragQueryFile(drop, 0, st->buff_filename, MAX_PATH);

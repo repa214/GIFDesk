@@ -86,8 +86,6 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
     rptr->st = st;
 }
 
-/// Main Loop
-
 void Loop(RenderPtr* rptr)
 {
     MSG msg;
@@ -99,14 +97,6 @@ void Loop(RenderPtr* rptr)
     rptr->rd->framed_trackbar = 0;
     rptr->rd->loading = 0;
 
-    rptr->dt->prev_mode = 0;
-    rptr->dt->prev_frxo = 0;
-    rptr->dt->prev_fryo = 0;
-    rptr->dt->prev_frxd = 0;
-    rptr->dt->prev_fryd = 0;
-
-    rptr->st->sfu = 0;
-
     /// Main Loop
 
     while (IsWindow(rptr->window->hwnd)) {
@@ -117,7 +107,7 @@ void Loop(RenderPtr* rptr)
 
         if (!IsWindow(rptr->window->hwnd)) continue;
 
-        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
+        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
         Sleep(1);
     }
 
@@ -228,17 +218,13 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                        5, y += 25, POPUP_WIDTH - 10, 25, 15,
                        " ", 3, "Segoe UI");
 
-//            LoadButton(rptr.label_interaction, rptr.window_popup,
-//                       5, y += 25, POPUP_WIDTH - 10, 25, 15,
-//                       " ", 4);
+            LoadButton(rptr.label_interaction, rptr.window_popup,
+                       5, y += 25, POPUP_WIDTH - 10, 25, 15,
+                       " ", 4, "Segoe UI");
 
             LoadButton(rptr.label_window_scale, rptr.window_popup,
                        5, y += 25, POPUP_WIDTH - 10, 25, 15,
                        " ", 5, "Segoe UI");
-
-            LoadButton(rptr.label_pin_window, rptr.window_popup,
-                       5, y += 25, POPUP_WIDTH - 10, 25, 15,
-                       " ", 6, "Segoe UI");
 
             LoadButton(rptr.label_move_window, rptr.window_popup,
                        5, y += 25, POPUP_WIDTH - 10, 25, 15,
@@ -299,8 +285,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                              SWP_NOMOVE | SWP_NOSIZE);
                     break;
                 case 3:
-                    printf("WM_USER: 3 |");
-
                     SetWindowPos(rptr.window->hwnd,
                              (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
                              0,
@@ -310,7 +294,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                              SWP_NOMOVE);
                     break;
                 case 4:
-                    printf("WM_USER: 4 |");
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
 
                     if (_GetCollisionSize(rptr.dt->width, rptr.st->size) > res.right / 2)
@@ -347,15 +330,30 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-LRESULT CALLBACK BusyWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK EscapeWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+    switch (msg)
+    {
+        /// -------------------
+        case WM_KEYDOWN: {
+            switch (wparam) {
+                /// -------------------
+                case VK_ESCAPE:
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    break;
+            }
+        }   break;
+
+        default: break;
+    }
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     static POINT p;
-    static RECT rect, wcrect, pbrect, res;
+    static RECT rect, res;
+    static RECT wcrect, pbrect, imrect, pwrect, mwtrect;
     static HBRUSH brush = NULL;
     static PAINTSTRUCT ps;
     static HDC hdc = NULL;
@@ -399,31 +397,43 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
         /// -------------------
         case WM_CLOSE: {
+            if (rptr.window_wc->isactive) PostMessage(rptr.window_wc->hwnd, WM_CLOSE, 0, 0);
+            if (rptr.window_pb->isactive) PostMessage(rptr.window_pb->hwnd, WM_CLOSE, 0, 0);
+            if (rptr.window_im->isactive) PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
+            if (rptr.window_pw->isactive) PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
+            if (rptr.window_mwt->isactive) PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
+
+            SetWindowPos(rptr.window->hwnd,
+                         (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                         0,
+                         0,
+                         0,
+                         0,
+                         SWP_NOMOVE | SWP_NOSIZE);
             DestroyWindow(hwnd);
         }   break;
 
         /// -------------------
         case WM_ACTIVATE: {
-
             GetCursorPos(&p);
             GetWindowRect(rptr.window_popup->hwnd, &rect);
             GetWindowRect(rptr.window_wc->hwnd, &wcrect);
             GetWindowRect(rptr.window_pb->hwnd, &pbrect);
+            GetWindowRect(rptr.window_im->hwnd, &imrect);
+            GetWindowRect(rptr.window_pw->hwnd, &pwrect);
+            GetWindowRect(rptr.window_mwt->hwnd, &mwtrect);
 
             if (wparam != WA_INACTIVE ||
                 IsChild(rptr.window_popup->hwnd, (HWND)lparam) ||
-                IsChild(rptr.window_wc->hwnd, (HWND)lparam) ||
                 (HWND)lparam == hwnd ||
                 PtInRect(&rect, p) ||
-                PtInRect(&wcrect, p) ||
-                PtInRect(&pbrect, p)) { break; }
+                (PtInRect(&wcrect, p) && rptr.window_wc->isactive) ||
+                (PtInRect(&pbrect, p) && rptr.window_pb->isactive) ||
+                (PtInRect(&imrect, p) && rptr.window_im->isactive) ||
+                (PtInRect(&pwrect, p) && rptr.window_pw->isactive) ||
+                (PtInRect(&mwtrect, p) && rptr.window_mwt->isactive)) { break; }
 
             PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
-
-            if (rptr.window_pw->isactive)
-                PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
-            if (rptr.window_mwt->isactive)
-                PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
         }   break;
 
         /// -------------------
@@ -497,45 +507,53 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     LoadTrackBar(rptr.trackbar_frames, rptr.window_pb,
                          13, y += 27, PB_WIDTH - 26, 24, 0,
                          1, rptr.dt->count, rptr.rd->frame - 1, 5);
+                    /// LINE
+                    LoadButton(rptr.label_speed, rptr.window_pb,
+                               4, y += 38, PB_WIDTH - 10, 25, 15,
+                               " ", 4, "Segoe UI");
 
+                    LoadTrackBar(rptr.trackbar_speed, rptr.window_pb,
+                         13, y += 27, PB_WIDTH - 26, 24, 0,
+                         1, 36, rptr.st->speed, 5);
+                    /// LINE
                     LoadButton(rptr.btn_frame_updates, rptr.window_pb,
-                               4, y += 28, PB_WIDTH - 10, 25, 15,
+                               4, y += 38, PB_WIDTH - 10, 25, 15,
                                " ", 6, "Segoe UI");
                 }
             }
             else PostMessage(rptr.window_pb->hwnd, WM_USER, 1, 0);
 
-//            if (_IsButtonHovered(rptr.label_interaction, &p, 1)) {
-//                if (rptr.window_im->isactive == 0) {
-//                    GetWindowRect(rptr.window_popup->hwnd, &rect);
-//
-//                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-//                    int popup_left = rect.left + POPUP_WIDTH;
-//                    int popup_top = rect.top + 84;
-//                    if (rptr.dt->count == 1) popup_top -= 55;
-//                    if (popup_left + IM_WIDTH + 5 > res.right) popup_left = rect.left - POPUP_WIDTH + 24;
-//                    if (popup_top + IM_HEIGHT + 5 > res.bottom) popup_top = res.bottom - 229;
-//
-//                    LoadWindow(rptr.window_im, rptr.st, NULL, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, 0, 0, 0, 0);
-//
-//                    HRGN rgn = CreateRoundRectRgn(0, 0, IM_WIDTH, IM_HEIGHT, 5, 5);
-//                    SetWindowRgn(rptr.window_im->hwnd, rgn, TRUE);
-//
-//                    int y = 5;
-//
-//                    LoadButton(rptr.btn_ignore_input, rptr.window_im,
-//                               5, y, IM_WIDTH - 10, 25, 15,
-//                               " ", 1);
-//                }
-//            }
-//            else PostMessage(rptr.window_im->hwnd, WM_USER, 1, 0);
+            if (_IsButtonHovered(rptr.label_interaction, &p, 1)) {
+                if (rptr.window_im->isactive == 0) {
+                    GetWindowRect(rptr.window_popup->hwnd, &rect);
+
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    int offset = 84;
+                    int popup_left = rect.left + POPUP_WIDTH;
+                    int popup_top = rect.top + offset;
+                    if (popup_left + IM_WIDTH > res.right) popup_left = rect.left - IM_WIDTH;
+                    if (popup_top + IM_HEIGHT > res.bottom) popup_top = res.bottom - IM_HEIGHT;
+
+                    LoadWindow(rptr.window_im, rptr.st, NULL, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, 0, 0, 0, 0);
+
+                    HRGN rgn = CreateRoundRectRgn(0, 0, IM_WIDTH, IM_HEIGHT, 5, 5);
+                    SetWindowRgn(rptr.window_im->hwnd, rgn, TRUE);
+
+                    int y = 5;
+
+                    LoadButton(rptr.btn_ignore_input, rptr.window_im,
+                               5, y, IM_WIDTH - 10, 25, 15,
+                               " ", 1, "Segoe UI");
+                }
+            }
+            else PostMessage(rptr.window_im->hwnd, WM_USER, 1, 0);
 
             if (_IsButtonHovered(rptr.label_window_scale, &p, 1)) {
                 if (rptr.window_wc->isactive == 0) {
                     GetWindowRect(rptr.window_popup->hwnd, &rect);
 
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-                    int offset = 84;
+                    int offset = 109;
                     int popup_left = rect.left + POPUP_WIDTH;
                     int popup_top = rect.top + offset;
                     if (popup_left + WC_WIDTH > res.right) popup_left = rect.left - WC_WIDTH;
@@ -564,40 +582,27 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                          13, y += 27, WC_WIDTH - 27, 24, 0,
                          1, 200, (int)(rptr.st->trackbar_size * 100), 4);
 
+//                  LINE
+//                    LoadButton(rptr.label_transparency, rptr.window_wc,
+//                               4, y += 28, WC_WIDTH - 10, 25, 15,
+//                               " ", 5, "Segoe UI");
+
+//                    LoadTrackBar(rptr.trackbar_transparency, rptr.window_wc,
+//                         13, y += 27, WC_WIDTH - 27, 24, 0,
+//                         1, 100, (int)((float)rptr.st->transparency / 2.55), 6);
+
+                    /// LINE
+
+                    LoadButton(rptr.btn_pin_top, rptr.window_wc,
+                               4, y += 38, WC_WIDTH - 10, 25, 15,
+                               " ", 7, "Segoe UI");
+
                     LoadButton(rptr.btn_taskbar, rptr.window_wc,
-                               4, y += 28, WC_WIDTH - 10, 25, 15,
-                               " ", 5, "Segoe UI");
+                               4, y += 25, WC_WIDTH - 10, 25, 15,
+                               " ", 8, "Segoe UI");
                 }
             }
             else PostMessage(rptr.window_wc->hwnd, WM_USER, 1, 0);
-
-            if (_IsButtonHovered(rptr.label_pin_window, &p, 1)) {
-                if (rptr.window_pw->isactive == 0) {
-                    GetWindowRect(rptr.window_popup->hwnd, &rect);
-
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-                    int offset = 109;
-                    int popup_left = rect.left + POPUP_WIDTH;
-                    int popup_top = rect.top + offset;
-                    if (popup_left + PW_WIDTH > res.right) popup_left = rect.left - PW_WIDTH;
-                    if (popup_top + PW_HEIGHT > res.bottom) popup_top = res.bottom - PW_HEIGHT;
-
-                    LoadWindow(rptr.window_pw, rptr.st, NULL, "window_pw", popup_left, popup_top, PW_WIDTH, PW_HEIGHT, 0, 0, 0, 0);
-
-                    HRGN rgn = CreateRoundRectRgn(0, 0, PW_WIDTH, PW_HEIGHT, 5, 5);
-                    SetWindowRgn(rptr.window_pw->hwnd, rgn, TRUE);
-
-                    int y = 5;
-                    LoadButton(rptr.btn_pin_default, rptr.window_pw,
-                               4, y, PW_WIDTH - 10, 25, 15,
-                               " ", 1, "Segoe UI");
-
-                    LoadButton(rptr.btn_pin_top, rptr.window_pw,
-                               4, y += 25, PW_WIDTH - 10, 25, 15,
-                               " ", 2, "Segoe UI");
-                }
-            }
-            else PostMessage(rptr.window_pw->hwnd, WM_USER, 1, 0);
 
             if (_IsButtonHovered(rptr.label_move_window, &p, 1)) {
                 if (rptr.window_mwt->isactive == 0)
@@ -653,13 +658,11 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             rect.left = 0; rect.top = 0; rect.right = POPUP_WIDTH; rect.bottom = POPUP_HEIGHT;
             brush = CreateSolidBrush(RGB(250, 250, 250));
             FillRect(hdc, &rect, brush);
-            DeleteObject(brush);
 
             // Lines
             rect.left = 10; rect.top = 34; rect.right = POPUP_WIDTH - 10; rect.bottom = rect.top + 1;
             brush = CreateSolidBrush(RGB(210, 210, 210));
             FillRect(hdc, &rect, brush);
-            DeleteObject(brush);
             rect.left = 10; rect.top = 169; rect.right = POPUP_WIDTH - 10; rect.bottom = rect.top + 1;
             brush = CreateSolidBrush(RGB(210, 210, 210));
             FillRect(hdc, &rect, brush);
@@ -744,108 +747,9 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     }
                 }   break;
 
-                /// Add scale
-                case 4:
-                case 327684: {
-//                    if (lparam == (LPARAM)rptr.addscale_button->hwnd) {
-//                        rptr.st->pos = SendMessage(rptr.scale_trackbar->hwnd, TBM_GETPOS, 0, 0) + 1;
-//
-//                        _ChangeScaleTrackBar(rptr.window, rptr.window_popup,
-//                                             rptr.scale_trackbar, rptr.scale_button,
-//                                             rptr.st, rptr.dt, rptr.rd,
-//                                             rptr.st->pos);
-//
-//                        PostMessage(rptr.scale_trackbar->hwnd, TBM_SETPOS, TRUE, rptr.st->pos);
-//                    }
-                }   break;
-
-                /// Decrease scale
-                case 5:
-                case 327685: {
-//                    if (lparam == (LPARAM)rptr.decscale_button->hwnd) {
-//                        rptr.st->pos = SendMessage(rptr.scale_trackbar->hwnd, TBM_GETPOS, 0, 0) - 1;
-//
-//                        _ChangeScaleTrackBar(rptr.window, rptr.window_popup,
-//                                             rptr.scale_trackbar, rptr.scale_button,
-//                                             rptr.st, rptr.dt, rptr.rd,
-//                                             rptr.st->pos);
-//
-//                        PostMessage(rptr.scale_trackbar->hwnd, TBM_SETPOS, TRUE, rptr.st->pos);
-//                    }
-                }   break;
-
-                /// Pause
-                case 6: {
-//                    if (rptr.rd->change_frames) rptr.rd->change_frames = 0;
-//                    else rptr.rd->change_frames = 1;
-//
-//                    SetFocus(rptr.window_popup->hwnd);
-                }   break;
-
-                /// Show frame updates
-                case 7: {
-//                    if (rptr.st->sfu)
-//                        rptr.st->sfu = 0;
-//                    else
-//                        rptr.st->sfu = 1;
-//
-//                    SetFocus(rptr.window_popup->hwnd);
-//                    InvalidateRect(rptr.sfp_button->hwnd, NULL, TRUE);
-                }   break;
-
-                /// Show taskbar icon
+                /// Close window
                 case 8: {
                     PostMessage(rptr.window->hwnd, WM_CLOSE, 0, 0);
-//                    if ((HWND)lparam == rptr.sti_button->hwnd) {
-//                        LONG_PTR style = GetWindowLong(rptr.window->hwnd, GWL_EXSTYLE);
-//
-//                        if (rptr.st->taskbar) {
-//                            rptr.st->taskbar = 0;
-//                            style |= WS_EX_TOOLWINDOW;
-//                            style &= ~WS_EX_APPWINDOW;
-//                        }
-//                        else {
-//                            rptr.st->taskbar = 1;
-//                            style &= ~WS_EX_TOOLWINDOW;
-//                            style |= WS_EX_APPWINDOW;
-//                        }
-//
-//                        SetWindowLong(rptr.window->hwnd, GWL_EXSTYLE, style);
-//                        SetWindowPos(rptr.window->hwnd, NULL,
-//                                     0, 0, 0, 0,
-//                                     SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-//
-//                        if (!ts && rptr.st->taskbar) {
-//                            ShowWindow(rptr.window->hwnd, SW_HIDE);
-//                            ShowWindow(rptr.window->hwnd, SW_SHOW);
-//                            ts = 1;
-//                        }
-//                        else ts = 1;
-//                        SetFocus(rptr.window_popup->hwnd);
-//
-//                        WriteSettings(rptr.st);
-//                    }
-                }   break;
-
-                /// Always on top
-                case 9: {
-//                    if (rptr.st->topmost)
-//                        rptr.st->topmost = 0;
-//                    else
-//                        rptr.st->topmost = 1;
-//
-//                    SetWindowPos(rptr.window->hwnd, NULL,
-//                             0, 0, 0, 0,
-//                             SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-//
-//                    SetFocus(rptr.window_popup->hwnd);
-//                    InvalidateRect(rptr.aot_button->hwnd, NULL, TRUE);
-//                    WriteSettings(rptr.st);
-                }   break;
-
-                /// -------------------
-                case 12: {
-//                    PostMessage(rptr.window->hwnd, WM_CLOSE, 0, 0);
                 }   break;
             }
         }   break;
@@ -862,40 +766,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                 /// -------------------
                 case VK_ESCAPE: {
                     PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
-                }   break;
-
-                /// -------------------
-                case VK_LEFT:
-                case VK_UP: {
-//                    if (rptr.rd->change_frames)
-//                        PostMessage(rptr.window_popup->hwnd, WM_COMMAND, 327685, (LPARAM)rptr.decscale_button->hwnd);
-//                    else {
-//                        SetFocus(rptr.window_popup->hwnd);
-//                        int pos = SendMessage(rptr.trackbar_frames->hwnd, TBM_GETPOS, 0, 0) - 1;
-//                        if (pos - 1 < 0)
-//                            rptr.rd->frame = rptr.dt->count - 1;
-//                        else
-//                            rptr.rd->frame = pos - 1;
-//                        PostMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, pos);
-//                        rptr.rd->framed_trackbar = 1; ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st); rptr.rd->framed_trackbar = 0;
-//                    }
-                }   break;
-
-                /// -------------------
-                case VK_RIGHT:
-                case VK_DOWN: {
-//                    if (rptr.rd->change_frames)
-//                        PostMessage(rptr.window_popup->hwnd, WM_COMMAND, 327684, (LPARAM)rptr.addscale_button->hwnd);
-//                    else {
-//                        SetFocus(rptr.window_popup->hwnd);
-//                        int pos = SendMessage(rptr.trackbar_frames->hwnd, TBM_GETPOS, 0, 0);
-//
-//                        if (pos + 1 > rptr.dt->count) { rptr.rd->frame = 0; pos = 1; }
-//                        else { rptr.rd->frame = pos; pos++; }
-//
-//                        SendMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, pos);
-//                        rptr.rd->framed_trackbar = 1; ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st); rptr.rd->framed_trackbar = 0;
-//                    }
                 }   break;
             }
         }   break;
@@ -915,11 +785,14 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     static PAINTSTRUCT ps;
     static HPEN pen = NULL;
     static HPEN prev_pen = NULL;
+    static TRACKMOUSEEVENT tme;
+    static BOOL tracking = FALSE;
 
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
@@ -930,7 +803,7 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CLOSE: {
             DestroyWindow(hwnd);
-            SetFocus(rptr.window_popup->hwnd);
+            SetActiveWindow(rptr.window_popup->hwnd);
             rptr.window_pb->isactive = 0;
         }   break;
 
@@ -941,8 +814,19 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             GetClientRect(rptr.window_pb->hwnd, &rect);
             brush = CreateSolidBrush(RGB(250, 250, 250));
             FillRect(hdc, &rect, brush);
+
+            // Lines
+            rect.left = 10; rect.top = 90; rect.right = PB_WIDTH - 10; rect.bottom = rect.top + 1; // 57
+            brush = CreateSolidBrush(RGB(210, 210, 210));
+            FillRect(hdc, &rect, brush);
+
+            rect.left = 10; rect.top = 155; rect.right = PB_WIDTH - 10; rect.bottom = rect.top + 1; // 57
+            brush = CreateSolidBrush(RGB(210, 210, 210));
+            FillRect(hdc, &rect, brush);
+
             DeleteObject(brush);
 
+            GetClientRect(rptr.window_pb->hwnd, &rect);
             pen = CreatePen(PS_SOLID, 3, RGB(238, 238, 238));
             prev_pen = (HPEN)SelectObject(hdc, pen);
             prev_brush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -969,11 +853,13 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         case WM_SETCURSOR: {
             GetCursorPos(&p);
 
-            _IsButtonHovered(rptr.label_frames, &p, 0);
+//            _IsButtonHovered(rptr.label_frames, &p, 0);
             _IsButtonHovered(rptr.btn_prev_frame, &p, 0);
             _IsButtonHovered(rptr.btn_play, &p, 0);
             _IsButtonHovered(rptr.btn_next_frame, &p, 0);
             _IsButtonHovered(rptr.btn_frame_updates, &p, 0);
+//            _IsButtonHovered(rptr.label_speed, &p, 0);
+//            _IsButtonHovered(rptr.btn_slow_rewind, &p, 0);
         }   break;
 
         /// -------------------
@@ -981,7 +867,8 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.label_frames->hwnd) {
-                _InvalidateButton(item, rptr.label_frames, "Frames", 35, 0);
+                sprintf(rptr.st->str_frame, "Frame (%d/%d)", rptr.rd->frame + 1, rptr.dt->count);
+                _InvalidateButton(item, rptr.label_frames, rptr.st->str_frame, 35, 0);
             }
             if (item->hwndItem == rptr.btn_prev_frame->hwnd) {
                 _InvalidateButton(item, rptr.btn_prev_frame, "", 30, 0x4);
@@ -991,6 +878,15 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             }
             if (item->hwndItem == rptr.btn_next_frame->hwnd) {
                 _InvalidateButton(item, rptr.btn_next_frame, "", 21, 0x8);
+            }
+            if (item->hwndItem == rptr.label_speed->hwnd) {
+                if (rptr.st->speed == 16 || rptr.st->speed == 36)
+                    sprintf(rptr.st->str_speed, "Speed (%.0fx)", (float)rptr.st->speed * 0.05 + 0.2);
+                else if (rptr.st->speed % 2)
+                    sprintf(rptr.st->str_speed, "Speed (%.2fx)", (float)rptr.st->speed * 0.05 + 0.2);
+                else
+                    sprintf(rptr.st->str_speed, "Speed (%.1fx)", (float)rptr.st->speed * 0.05 + 0.2);
+                _InvalidateButton(item, rptr.label_speed, rptr.st->str_speed, 35, 0);
             }
             if (item->hwndItem == rptr.btn_frame_updates->hwnd) {
                 _InvalidateButton(item, rptr.btn_frame_updates, "Show frame updates", 35, (uint8_t)rptr.st->sfu);
@@ -1025,23 +921,24 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PtInRect(&rect, p)) break;
 
             PostMessage(rptr.window_pb->hwnd, WM_CLOSE, 0, 0);
-
-//            if (rptr.window_mwt->isactive)
-//                PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
         }   break;
 
         /// -------------------
         case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme;
-            tme.cbSize = sizeof(tme);
-            tme.hwndTrack = hwnd;
-            tme.dwFlags = TME_LEAVE;
+            if (!tracking) {
+                tme.cbSize = sizeof(tme);
+                tme.hwndTrack = rptr.window_pb->hwnd;
+                tme.dwFlags = TME_LEAVE;
 
-            _TrackMouseEvent(&tme);
+                if (_TrackMouseEvent(&tme))
+                    tracking = TRUE;
+            }
         }   break;
 
         /// -------------------
         case WM_MOUSELEAVE: {
+            tracking = FALSE;
+
             GetCursorPos(&p);
 
             GetWindowRect(rptr.window_pb->hwnd, &wrect);
@@ -1055,13 +952,34 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PostMessage(rptr.window_pb->hwnd, WM_CLOSE, 0, 0);
                 ReleaseHover(&rptr, rptr.label_playback->hwnd);
             }
-            else {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(tme);
-                tme.hwndTrack = hwnd;
-                tme.dwFlags = TME_LEAVE;
-            }
         }   break;
+
+        /// -------------------
+        case WM_NCMOUSEMOVE: {
+            tracking = FALSE;
+        }   break;
+
+        /// -------------------
+        case WM_TIMER: {
+            switch (wparam) {
+                case 1:
+                    GetCursorPos(&p);
+                    GetWindowRect(rptr.window_pb->hwnd, &wrect);
+                    GetWindowRect(rptr.label_playback->hwnd, &brect);
+                    GetWindowRect(rptr.window_popup->hwnd, &prect);
+
+                    if (prect.left > wrect.left) brect.left -= 5;
+                    else brect.right += 5;
+
+                    if (!PtInRect(&wrect, p) && !PtInRect(&brect, p) &&
+                        GetCapture() != rptr.trackbar_frames->hwnd &&
+                        GetCapture() != rptr.trackbar_speed->hwnd) {
+                        PostMessage(rptr.window_pb->hwnd, WM_CLOSE, 0, 0);
+                        ReleaseHover(&rptr, rptr.label_playback->hwnd);
+                    }
+                    break;
+            }
+        }
 
         /// -------------------
         case WM_HSCROLL: {
@@ -1069,6 +987,12 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 SetFocus(rptr.window_popup->hwnd);
                 rptr.rd->frame = SendMessage(rptr.trackbar_frames->hwnd, TBM_GETPOS, 0, 0) - 1;
                 rptr.rd->framed_trackbar = 1; ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st); rptr.rd->framed_trackbar = 0;
+            }
+            if ((HWND)lparam == rptr.trackbar_speed->hwnd) {
+                SetFocus(rptr.window_popup->hwnd);
+                rptr.st->speed = SendMessage(rptr.trackbar_speed->hwnd, TBM_GETPOS, 0, 0);
+                printf("speed: %u | %.2f\n", rptr.st->speed, (float)rptr.st->speed * 0.05 + 0.2);
+                InvalidateRect(rptr.label_speed->hwnd, NULL, TRUE);
             }
         }   break;
 
@@ -1129,11 +1053,14 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     static PAINTSTRUCT ps;
     static HPEN pen = NULL;
     static HPEN prev_pen = NULL;
+    static TRACKMOUSEEVENT tme;
+    static BOOL tracking = FALSE;
 
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
@@ -1144,7 +1071,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CLOSE: {
             DestroyWindow(hwnd);
-            SetFocus(rptr.window_popup->hwnd);
+            SetActiveWindow(rptr.window_popup->hwnd);
             rptr.window_im->isactive = 0;
         }   break;
 
@@ -1167,16 +1094,6 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             DeleteObject(pen);
 
             EndPaint(rptr.window_im->hwnd, &ps);
-        }   break;
-
-        /// -------------------
-        case WM_CTLCOLORSTATIC: {
-            brush = CreateSolidBrush(RGB(250, 250, 250));
-
-//            if (GetDlgCtrlID((HWND)lparam) == 4) {
-//                SetBkMode((HDC)wparam, TRANSPARENT);
-//                return (LRESULT)brush;
-//            }
         }   break;
 
         /// -------------------
@@ -1222,18 +1139,21 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme;
-            tme.cbSize = sizeof(tme);
-            tme.hwndTrack = hwnd;
-            tme.dwFlags = TME_LEAVE;
+            if (!tracking) {
+                tme.cbSize = sizeof(tme);
+                tme.hwndTrack = rptr.window_im->hwnd;
+                tme.dwFlags = TME_LEAVE;
 
-            _TrackMouseEvent(&tme);
+                if (_TrackMouseEvent(&tme))
+                    tracking = TRUE;
+            }
         }   break;
 
         /// -------------------
         case WM_MOUSELEAVE: {
-            GetCursorPos(&p);
+            tracking = FALSE;
 
+            GetCursorPos(&p);
             GetWindowRect(rptr.window_im->hwnd, &wrect);
             GetWindowRect(rptr.label_interaction->hwnd, &brect);
             GetWindowRect(rptr.window_popup->hwnd, &prect);
@@ -1245,18 +1165,48 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
                 ReleaseHover(&rptr, rptr.label_interaction->hwnd);
             }
-            else {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(tme);
-                tme.hwndTrack = hwnd;
-                tme.dwFlags = TME_LEAVE;
-            }
         }   break;
+
+        /// -------------------
+        case WM_NCMOUSEMOVE: {
+            tracking = FALSE;
+        }   break;
+
+        /// -------------------
+        case WM_TIMER: {
+            switch (wparam) {
+                case 1:
+                    GetCursorPos(&p);
+                    GetWindowRect(rptr.window_im->hwnd, &wrect);
+                    GetWindowRect(rptr.label_interaction->hwnd, &brect);
+                    GetWindowRect(rptr.window_popup->hwnd, &prect);
+
+                    if (prect.left > wrect.left) brect.left -= 5;
+                    else brect.right += 5;
+
+                    if (!PtInRect(&wrect, p) && !PtInRect(&brect, p)) {
+                        PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
+                        ReleaseHover(&rptr, rptr.label_interaction->hwnd);
+                    }
+                    break;
+            }
+        }
 
         /// -------------------
         case WM_UPDATE_ALPHA: {
             uint8_t alpha = (uint8_t)lparam;
-            SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
+            if (alpha > 0) SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
+        }   break;
+
+        /// -------------------
+        case WM_COMMAND: {
+            switch (wparam) {
+                /// -------------------
+                case 1:
+                    SetWindowLongPtr(rptr.window->hwnd, GWLP_WNDPROC, (LONG_PTR)EscapeWindowProc);
+                    PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
+                    break;
+            }
         }   break;
 
         default: break;
@@ -1274,12 +1224,15 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     static PAINTSTRUCT ps;
     static HPEN pen = NULL;
     static HPEN prev_pen = NULL;
+    static TRACKMOUSEEVENT tme;
+    static BOOL tracking = FALSE;
     static uint8_t ts = 0;
 
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
@@ -1290,7 +1243,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CLOSE: {
             DestroyWindow(hwnd);
-            SetFocus(rptr.window_popup->hwnd);
+            SetActiveWindow(rptr.window_popup->hwnd);
             rptr.window_wc->isactive = 0;
         }   break;
 
@@ -1301,12 +1254,19 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             GetClientRect(rptr.window_wc->hwnd, &rect);
             brush = CreateSolidBrush(RGB(250, 250, 250));
             FillRect(hdc, &rect, brush);
+
+            // Lines
+            rect.left = 10; rect.top = 65; rect.right = PB_WIDTH - 10; rect.bottom = rect.top + 1;
+            brush = CreateSolidBrush(RGB(210, 210, 210));
+            FillRect(hdc, &rect, brush);
+
             DeleteObject(brush);
 
             pen = CreatePen(PS_SOLID, 3, RGB(238, 238, 238));
             prev_pen = (HPEN)SelectObject(hdc, pen);
             prev_brush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
 
+            GetClientRect(rptr.window_wc->hwnd, &rect);
             RoundRect(hdc, 0, 0, rect.right - 1, rect.bottom - 1, 10, 10);
             SelectObject(hdc, prev_pen);
             SelectObject(hdc, prev_brush);
@@ -1319,7 +1279,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         case WM_CTLCOLORSTATIC: {
             brush = CreateSolidBrush(RGB(250, 250, 250));
 
-            if (GetDlgCtrlID((HWND)lparam) == 4) {
+            if (GetDlgCtrlID((HWND)lparam) == 4 || GetDlgCtrlID((HWND)lparam) == 6) {
                 SetBkMode((HDC)wparam, TRANSPARENT);
                 return (LRESULT)brush;
             }
@@ -1331,6 +1291,8 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
             _IsButtonHovered(rptr.btn_add_scale, &p, 0);
             _IsButtonHovered(rptr.btn_subtract_scale, &p, 0);
+//            _IsButtonHovered(rptr.label_transparency, &p, 0);
+            _IsButtonHovered(rptr.btn_pin_top, &p, 0);
             _IsButtonHovered(rptr.btn_taskbar, &p, 0);
         }   break;
 
@@ -1348,6 +1310,14 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
             if (item->hwndItem == rptr.btn_subtract_scale->hwnd)
                 _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, 0);
+
+//            if (item->hwndItem == rptr.label_transparency->hwnd) {
+//                sprintf(rptr.st->str_transparency, "Transparency (%u%%)", (uint8_t)((float)rptr.st->transparency / 2.55));
+//                _InvalidateButton(item, rptr.label_transparency, rptr.st->str_transparency, 35, 0);
+//            }
+
+            if (item->hwndItem == rptr.btn_pin_top->hwnd)
+                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, (uint8_t)rptr.st->topmost);
 
             if (item->hwndItem == rptr.btn_taskbar->hwnd)
                 _InvalidateButton(item, rptr.btn_taskbar, "Show taskbar icon", 35, (uint8_t)rptr.st->taskbar);
@@ -1381,25 +1351,25 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PtInRect(&rect, p)) break;
 
             PostMessage(rptr.window_wc->hwnd, WM_CLOSE, 0, 0);
-
-//            if (rptr.window_mwt->isactive)
-//                PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
         }   break;
 
         /// -------------------
         case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme;
-            tme.cbSize = sizeof(tme);
-            tme.hwndTrack = hwnd;
-            tme.dwFlags = TME_LEAVE;
+            if (!tracking) {
+                tme.cbSize = sizeof(tme);
+                tme.hwndTrack = rptr.window_wc->hwnd;
+                tme.dwFlags = TME_LEAVE;
 
-            _TrackMouseEvent(&tme);
+                if (_TrackMouseEvent(&tme))
+                    tracking = TRUE;
+            }
         }   break;
 
         /// -------------------
         case WM_MOUSELEAVE: {
-            GetCursorPos(&p);
+            tracking = FALSE;
 
+            GetCursorPos(&p);
             GetWindowRect(rptr.window_wc->hwnd, &wrect);
             GetWindowRect(rptr.label_window_scale->hwnd, &brect);
             GetWindowRect(rptr.window_popup->hwnd, &prect);
@@ -1411,18 +1381,39 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PostMessage(rptr.window_wc->hwnd, WM_CLOSE, 0, 0);
                 ReleaseHover(&rptr, rptr.label_window_scale->hwnd);
             }
-            else {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(tme);
-                tme.hwndTrack = hwnd;
-                tme.dwFlags = TME_LEAVE;
-            }
         }   break;
+
+        /// -------------------
+        case WM_NCMOUSEMOVE: {
+            tracking = FALSE;
+        }   break;
+
+        /// -------------------
+        case WM_TIMER: {
+            switch (wparam) {
+                case 1:
+                    GetCursorPos(&p);
+                    GetWindowRect(rptr.window_wc->hwnd, &wrect);
+                    GetWindowRect(rptr.label_window_scale->hwnd, &brect);
+                    GetWindowRect(rptr.window_popup->hwnd, &prect);
+
+                    if (prect.left > wrect.left) brect.left -= 5;
+                    else brect.right += 5;
+
+                    if (!PtInRect(&wrect, p) && !PtInRect(&brect, p) &&
+                        GetCapture() != rptr.trackbar_scale->hwnd &&
+                        GetCapture() != rptr.trackbar_transparency->hwnd) {
+                        PostMessage(rptr.window_wc->hwnd, WM_CLOSE, 0, 0);
+                        ReleaseHover(&rptr, rptr.label_window_scale->hwnd);
+                    }
+                    break;
+            }
+        }
 
         /// -------------------
         case WM_UPDATE_ALPHA: {
             uint8_t alpha = (uint8_t)lparam;
-            SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
+            if (alpha > 0) SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
         }   break;
 
         /// -------------------
@@ -1434,6 +1425,12 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                      rptr.trackbar_scale, rptr.label_scale,
                                      rptr.st, rptr.dt, rptr.rd,
                                      rptr.st->pos);
+            }
+            if ((HWND)lparam == rptr.trackbar_transparency->hwnd) {
+                rptr.st->transparency = (uint8_t)(((float)SendMessage(rptr.trackbar_transparency->hwnd, TBM_GETPOS, 0, 0)) * 2.55 + 0.555555555);
+                SetLayeredWindowAttributes(rptr.window->hwnd, 0x0, rptr.st->transparency, LWA_ALPHA);
+
+                InvalidateRect(rptr.label_transparency->hwnd, NULL, TRUE);
             }
         }   break;
 
@@ -1468,7 +1465,14 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                     }
                 }   break;
 
-                case 5: {
+                case 7: {
+                     if (rptr.st->topmost) rptr.st->topmost = 0;
+                     else rptr.st->topmost = 1;
+
+                     InvalidateRect(rptr.btn_pin_top->hwnd, NULL, TRUE);
+                }   break;
+
+                case 8: {
                     if ((HWND)lparam == rptr.btn_taskbar->hwnd) {
                         LONG_PTR style = GetWindowLong(rptr.window->hwnd, GWL_EXSTYLE);
 
@@ -1508,168 +1512,6 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 LRESULT CALLBACK PWProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    static RECT prect, brect, wrect, rect;
-    static POINT p;
-    static HBRUSH brush = NULL;
-    static HBRUSH prev_brush = NULL;
-    static HDC hdc = NULL;
-    static PAINTSTRUCT ps;
-    static HPEN pen = NULL;
-    static HPEN prev_pen = NULL;
-
-    switch (msg) {
-        /// -------------------
-        case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
-        }   break;
-
-        /// -------------------
-        case WM_DESTROY: {
-            PostQuitMessage(0);
-        }   break;
-
-        /// -------------------
-        case WM_CLOSE: {
-            DestroyWindow(hwnd);
-            SetFocus(rptr.window_popup->hwnd);
-            rptr.window_pw->isactive = 0;
-        }   break;
-
-        /// -------------------
-        case WM_PAINT: {
-            hdc = BeginPaint(rptr.window_pw->hwnd, &ps);
-
-            GetClientRect(rptr.window_pw->hwnd, &rect);
-            brush = CreateSolidBrush(RGB(250, 250, 250));
-            FillRect(hdc, &rect, brush);
-            DeleteObject(brush);
-
-            pen = CreatePen(PS_SOLID, 3, RGB(238, 238, 238)); // 235, 235, 235
-            prev_pen = (HPEN)SelectObject(hdc, pen);
-            prev_brush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
-
-            RoundRect(hdc, 0, 0, rect.right - 1, rect.bottom - 1, 10, 10);
-            SelectObject(hdc, prev_pen);
-            SelectObject(hdc, prev_brush);
-            DeleteObject(pen);
-
-            EndPaint(rptr.window_pw->hwnd, &ps);
-        }   break;
-
-        /// -------------------
-        case WM_SETCURSOR: {
-            GetCursorPos(&p);
-
-            _IsButtonHovered(rptr.btn_pin_default, &p, 0);
-            _IsButtonHovered(rptr.btn_pin_top, &p, 0);
-        }   break;
-
-        /// -------------------
-        case WM_DRAWITEM: {
-            LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
-
-            if (item->hwndItem == rptr.btn_pin_default->hwnd)
-                _InvalidateButton(item, rptr.btn_pin_default, "Default", 35, (uint8_t)!rptr.st->topmost);
-
-            if (item->hwndItem == rptr.btn_pin_top->hwnd)
-                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, (uint8_t)rptr.st->topmost);
-        }   break;
-
-        /** Checks whether window should exist **/
-
-        case WM_USER: {
-            GetCursorPos(&p);
-
-            GetWindowRect(rptr.window_pw->hwnd, &wrect);
-            GetWindowRect(rptr.label_pin_window->hwnd, &brect);
-            GetWindowRect(rptr.window_popup->hwnd, &prect);
-
-            if (prect.left > wrect.left) brect.left -= 5;
-            else brect.right += 5;
-
-            if (!PtInRect(&wrect, p) && !PtInRect(&brect, p)) {
-                PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
-                ReleaseHover(&rptr, rptr.label_pin_window->hwnd);
-            }
-        }   break;
-
-        /// -------------------
-        case WM_ACTIVATE: {
-            if (wparam == WA_INACTIVE) {
-                PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
-                ReleaseHover(&rptr, rptr.label_pin_window->hwnd);
-            }
-        }   break;
-
-        /// -------------------
-        case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme;
-            tme.cbSize = sizeof(tme);
-            tme.hwndTrack = hwnd;
-            tme.dwFlags = TME_LEAVE;
-
-            _TrackMouseEvent(&tme);
-        }   break;
-
-        /// -------------------
-        case WM_MOUSELEAVE: {
-            GetCursorPos(&p);
-
-            GetWindowRect(rptr.window_pw->hwnd, &wrect);
-            GetWindowRect(rptr.label_move_window->hwnd, &brect);
-            GetWindowRect(rptr.window_popup->hwnd, &prect);
-
-            if (prect.left > wrect.left) brect.left -= 5;
-            else brect.right += 5;
-
-            if (!PtInRect(&wrect, p) && !PtInRect(&brect, p)) {
-                PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
-                ReleaseHover(&rptr, rptr.label_pin_window->hwnd);
-            }
-            else {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(tme);
-                tme.hwndTrack = hwnd;
-                tme.dwFlags = TME_LEAVE;
-            }
-        }   break;
-
-        /** Commands **/
-
-        /// -------------------
-        case WM_UPDATE_ALPHA: {
-            uint8_t alpha = (uint8_t)lparam;
-            SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
-        }   break;
-
-        /// -------------------
-        case WM_COMMAND: {
-            switch (wparam) {
-                case 1: {
-                    rptr.st->topmost = 0;
-
-                    SetWindowPos(rptr.window->hwnd, NULL,
-                             0, 0, 0, 0,
-                             SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-
-                    SetFocus(rptr.window_popup->hwnd);
-                    WriteSettings(rptr.st);
-                }   break;
-                case 2: {
-                    rptr.st->topmost = 1;
-
-                    SetWindowPos(rptr.window->hwnd, NULL,
-                             0, 0, 0, 0,
-                             SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-
-                    SetFocus(rptr.window_popup->hwnd);
-                    WriteSettings(rptr.st);
-                }   break;
-            }
-        }   break;
-
-        default: break;
-    }
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
@@ -1683,12 +1525,15 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     static PAINTSTRUCT ps;
     static HPEN pen = NULL;
     static HPEN prev_pen = NULL;
+    static TRACKMOUSEEVENT tme;
+    static BOOL tracking = FALSE;
 
     switch (msg)
     {
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
@@ -1699,7 +1544,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CLOSE: {
             DestroyWindow(hwnd);
-            SetFocus(rptr.window_popup->hwnd);
+            SetActiveWindow(rptr.window_popup->hwnd);
             rptr.window_mwt->isactive = 0;
         }   break;
 
@@ -1779,20 +1624,33 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
                 ReleaseHover(&rptr, rptr.label_move_window->hwnd);
             }
+//            GetCursorPos(&p);
+//            GetWindowRect(rptr.window_mwt->hwnd, &rect);
+//
+//            if (wparam != WA_INACTIVE ||
+//                IsChild(rptr.window_mwt->hwnd, (HWND)lparam) ||
+//                (HWND)lparam == hwnd ||
+//                PtInRect(&rect, p)) break;
+//
+//            PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
         }   break;
 
         /// -------------------
         case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme;
-            tme.cbSize = sizeof(tme);
-            tme.hwndTrack = hwnd;
-            tme.dwFlags = TME_LEAVE;
+            if (!tracking) {
+                tme.cbSize = sizeof(tme);
+                tme.hwndTrack = rptr.window_mwt->hwnd;
+                tme.dwFlags = TME_LEAVE;
 
-            _TrackMouseEvent(&tme);
+                if (_TrackMouseEvent(&tme))
+                    tracking = TRUE;
+            }
         }   break;
 
         /// -------------------
         case WM_MOUSELEAVE: {
+            tracking = FALSE;
+
             GetCursorPos(&p);
 
             GetWindowRect(rptr.window_mwt->hwnd, &wrect);
@@ -1806,20 +1664,39 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
                 ReleaseHover(&rptr, rptr.label_move_window->hwnd);
             }
-            else {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(tme);
-                tme.hwndTrack = hwnd;
-                tme.dwFlags = TME_LEAVE;
-            }
         }   break;
+
+        /// -------------------
+        case WM_NCMOUSEMOVE: {
+            tracking = FALSE;
+        }   break;
+
+        /// -------------------
+        case WM_TIMER: {
+            switch (wparam) {
+                case 1:
+                    GetCursorPos(&p);
+                    GetWindowRect(rptr.window_mwt->hwnd, &wrect);
+                    GetWindowRect(rptr.label_move_window->hwnd, &brect);
+                    GetWindowRect(rptr.window_popup->hwnd, &prect);
+
+                    if (prect.left > wrect.left) brect.left -= 5;
+                    else brect.right += 5;
+
+                    if (!PtInRect(&wrect, p) && !PtInRect(&brect, p)) {
+                        PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
+                        ReleaseHover(&rptr, rptr.label_move_window->hwnd);
+                    }
+                    break;
+            }
+        }
 
         /** Commands **/
 
         /// -------------------
         case WM_UPDATE_ALPHA: {
             uint8_t alpha = (uint8_t)lparam;
-            SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
+            if (alpha > 0) SetLayeredWindowAttributes(hwnd, 0x0, alpha, LWA_ALPHA);
         }   break;
 
         /// -------------------
@@ -1894,7 +1771,6 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     }
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
-
 
 BOOL CALLBACK DlgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -2271,6 +2147,9 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
         glEnd();
     }
 
+    if (rptr.window_pb->isactive)
+        InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
+
     SwapBuffers(window->hdc);
 
     if (!rd->framed_trackbar)
@@ -2314,7 +2193,7 @@ DWORD WINAPI RenderThread(LPVOID arg)
 {
     RenderPtr* rptr = (RenderPtr*)arg;
     while (rptr->rd->render_thread) {
-        if (ChangeFrame(rptr->dt, rptr->rd)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
+        if (ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
         Sleep(1);
     }
 
@@ -2333,18 +2212,19 @@ double GetTime()
     return (double)counter.QuadPart / freq.QuadPart;
 }
 
-uint8_t ChangeFrame(Data* dt, Render* rd)
+uint8_t ChangeFrame(Data* dt, Render* rd, Settings* st)
 {
     rd->current_time = GetTime();
+    float delay = dt->delays[rd->frame] / ((float)st->speed * 0.05 + 0.2);
 
-    if (rd->current_time - 0.002 > rd->start_time + dt->delays[rd->frame] + rd->inaccuracy)
+    if (rd->current_time - 0.002 > rd->start_time + delay + rd->inaccuracy)
     {
-        rd->inaccuracy += dt->delays[rd->frame] - (rd->current_time - rd->start_time);
+        rd->inaccuracy += delay - (rd->current_time - rd->start_time);
 
-        if (rd->inaccuracy < -dt->delays[rd->frame] * 2)
+        if (rd->inaccuracy < -delay * 2)
             rd->inaccuracy = 0;
 
-        // printf("%f | %f | %f | %f\n", rd->start_time, rd->current_time, dt->delays[rd->frame], rd->inaccuracy);
+        // printf("%f | %f | %f | %f\n", rd->start_time, rd->current_time, delay, rd->inaccuracy);
 
         rd->start_time = rd->current_time;
         return 1;

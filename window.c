@@ -2,9 +2,9 @@
 
 /** Windows Processing **/
 
-int WindowInit(Window* window, const char* lpszClassName, WNDPROC Proc)
+int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc)
 {
-    WcexInit(&window->wcex, lpszClassName, (WNDPROC)Proc, window->hinstance);
+    WcexInit(&window->wcex, lpszclassname, (WNDPROC)proc, window->hinstance);
     if (!RegisterClassEx(&window->wcex)) return 1;
     window->isactive = 0;
 
@@ -31,7 +31,7 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     window->hwnd = CreateWindowEx(style,
                                   classname,
                                   APP_NAME,
-                                  WS_POPUP | WS_VISIBLE,
+                                  WS_POPUP,
                                   xoffset,
                                   yoffset,
                                   width,
@@ -40,12 +40,11 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                                   NULL,
                                   window->hinstance,
                                   NULL);
-    SetFocus(window->hwnd);
 
     if (settm) SetWindowPos(window->hwnd, (st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
 
     SetLayeredWindowAttributes(window->hwnd, 0x0, 0, LWA_COLORKEY);
-    if (!setgl) SetLayeredWindowAttributes(window->hwnd, 0x0, 0, LWA_ALPHA);
+//    SetLayeredWindowAttributes(window->hwnd, 0, st->transparency, LWA_ALPHA);
 
     ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->isactive = 1;
     DragAcceptFiles(window->hwnd, (setdaf) ? TRUE : FALSE);
@@ -75,7 +74,6 @@ void LoadTrackBar(Trackbar* trackbar, Window* main_window,
     SendMessage(trackbar->hwnd, TBM_SETRANGE, TRUE, MAKELONG(vfrom, vto));
     SendMessage(trackbar->hwnd, TBM_SETPOS, TRUE, sp);
     SendMessage(trackbar->hwnd, TBM_SETTIC, vto, 0);
-
 }
 
 void LoadButton(Button* button, Window* main_window,
@@ -128,19 +126,19 @@ void ReleaseWindow(Window* window)
     DestroyWindow(window->hwnd);
 }
 
-void WcexInit(WNDCLASSEX* wcex, const char* lpszClassName, WNDPROC Proc, HINSTANCE hInstance)
+void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTANCE hinstance)
 {
     (*wcex).cbSize =           sizeof(WNDCLASSEX);
     (*wcex).style =            CS_OWNDC;
-    (*wcex).lpfnWndProc =      Proc;
+    (*wcex).lpfnWndProc =      proc;
     (*wcex).cbClsExtra =       0;
     (*wcex).cbWndExtra =       0;
-    (*wcex).hInstance =        hInstance;
+    (*wcex).hInstance =        hinstance;
     (*wcex).hIcon =            (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
     (*wcex).hCursor =          LoadCursor(NULL, IDC_SIZEALL);
     (*wcex).hbrBackground =    (HBRUSH)GetStockObject(BLACK_BRUSH);
     (*wcex).lpszMenuName =     NULL;
-    (*wcex).lpszClassName =    lpszClassName;
+    (*wcex).lpszClassName =    lpszclassname;
     (*wcex).hIconSm =          (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
 }
 
@@ -157,10 +155,10 @@ void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC) {
 
     pfd.nSize = sizeof(pfd);
     pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_DRAW_TO_BITMAP;
     pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 8;
-    pfd.cDepthBits = 16;
+    pfd.cColorBits = 24;
+    pfd.cDepthBits = 32;
     pfd.iLayerType = PFD_MAIN_PLANE;
 
     iFormat = ChoosePixelFormat(*hdc, &pfd);
