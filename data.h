@@ -34,6 +34,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt);
 uint8_t _LoadMNG(Window* window, Settings* st, Data* dt);
 
 void _GLImage(Window* window, Data* dt);
+void _ChangeTexFilt(Window* window, Data* dt, GLint param);
 
 void ClearMedia(Data* dt);
 void ClearFileData(Data* dt);

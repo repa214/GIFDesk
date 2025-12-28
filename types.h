@@ -7,6 +7,7 @@
 #include <gl/gl.h>
 
 #include <windows.h>
+#include <tchar.h>
 
 #include <commctrl.h>
 #include <locale.h>
@@ -20,7 +21,8 @@
 #include "webp/demux.h"
 #include "avif/avif.h"
 
-#define APP_NAME "GIFDesk 1.1b"
+#define APP_NAME "GIFDesk"
+#define APP_NAME_VER "GIFDesk 1.1"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -79,17 +81,16 @@ typedef struct
     char str_transparency[32];
     char str_speed[32];
 
+    /** contains in settings file **/
+
     float size;
-    int taskbar;
-    int topmost;
-    int lang;
+    uint8_t taskbar, topmost, lang, speed, transparency;
+    int x, y;
 
-    /** doesn`t contains in file **/
+    /** doesn`t contains in settings file **/
 
-    uint8_t transparency;   /// Window transparency
-    uint8_t speed;          /// Speed play
-    int sfu;                /// Show frame updates
-    int dnd;                /// Enable Drag n` Drop
+    uint8_t sfu;
+    uint8_t dnd;
 
     /** for temporary changes **/
 

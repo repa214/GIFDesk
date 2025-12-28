@@ -162,7 +162,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd);
 
 **/
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
-                       const char* text, int left, uint8_t flag);
+                       const char* text, int left, LPCWSTR graytext, int gleft, uint8_t flag);
 /// void _InvalidateTrackBar(LPDRAWITEMSTRUCT item, Window* window, Window* cf_window);
 
 int _IsButtonHovered(Button* button, POINT* p, int arrowed);

@@ -16,6 +16,4 @@ void SwapFilenames(Settings* st);
 
 void WriteSettings(Settings* st);
 
-void ShowSettings(Settings* st);
-
 #endif // SETTINGS_H_INCLUDED

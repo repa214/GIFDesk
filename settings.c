@@ -11,6 +11,8 @@ void GetSettingsPath(Settings* st)
     st->sfu = 0;
     st->transparency = 255;
     st->speed = 16;
+    st->x = 0;
+    st->y = 0;
     const char filter[] =
         "Animations (*.gif, *.webp, *.png, *.avif)\0*.gif; *.webp; *.png; *.apng; *.avif; *.avifs\0"
         "GIF (*.gif)\0*.gif\0"
@@ -103,10 +105,12 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
 
     }   while (1);
 
-    ReloadWindow(window, st, dt, 1); rd->loading = 0; rd->frame = 0; // rd->change_frames = 1;
+    ReloadWindow(window, st, dt, 1); rd->loading = 0; rd->frame = 0; rd->change_frames = 1;
     window->wcex.lpfnWndProc = MainWindowProc;
 }
 
+/// BYTE CONFIG: filename, size, taskbar, topmost, lang
+///              char      float byte     byte     byte
 /// returns 0 if settings file is invalid
 /// returns 1 if settings file is valid
 uint8_t GetSettings(Settings* st)
@@ -116,9 +120,13 @@ uint8_t GetSettings(Settings* st)
     {
         if (fread(st->filename, sizeof(char), 261, f) < 261) goto nofile;
         if (fread(&st->size, sizeof(float), 1, f) < 1) goto nofile;
-        if (fread(&st->taskbar, sizeof(int), 1, f) < 1) goto nofile;
-        if (fread(&st->topmost, sizeof(int), 1, f) < 1) goto nofile;
-        if (fread(&st->lang, sizeof(int), 1, f) < 1) goto nofile;
+        if (fread(&st->x, sizeof(int), 1, f) < 1) goto nofile;                ///
+        if (fread(&st->y, sizeof(int), 1, f) < 1) goto nofile;                ///
+        if (fread(&st->speed, sizeof(uint8_t), 1, f) < 1) goto nofile;        ///
+        if (fread(&st->transparency, sizeof(uint8_t), 1, f) < 1) goto nofile; ///
+        if (fread(&st->taskbar, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->topmost, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->lang, sizeof(uint8_t), 1, f) < 1) goto nofile;
     }
     else goto nofile;
 
@@ -167,22 +175,16 @@ void WriteSettings(Settings* st)
     FILE *f = fopen(st->settings_path, "wb");
     fwrite(st->filename, sizeof(char), 261, f);
     fwrite(&st->size, sizeof(float), 1, f);
-    fwrite(&st->taskbar, sizeof(int), 1, f);
-    fwrite(&st->topmost, sizeof(int), 1, f);
-    fwrite(&st->lang, sizeof(int), 1, f);
+    fwrite(&st->x, sizeof(int), 1, f);
+    fwrite(&st->y, sizeof(int), 1, f);
+    fwrite(&st->speed, sizeof(uint8_t), 1, f);
+    fwrite(&st->transparency, sizeof(uint8_t), 1, f);
+    fwrite(&st->taskbar, sizeof(uint8_t), 1, f);
+    fwrite(&st->topmost, sizeof(uint8_t), 1, f);
+    fwrite(&st->lang, sizeof(uint8_t), 1, f);
 
     fclose(f);
 }
-
-void ShowSettings(Settings* st)
-{
-    printf("filename: %s\n", st->filename);
-    printf("size: %f\n", st->size);
-    printf("taskbar: %d\n", st->taskbar);
-    printf("topmost: %d\n", st->topmost);
-    printf("lang: %d\n", st->lang);
-}
-
 
 
 

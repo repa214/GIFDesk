@@ -152,6 +152,9 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                     );
 
             if (!rptr.window_popup->isactive) SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            GetWindowRect(hwnd, &rect);
+            rptr.st->x = rect.left; rptr.st->y = rect.top;
+            WriteSettings(rptr.st);
 
             rptr.rd->render_thread = 0;
             WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
@@ -689,28 +692,28 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 //          _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
 //                     const char* text, int left, int activated, int arrow)
             if (item->hwndItem == rptr.btn_title->hwnd)
-                _InvalidateButton(item, rptr.btn_title, APP_NAME, 35, 0);
+                _InvalidateButton(item, rptr.btn_title, APP_NAME_VER, 35, L"", 0, 0);
 
             else if (item->hwndItem == rptr.btn_openfile->hwnd)
-                _InvalidateButton(item, rptr.btn_openfile, "Open file...", 35, 0);
+                _InvalidateButton(item, rptr.btn_openfile, "Open file...", 35, L"", 0, 0);
 
             else if (item->hwndItem == rptr.label_playback->hwnd)
-                _InvalidateButton(item, rptr.label_playback, "Playback", 35, 0x2);
+                _InvalidateButton(item, rptr.label_playback, "Playback", 35, L"", 0, 0x2);
 
             else if (item->hwndItem == rptr.label_interaction->hwnd)
-                _InvalidateButton(item, rptr.label_interaction, "Interaction", 35, 0x2);
+                _InvalidateButton(item, rptr.label_interaction, "Interaction", 35, L"", 0, 0x2);
 
             else if (item->hwndItem == rptr.label_window_scale->hwnd)
-                _InvalidateButton(item, rptr.label_window_scale, "Window", 35, 0x2);
+                _InvalidateButton(item, rptr.label_window_scale, "Window", 35, L"", 0, 0x2);
 
             else if (item->hwndItem == rptr.label_pin_window->hwnd)
-                _InvalidateButton(item, rptr.label_pin_window, "Pin window", 35, 0x2);
+                _InvalidateButton(item, rptr.label_pin_window, "Pin window", 35, L"", 0, 0x2);
 
             else if (item->hwndItem == rptr.label_move_window->hwnd)
-                _InvalidateButton(item, rptr.label_move_window, "Move window to", 35, 0x2);
+                _InvalidateButton(item, rptr.label_move_window, "Move window to", 35, L"", 0, 0x2);
 
             else if (item->hwndItem == rptr.btn_close_window->hwnd)
-                _InvalidateButton(item, rptr.btn_close_window, "Close window", 35, 0);
+                _InvalidateButton(item, rptr.btn_close_window, "Close window", 35, L"", 0, 0);
 
         }   break;
 
@@ -851,6 +854,8 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+
             GetCursorPos(&p);
 
 //            _IsButtonHovered(rptr.label_frames, &p, 0);
@@ -868,28 +873,32 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
             if (item->hwndItem == rptr.label_frames->hwnd) {
                 sprintf(rptr.st->str_frame, "Frame (%d/%d)", rptr.rd->frame + 1, rptr.dt->count);
-                _InvalidateButton(item, rptr.label_frames, rptr.st->str_frame, 35, 0);
+                _InvalidateButton(item, rptr.label_frames, rptr.st->str_frame, 35, L"", 0, 0);
             }
             if (item->hwndItem == rptr.btn_prev_frame->hwnd) {
-                _InvalidateButton(item, rptr.btn_prev_frame, "", 30, 0x4);
+                _InvalidateButton(item, rptr.btn_prev_frame, "", 30, L"", 0, 0x4);
             }
             if (item->hwndItem == rptr.btn_play->hwnd) {
-                _InvalidateButton(item, rptr.btn_play, "", 28, 0x10);
+                _InvalidateButton(item, rptr.btn_play, "", 28, L"", 0, 0x10);
             }
             if (item->hwndItem == rptr.btn_next_frame->hwnd) {
-                _InvalidateButton(item, rptr.btn_next_frame, "", 21, 0x8);
+                _InvalidateButton(item, rptr.btn_next_frame, "", 21, L"", 0, 0x8);
             }
             if (item->hwndItem == rptr.label_speed->hwnd) {
+                setlocale(LC_NUMERIC, "C");
+
                 if (rptr.st->speed == 16 || rptr.st->speed == 36)
                     sprintf(rptr.st->str_speed, "Speed (%.0fx)", (float)rptr.st->speed * 0.05 + 0.2);
                 else if (rptr.st->speed % 2)
                     sprintf(rptr.st->str_speed, "Speed (%.2fx)", (float)rptr.st->speed * 0.05 + 0.2);
                 else
                     sprintf(rptr.st->str_speed, "Speed (%.1fx)", (float)rptr.st->speed * 0.05 + 0.2);
-                _InvalidateButton(item, rptr.label_speed, rptr.st->str_speed, 35, 0);
+                _InvalidateButton(item, rptr.label_speed, rptr.st->str_speed, 35, L"", 0, 0);
+
+                setlocale(LC_ALL, "Russian");
             }
             if (item->hwndItem == rptr.btn_frame_updates->hwnd) {
-                _InvalidateButton(item, rptr.btn_frame_updates, "Show frame updates", 35, (uint8_t)rptr.st->sfu);
+                _InvalidateButton(item, rptr.btn_frame_updates, "Show frame updates", 35, L"GIF, PNG", 147, (uint8_t)rptr.st->sfu);
             }
         }   break;
 
@@ -991,9 +1000,9 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             if ((HWND)lparam == rptr.trackbar_speed->hwnd) {
                 SetFocus(rptr.window_popup->hwnd);
                 rptr.st->speed = SendMessage(rptr.trackbar_speed->hwnd, TBM_GETPOS, 0, 0);
-                printf("speed: %u | %.2f\n", rptr.st->speed, (float)rptr.st->speed * 0.05 + 0.2);
                 InvalidateRect(rptr.label_speed->hwnd, NULL, TRUE);
             }
+            WriteSettings(rptr.st);
         }   break;
 
         /// -------------------
@@ -1098,6 +1107,8 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+
             GetCursorPos(&p);
 
             _IsButtonHovered(rptr.btn_ignore_input, &p, 0);
@@ -1108,7 +1119,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_ignore_input->hwnd) {
-                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input (except ESC)", 35, 0);
+                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input", 35, L"except ESC", 120, 0);
             }
         }   break;
 
@@ -1287,6 +1298,8 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+
             GetCursorPos(&p);
 
             _IsButtonHovered(rptr.btn_add_scale, &p, 0);
@@ -1302,14 +1315,14 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
             if (item->hwndItem == rptr.label_scale->hwnd) {
                 sprintf(rptr.st->str_size, "Scale (%.0f%%)", rptr.st->trackbar_size * 100);
-                _InvalidateButton(item, rptr.label_scale, rptr.st->str_size, 35, 0);
+                _InvalidateButton(item, rptr.label_scale, rptr.st->str_size, 35, L"", 0, 0);
             }
 
             if (item->hwndItem == rptr.btn_add_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_add_scale, "+", 12, 0);
+                _InvalidateButton(item, rptr.btn_add_scale, "+", 12, L"", 0, 0);
 
             if (item->hwndItem == rptr.btn_subtract_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, 0);
+                _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, L"", 0, 0);
 
 //            if (item->hwndItem == rptr.label_transparency->hwnd) {
 //                sprintf(rptr.st->str_transparency, "Transparency (%u%%)", (uint8_t)((float)rptr.st->transparency / 2.55));
@@ -1317,10 +1330,10 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //            }
 
             if (item->hwndItem == rptr.btn_pin_top->hwnd)
-                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, (uint8_t)rptr.st->topmost);
+                _InvalidateButton(item, rptr.btn_pin_top, "Always on top", 35, L"", 0, (uint8_t)rptr.st->topmost);
 
             if (item->hwndItem == rptr.btn_taskbar->hwnd)
-                _InvalidateButton(item, rptr.btn_taskbar, "Show taskbar icon", 35, (uint8_t)rptr.st->taskbar);
+                _InvalidateButton(item, rptr.btn_taskbar, "Show taskbar icon", 35, L"", 0, (uint8_t)rptr.st->taskbar);
         }   break;
 
         /// -------------------
@@ -1420,6 +1433,11 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         case WM_HSCROLL: {
             if ((HWND)lparam == rptr.trackbar_scale->hwnd) {
                 rptr.st->pos = SendMessage(rptr.trackbar_scale->hwnd, TBM_GETPOS, 0, 0);
+
+                if (rptr.st->pos == 100)
+                    _ChangeTexFilt(rptr.window, rptr.dt, GL_NEAREST);
+                else
+                    _ChangeTexFilt(rptr.window, rptr.dt, GL_LINEAR);
 
                 _ChangeScaleTrackBar(rptr.window, rptr.window_wc,
                                      rptr.trackbar_scale, rptr.label_scale,
@@ -1571,6 +1589,8 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+
             GetCursorPos(&p);
 
             _IsButtonHovered(rptr.btn_move_topleft, &p, 0);
@@ -1585,19 +1605,19 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_move_topleft->hwnd)
-                _InvalidateButton(item, rptr.btn_move_topleft, "Top left corner", 35, 0);
+                _InvalidateButton(item, rptr.btn_move_topleft, "Top left corner", 35, L"", 0, 0);
 
             if (item->hwndItem == rptr.btn_move_topright->hwnd)
-                _InvalidateButton(item, rptr.btn_move_topright, "Top right corner", 35, 0);
+                _InvalidateButton(item, rptr.btn_move_topright, "Top right corner", 35, L"", 0, 0);
 
             if (item->hwndItem == rptr.btn_move_center->hwnd)
-                _InvalidateButton(item, rptr.btn_move_center, "Center", 35, 0);
+                _InvalidateButton(item, rptr.btn_move_center, "Center", 35, L"", 0, 0);
 
             if (item->hwndItem == rptr.btn_move_left->hwnd)
-                _InvalidateButton(item, rptr.btn_move_left, "Bottom left corner", 35, 0);
+                _InvalidateButton(item, rptr.btn_move_left, "Bottom left corner", 35, L"", 0, 0);
 
             if (item->hwndItem == rptr.btn_move_right->hwnd)
-                _InvalidateButton(item, rptr.btn_move_right, "Bottom right corner", 35, 0);
+                _InvalidateButton(item, rptr.btn_move_right, "Bottom right corner", 35, L"", 0, 0);
         }   break;
 
         /** Checks whether window should exist **/
@@ -1711,6 +1731,8 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+                    rptr.st->x = 0; rptr.st->y = 0;
+                    WriteSettings(rptr.st);
                 }   break;
 
                 /// -------------------
@@ -1722,6 +1744,9 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+                    GetWindowRect(hwnd, &rect);
+                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+                    WriteSettings(rptr.st);
                 }   break;
 
                 /// -------------------
@@ -1735,6 +1760,9 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+                    GetWindowRect(hwnd, &rect);
+                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+                    WriteSettings(rptr.st);
                 }   break;
 
                 /// -------------------
@@ -1748,6 +1776,9 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+                    GetWindowRect(hwnd, &rect);
+                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+                    WriteSettings(rptr.st);
                 }   break;
 
                 /// -------------------
@@ -1761,6 +1792,9 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+                    GetWindowRect(hwnd, &rect);
+                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+                    WriteSettings(rptr.st);
                 }   break;
 
                 default: break;
@@ -1880,7 +1914,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd)
 }
 
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
-                       const char* text, int left, uint8_t flag)
+                       const char* text, int left, LPCWSTR graytext, int gleft, uint8_t flag)
 {
     static HDC hdc = NULL;
     static HFONT font = NULL;
@@ -1897,6 +1931,22 @@ void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
     DeleteObject(hBrush);
     rect.left = left;
     DrawText(hdc, text, -1, &rect, DT_VCENTER | DT_SINGLELINE);
+
+    if (gleft) {
+        int size = 16;
+        font = CreateFont(16, 0, 0, 0, FW_NORMAL, TRUE, FALSE, FALSE,
+                          DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                          DEFAULT_QUALITY, DEFAULT_QUALITY, "Segoe UI");
+
+        int y = rect.top + (rect.bottom - rect.top - size) / 2 + 1;
+
+        SelectObject(hdc, font);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, BTN_MARLETT_COLOR);
+        TextOutW(hdc, gleft, y, graytext, (int)wcslen(graytext));
+
+        DeleteObject(font);
+    }
 
     int size = 20;
     font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,

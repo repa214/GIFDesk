@@ -950,6 +950,21 @@ void _GLImage(Window* window, Data* dt)
     wglMakeCurrent(NULL, NULL);
 }
 
+void _ChangeTexFilt(Window* window, Data* dt, GLint param) {
+    wglMakeCurrent(window->hdc, window->hrc);
+
+    for (int i = 0; i < dt->count; i++) {
+        glBindTexture(GL_TEXTURE_2D, dt->textures[i]);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    wglMakeCurrent(NULL, NULL);
+}
+
 void ClearMedia(Data* dt)
 {
     if (dt->count > 0) glDeleteTextures(dt->count, dt->textures);

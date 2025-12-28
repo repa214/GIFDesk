@@ -109,14 +109,19 @@ void LoadButton(Button* button, Window* main_window,
                             font_name);
 
     SendMessage(button->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
-
-//    HRGN hrgn = CreateRoundRectRgn(0, 0, width, height, rgn, rgn);
-//    SetWindowRgn(button->hwnd, hrgn, TRUE);
 }
 
 void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling)
 {
     PostMessage(window->hwnd, WM_USER, (autoscaling) ? 4 : 3, 0);
+
+    SetWindowPos(rptr.window->hwnd,
+                 HWND_NOTOPMOST,
+                 st->x,
+                 st->y,
+                 0,
+                 0,
+                 SWP_NOSIZE);
 }
 
 void ReleaseWindow(Window* window)
@@ -168,6 +173,9 @@ void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC) {
     *hRC = wglCreateContext(*hdc);
 
     wglMakeCurrent(*hdc, *hRC);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.75f);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {

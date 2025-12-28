@@ -2,67 +2,20 @@
 #include "gifdesk.h"
 
 /**
-        PopupMenu:
-            GIFDesk 1.1.x
-            ------------------------
-            Open file...
-
-            Playback               >
-                                      Frame: 1/39
-                                           |<     ||     >|
-                                      |-----------------------|
-
-                                      Speed: 1x
-                                           ||<  |<  >|  >||
-                                      |-----------------------|
-
-                                      Show frame updates (GIF, PNG)
-
-            Interaction            >
-                                      Enable Drag n` Drop
-                                      Only tray icon (disable RMB)
-                                      Ignore all input (except Esc)
-
-            Window                 >
-                                      Scale: 100%          +  -
-                                      |-----------------------|
-
-                                      Transparency: 100%   +  -
-                                      |-----------------------|
-
-                                      Always on top
-
-                                      Show taskbar icon
-
-            Move window to         >
-                                      Top left corner
-                                      Top right corner
-                                      Center
-                                      Bottom left corner
-                                      Bottom right corner
-
-            ------------------------
-            Close window
-
-        - Preview available up to 200% for performance
-        - High values may slow down playback
-
 
         Совместимость:
             Windows Vista
             OpenGL 1.1 и более
 
-        1.1b:
+        1.1:
 
-            - Добавлена вкладка Interaction
-            - Добавлена возможность настраивать скорость воспроизведения анимации
-            - Вкладка Frames показывает текущий кадр
-            - Изменен интерфейс всплывающих окон настройки
-            - Исправлено поведение всплывающих окон настройки
+            - Добавлена динамическая билинейная фильтрация
+            - Файл settings сохраняет координаты расположения окна
+            - Курсор корректно отображается во всплывающих меню
+            - Изменён стиль вывода скорости воспроизведения
+            - Изменён стиль кнопок с дополнительной информацией
 
             (нужно) добавить линейное сглаживание
-            (нужно) сохранять позицию окна в файле settings
-            (нужно) исправить автоположение всплывающих окон
             (нужно) сохранение профилей
             (нужно) добавить скорость воспроизведения анимации
             (нужно) добавить управление через tray icon
