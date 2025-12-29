@@ -109,8 +109,8 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
     window->wcex.lpfnWndProc = MainWindowProc;
 }
 
-/// BYTE CONFIG: filename, size, taskbar, topmost, lang
-///              char      float byte     byte     byte
+/// BYTE CONFIG: filename, size,  x,   y,   speed, transparency, taskbar, topmost, lang
+//               char,     float, int, int, byte,  byte,         byte,    byte,    byte
 /// returns 0 if settings file is invalid
 /// returns 1 if settings file is valid
 uint8_t GetSettings(Settings* st)

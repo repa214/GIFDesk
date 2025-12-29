@@ -22,7 +22,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.1"
+#define APP_NAME_VER "GIFDesk 1.1.1"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
