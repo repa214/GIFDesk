@@ -257,6 +257,11 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         }   break;
 
         /// -------------------
+        case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_SIZEALL));
+        }   break;
+
+        /// -------------------
         case WM_COMMAND: {
             switch (wparam) {
                 /// -------------------
@@ -338,11 +343,16 @@ LRESULT CALLBACK EscapeWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     switch (msg)
     {
         /// -------------------
+        case WM_SETCURSOR: {
+            SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+        }   break;
+
+        /// -------------------
         case WM_KEYDOWN: {
             switch (wparam) {
                 /// -------------------
                 case VK_ESCAPE:
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    SetWindowLongPtr(rptr.window->hwnd, GWLP_WNDPROC, (LONG_PTR)MainWindowProc);
                     break;
             }
         }   break;
@@ -1119,7 +1129,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lparam;
 
             if (item->hwndItem == rptr.btn_ignore_input->hwnd) {
-                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input", 35, L"except ESC", 120, 0);
+                _InvalidateButton(item, rptr.btn_ignore_input, "Ignore all input", 35, L"ESC to disable", 120, 0);
             }
         }   break;
 

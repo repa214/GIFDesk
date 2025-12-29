@@ -254,7 +254,7 @@ uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
         if (dt->delays == NULL) { gif_error = 15; goto _loadgif_release; }
         dt->delays[i] = (gcb.DelayTime == 0) ? 0.1 : (float)gcb.DelayTime / 100;
 
-        _GLImage(window, dt);
+        _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
 
         switch (gcb.DisposalMode)
@@ -554,7 +554,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
             dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 1.0001f;
             dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 1.0001f );
 
-            _GLImage(window, dt);
+            _GLImage(window, dt, st);
             ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
 
             prev_mode = mode;
@@ -597,7 +597,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
         dt->frame_points[2] = 1.0001f;
         dt->frame_points[3] = -1.0001f;
 
-        _GLImage(window, dt);
+        _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
     }
 
@@ -752,7 +752,7 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
         dt->frame_points[(dt->count - 1) * 4 + 3] = -0.9999f;
 
         prev_stamp = stamp;
-        _GLImage(window, dt);
+        _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
     }
 
@@ -902,7 +902,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         dt->frame_points[(dt->count - 1) * 4 + 2] = 0.9999f;
         dt->frame_points[(dt->count - 1) * 4 + 3] = -0.9999f;
 
-        _GLImage(window, dt);
+        _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
     }
 
@@ -928,7 +928,7 @@ _loadavif_release:
 uint8_t _LoadMNG(Window* window, Settings* st, Data* dt) { return 0xE0; }
 
 
-void _GLImage(Window* window, Data* dt)
+void _GLImage(Window* window, Data* dt, Settings* st)
 {
     wglMakeCurrent(window->hdc, window->hrc);
 
@@ -939,8 +939,8 @@ void _GLImage(Window* window, Data* dt)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width + 1, dt->height + 1,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, dt->frame);
@@ -950,7 +950,8 @@ void _GLImage(Window* window, Data* dt)
     wglMakeCurrent(NULL, NULL);
 }
 
-void _ChangeTexFilt(Window* window, Data* dt, GLint param) {
+void _ChangeTexFilt(Window* window, Data* dt, GLint param)
+{
     wglMakeCurrent(window->hdc, window->hrc);
 
     for (int i = 0; i < dt->count; i++) {
