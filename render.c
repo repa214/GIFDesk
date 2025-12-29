@@ -24,8 +24,8 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
               Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
               Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind,
               Button* btn_fast_wind, Button* label_transparency, Button* btn_frame_updates,
-              Button* label_interaction, Button* btn_ignore_input, Button* label_pin_window, Button* btn_pin_default,
-              Button* btn_pin_top, Button* btn_pin_bottom, Button* label_move_window, Button* btn_move_topleft,
+              Button* label_interaction, Button* btn_ignore_input,
+              Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
               Button* btn_move_topright, Button* btn_move_center, Button* btn_move_left, Button* btn_move_right, Button* btn_close_window,
               Button* btn_taskbar)
 {
@@ -67,10 +67,7 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
     rptr->btn_frame_updates = btn_frame_updates;
     rptr->label_interaction = label_interaction;
     rptr->btn_ignore_input = btn_ignore_input;
-    rptr->label_pin_window = label_pin_window;
-    rptr->btn_pin_default = btn_pin_default;
     rptr->btn_pin_top = btn_pin_top;
-    rptr->btn_pin_bottom = btn_pin_bottom;
     rptr->label_move_window = label_move_window;
     rptr->btn_move_topleft = btn_move_topleft;
     rptr->btn_move_topright = btn_move_topright;
@@ -125,6 +122,11 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
     switch (msg)
     {
+        /// -------------------
+        case WM_CREATE: {
+            SetTimer(hwnd, 100, 100, NULL);
+        }   break;
+
         /// -------------------
         case WM_CLOSE: {
             if (IsWindow(rptr.window->hwnd))
@@ -333,6 +335,15 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             }
         }   break;
 
+        /// -------------------
+        case WM_TIMER: {
+            if (rptr.st->ili) {
+                DragAcceptFiles(hwnd, FALSE);
+                SetWindowLongPtr(rptr.window->hwnd, GWLP_WNDPROC, (LONG_PTR)EscapeWindowProc);
+            }
+            KillTimer(hwnd, 100);
+        }   break;
+
         default: break;
     }
     return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -344,14 +355,18 @@ LRESULT CALLBACK EscapeWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     {
         /// -------------------
         case WM_SETCURSOR: {
+            DragAcceptFiles(hwnd, FALSE);
             SetClassLongPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
-        }   break;
+        }   return 0;
 
         /// -------------------
         case WM_KEYDOWN: {
             switch (wparam) {
                 /// -------------------
                 case VK_ESCAPE:
+                    rptr.st->ili = 0;
+                    WriteSettings(rptr.st);
+                    DragAcceptFiles(hwnd, TRUE);
                     SetWindowLongPtr(rptr.window->hwnd, GWLP_WNDPROC, (LONG_PTR)MainWindowProc);
                     break;
             }
@@ -716,9 +731,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             else if (item->hwndItem == rptr.label_window_scale->hwnd)
                 _InvalidateButton(item, rptr.label_window_scale, "Window", 35, L"", 0, 0x2);
 
-            else if (item->hwndItem == rptr.label_pin_window->hwnd)
-                _InvalidateButton(item, rptr.label_pin_window, "Pin window", 35, L"", 0, 0x2);
-
             else if (item->hwndItem == rptr.label_move_window->hwnd)
                 _InvalidateButton(item, rptr.label_move_window, "Move window to", 35, L"", 0, 0x2);
 
@@ -875,7 +887,7 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             _IsButtonHovered(rptr.btn_frame_updates, &p, 0);
 //            _IsButtonHovered(rptr.label_speed, &p, 0);
 //            _IsButtonHovered(rptr.btn_slow_rewind, &p, 0);
-        }   break;
+        }   return 0;
 
         /// -------------------
         case WM_DRAWITEM: {
@@ -1122,7 +1134,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             GetCursorPos(&p);
 
             _IsButtonHovered(rptr.btn_ignore_input, &p, 0);
-        }   break;
+        }   return 0;
 
         /// -------------------
         case WM_DRAWITEM: {
@@ -1226,6 +1238,8 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 case 1:
                     SetWindowLongPtr(rptr.window->hwnd, GWLP_WNDPROC, (LONG_PTR)EscapeWindowProc);
                     PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
+                    rptr.st->ili = 1;
+                    WriteSettings(rptr.st);
                     break;
             }
         }   break;
@@ -1317,7 +1331,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //            _IsButtonHovered(rptr.label_transparency, &p, 0);
             _IsButtonHovered(rptr.btn_pin_top, &p, 0);
             _IsButtonHovered(rptr.btn_taskbar, &p, 0);
-        }   break;
+        }   return 0;
 
         /// -------------------
         case WM_DRAWITEM: {
@@ -1538,11 +1552,6 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-LRESULT CALLBACK PWProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    return DefWindowProc(hwnd, msg, wparam, lparam);
-}
-
 LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     static RECT prect, brect, wrect, rect, res;
@@ -1608,7 +1617,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             _IsButtonHovered(rptr.btn_move_center, &p, 0);
             _IsButtonHovered(rptr.btn_move_left, &p, 0);
             _IsButtonHovered(rptr.btn_move_right, &p, 0);
-        }   break;
+        }   return 0;
 
         /// -------------------
         case WM_DRAWITEM: {
@@ -1907,10 +1916,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd)
     rptr->btn_frame_updates->hovered = 0;
     rptr->label_interaction->hovered = 0;
     rptr->btn_ignore_input->hovered = 0;
-    rptr->label_pin_window->hovered = 0;
-    rptr->btn_pin_default->hovered = 0;
     rptr->btn_pin_top->hovered = 0;
-    rptr->btn_pin_bottom->hovered = 0;
     rptr->label_move_window->hovered = 0;
     rptr->btn_move_topleft->hovered = 0;
     rptr->btn_move_topright->hovered = 0;
@@ -2094,13 +2100,19 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
 {
     SetFocus(window_popup->hwnd);
 
-    if (pos < 1) pos = 1;
-    else if (pos > 200) pos = 200;
+    int settedpos = pos;
+    if (dt->width * ((float)pos / 100) < 10)
+        settedpos = (10 / (float)dt->width * 100);
+    if (dt->height * ((float)pos / 100) < 10)
+        settedpos = (10 / (float)dt->height * 100);
 
-    texCoord[1] = 2 / ((float)pos / 100);
-    texCoord[2] = 2 / ((float)pos / 100);
-    texCoord[3] = 2 / ((float)pos / 100);
-    texCoord[4] = 2 / ((float)pos / 100);
+    if (settedpos < 1) settedpos = 1;
+    else if (settedpos > 200) settedpos = 200;
+
+    texCoord[1] = 2 / ((float)settedpos / 100);
+    texCoord[2] = 2 / ((float)settedpos / 100);
+    texCoord[3] = 2 / ((float)settedpos / 100);
+    texCoord[4] = 2 / ((float)settedpos / 100);
 
     st->trackbar_size = (float)pos / 100;
 

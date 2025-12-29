@@ -40,7 +40,6 @@ typedef struct
 
 /**
         Speed: [0.25x-2.0x] [+- 0.05x]
-          ||<  |<  >|  >||
         |------------------|
 **/
         Button label_speed;
@@ -92,17 +91,6 @@ typedef struct
 **/
         Button btn_pin_top;
         Button btn_taskbar;
-
-    /// Pin window
-    Button label_pin_window;
-
-/**
-        Default
-        Always on top
-        Always on bottom
-**/
-        Button btn_pin_default;
-        Button btn_pin_bottom;
 
     /// Move window to
     Button label_move_window;

@@ -9,7 +9,6 @@ int Run(GIFDesk* gf)
     WindowInit(&gf->window_wc, "window_wc", WCProc);
     WindowInit(&gf->window_pb, "window_pb", PBProc);
     WindowInit(&gf->window_im, "window_im", IMProc);
-    WindowInit(&gf->window_pw, "window_pw", PWProc);
     WindowInit(&gf->window_mwt, "window_mwt", MWTProc);
 
     GetSettingsPath(&gf->settings); DataInit(&gf->data); GetSettings(&gf->settings);
@@ -24,8 +23,8 @@ int Run(GIFDesk* gf)
              &gf->btn_subtract_scale, &gf->label_playback, &gf->label_frames, &gf->btn_prev_frame, &gf->btn_play,
              &gf->btn_next_frame, &gf->label_speed, &gf->btn_slow_rewind, &gf->btn_fast_rewind, &gf->btn_slow_wind,
              &gf->btn_fast_wind, &gf->label_transparency, &gf->btn_frame_updates,
-             &gf->label_interaction, &gf->btn_ignore_input, &gf->label_pin_window, &gf->btn_pin_default,
-             &gf->btn_pin_top, &gf->btn_pin_bottom, &gf->label_move_window, &gf->btn_move_topleft,
+             &gf->label_interaction, &gf->btn_ignore_input,
+             &gf->btn_pin_top, &gf->label_move_window, &gf->btn_move_topleft,
              &gf->btn_move_topright, &gf->btn_move_center, &gf->btn_move_left, &gf->btn_move_right, &gf->btn_close_window,
              &gf->btn_taskbar);
 

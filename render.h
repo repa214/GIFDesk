@@ -129,8 +129,8 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
               Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
               Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind,
               Button* btn_fast_wind, Button* label_transparency, Button* btn_frame_updates,
-              Button* label_interaction, Button* label_ignore_input, Button* label_pin_window, Button* btn_pin_default,
-              Button* btn_pin_top, Button* btn_pin_bottom, Button* label_move_window, Button* btn_move_topleft,
+              Button* label_interaction, Button* label_ignore_input,
+              Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
               Button* btn_move_topright, Button* btn_move_center, Button* btn_move_left, Button* btn_move_right, Button* btn_close_window,
               Button* btn_taskbar);
 
@@ -146,7 +146,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Playback
 LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Interaction
 LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Window
-LRESULT CALLBACK PWProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Pin window
 LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); /// Move window to
 
 void ReleaseHover(RenderPtr* rptr, HWND hwnd);
