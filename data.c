@@ -156,7 +156,7 @@ int _gifr(GifFileType* gif, GifByteType* bytes, int size)
     return to_read;
 }
 
-uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
+uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
 {
     int gif_error = 0;
 

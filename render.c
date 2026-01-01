@@ -394,6 +394,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowPopupThread, hwnd);
+            SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
@@ -793,6 +794,15 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
                 }   break;
             }
+        }   break;
+
+        /// -------------------
+        case WM_TIMER: {
+            GetCursorPos(&p);
+
+            _IsButtonHovered(rptr.btn_title, &p, 0);
+            _IsButtonHovered(rptr.btn_openfile, &p, 0);
+            _IsButtonHovered(rptr.btn_close_window, &p, 0);
         }   break;
 
         default: break;
@@ -1438,8 +1448,8 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                     else brect.right += 5;
 
                     if (!PtInRect(&wrect, p) && !PtInRect(&brect, p) &&
-                        GetCapture() != rptr.trackbar_scale->hwnd &&
-                        GetCapture() != rptr.trackbar_transparency->hwnd) {
+//                        GetCapture() != rptr.trackbar_transparency->hwnd &&
+                        GetCapture() != rptr.trackbar_scale->hwnd) {
                         PostMessage(rptr.window_wc->hwnd, WM_CLOSE, 0, 0);
                         ReleaseHover(&rptr, rptr.label_window_scale->hwnd);
                     }
