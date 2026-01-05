@@ -1,13 +1,14 @@
 #include "render.h"
 
-float vertex[] = {-1, -1, 0,
-                   1, -1, 0,
-                   1,  1, 0,
-                  -1,  1, 0};
-float texCoord[] = {0, 1,
-                    1, 1,
+float vertex[] = {-1,  1,
+                   1,  1,
+                   1, -1,
+                  -1, -1};
+
+float texCoord[] = {0, 0,
                     1, 0,
-                    0, 0};
+                    1, 1,
+                    0, 1};
 
 RenderPtr rptr;
 HANDLE thread;
@@ -170,27 +171,64 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
             GetCursorPos(&p);
             SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+            GetWindowRect(hwnd, &res);
 
             if (p.x + POPUP_WIDTH > rect.right - rect.left) { p.x -= POPUP_WIDTH; }
             if (p.y + POPUP_HEIGHT > rect.bottom - rect.top) { p.y -= POPUP_HEIGHT; }
 
             /** Resize Window **/
 
-            texCoord[1] = 2 / ((rptr.st->size > 2) ? 2 : rptr.st->size);
-            texCoord[2] = 2 / ((rptr.st->size > 2) ? 2 : rptr.st->size);
-            texCoord[3] = 2 / ((rptr.st->size > 2) ? 2 : rptr.st->size);
-            texCoord[4] = 2 / ((rptr.st->size > 2) ? 2 : rptr.st->size);
+            rptr.rd->loading = 1;
+            if (res.left + (res.right - res.left) / 2 < rect.right / 2 &&
+                res.top + (res.bottom - res.top) / 2 < rect.bottom / 2)
+                rptr.rd->pos = POS_LTC;
+            else if (res.left + (res.right - res.left) / 2 < rect.right / 2 &&
+                res.top + (res.bottom - res.top) / 2 >= rect.bottom / 2)
+                rptr.rd->pos = POS_LLC;
+            else if (res.left + (res.right - res.left) / 2 >= rect.right / 2 &&
+                res.top + (res.bottom - res.top) / 2 < rect.bottom / 2)
+                rptr.rd->pos = POS_RTC;
+            else if (res.left + (res.right - res.left) / 2 >= rect.right / 2 &&
+                res.top + (res.bottom - res.top) / 2 >= rect.bottom / 2)
+                rptr.rd->pos = POS_RLC;
+            if (res.bottom >= rect.bottom) rptr.rd->pos = POS_LTC;
+            else if (res.right >= rect.right) rptr.rd->pos = POS_LTC;
+
+            switch (rptr.rd->pos) {
+                case POS_LTC:
+                    SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
+                                 0,
+                                 0,
+                                 _GetCollisionSize(rptr.dt->width, 2),
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOMOVE);
+                    break;
+                case POS_LLC:
+                    SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
+                                 res.left,
+                                 res.top - (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->width, 2),
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                    break;
+                case POS_RTC:
+                    SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
+                                 res.left - (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
+                                 res.top,
+                                 _GetCollisionSize(rptr.dt->width, 2),
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                    break;
+                case POS_RLC:
+                    SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
+                                 res.left - (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
+                                 res.top - (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->width, 2),
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                    break;
+            }
+            rptr.rd->loading = 0;
 
             rptr.st->trackbar_size = rptr.st->size; rptr.st->size = 2;
 
-            SetWindowPos(rptr.window->hwnd,
-                         HWND_NOTOPMOST,
-                         0,
-                         0,
-                         _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                         _GetCollisionSize(rptr.dt->height, rptr.st->size),
-                         SWP_NOMOVE);
-
+            _SetVertex(rptr.rd, vertex, rptr.st->trackbar_size * 100);
             DragAcceptFiles(rptr.window->hwnd, FALSE);
 
             thread = CreateThread(
@@ -204,7 +242,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
             /** Popup Menu **/
 
-            LoadWindow(rptr.window_popup, rptr.st, NULL,
+            LoadWindow(rptr.window_popup, rptr.st, NULL, rptr.rd,
                        "window_popup", p.x + 5, p.y + 5,
                        1, 1, POPUP_MENU);
 
@@ -403,19 +441,59 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
             rptr.rd->render_thread = 1;
 
+            GetWindowRect(rptr.window->hwnd, &res);
             rptr.st->size = rptr.st->trackbar_size;
 
-            SetWindowPos(rptr.window->hwnd,
-                         (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                         0, 0,
-                         _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                         _GetCollisionSize(rptr.dt->height, rptr.st->size),
-                         SWP_NOMOVE);
+            if (rptr.dt->width * rptr.st->size < 10)
+                rptr.st->size = (10 / (float)rptr.dt->width);
+            if (rptr.dt->height * rptr.st->size < 10)
+                rptr.st->size = (10 / (float)rptr.dt->height);
 
-            texCoord[1] = 1;
-            texCoord[2] = 1;
-            texCoord[3] = 1;
-            texCoord[4] = 1;
+            vertex[0] = -1;
+            vertex[1] =  1;
+            vertex[2] =  1;
+            vertex[3] =  1;
+            vertex[4] =  1;
+            vertex[5] = -1;
+            vertex[6] = -1;
+            vertex[7] = -1;
+
+            rptr.rd->loading = 1;
+            switch (rptr.rd->pos) {
+                case POS_LTC:
+                    SetWindowPos(rptr.window->hwnd,
+                                 (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                                 0,
+                                 0,
+                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOMOVE);
+                    break;
+                case POS_LLC:
+                    SetWindowPos(rptr.window->hwnd,
+                                 (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                                 res.left,
+                                 res.top + (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                    break;
+                case POS_RTC:
+                    SetWindowPos(rptr.window->hwnd,
+                                 (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                                 res.left + (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
+                                 res.top,
+                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                    break;
+                case POS_RLC:
+                    SetWindowPos(rptr.window->hwnd,
+                                 (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                                 res.left + (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
+                                 res.top + (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                    break;
+            }
+            rptr.rd->loading = 0;
 
             DragAcceptFiles(rptr.window->hwnd, TRUE);
             WriteSettings(rptr.st);
@@ -510,7 +588,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + PB_WIDTH > res.right) popup_left = rect.left - PB_WIDTH;
                     if (popup_top + PB_HEIGHT > res.bottom) popup_top = res.bottom - PB_HEIGHT;
 
-                    LoadWindow(rptr.window_pb, rptr.st, NULL, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_pb, rptr.st, NULL, rptr.rd, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, 0, 0, 0, 0);
 
                     HRGN rgn = CreateRoundRectRgn(0, 0, PB_WIDTH, PB_HEIGHT, 5, 5);
                     SetWindowRgn(rptr.window_pb->hwnd, rgn, TRUE);
@@ -563,7 +641,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + IM_WIDTH > res.right) popup_left = rect.left - IM_WIDTH;
                     if (popup_top + IM_HEIGHT > res.bottom) popup_top = res.bottom - IM_HEIGHT;
 
-                    LoadWindow(rptr.window_im, rptr.st, NULL, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_im, rptr.st, NULL, rptr.rd, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, 0, 0, 0, 0);
 
                     HRGN rgn = CreateRoundRectRgn(0, 0, IM_WIDTH, IM_HEIGHT, 5, 5);
                     SetWindowRgn(rptr.window_im->hwnd, rgn, TRUE);
@@ -588,7 +666,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + WC_WIDTH > res.right) popup_left = rect.left - WC_WIDTH;
                     if (popup_top + WC_HEIGHT > res.bottom) popup_top = res.bottom - WC_HEIGHT;
 
-                    LoadWindow(rptr.window_wc, rptr.st, NULL, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_wc, rptr.st, NULL, rptr.rd, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, 0, 0, 0, 0);
 
                     HRGN rgn = CreateRoundRectRgn(0, 0, WC_WIDTH, WC_HEIGHT, 5, 5);
                     SetWindowRgn(rptr.window_wc->hwnd, rgn, TRUE);
@@ -645,7 +723,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + MWT_WIDTH > res.right) popup_left = rect.left - MWT_WIDTH;
                     if (popup_top + MWT_HEIGHT > res.bottom) popup_top = res.bottom - MWT_HEIGHT;
 
-                    LoadWindow(rptr.window_mwt, rptr.st, NULL, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_mwt, rptr.st, NULL, rptr.rd, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, 0, 0, 0, 0);
 
                     HRGN rgn = CreateRoundRectRgn(0, 0, MWT_WIDTH, MWT_HEIGHT, 5, 5);
                     SetWindowRgn(rptr.window_mwt->hwnd, rgn, TRUE);
@@ -2100,7 +2178,7 @@ int _IsButtonHovered(Button* button, POINT* p, int arrowed)
 
 int _GetCollisionSize(int n, float size)
 {
-    return (n * size < 10.0) ? 10.0 : n * size + size;
+    return (n * size < 10.0) ? 10.0 : n * size;
 }
 
 void _ChangeScaleTrackBar(Window* window, Window* window_popup,
@@ -2119,11 +2197,7 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
     if (settedpos < 1) settedpos = 1;
     else if (settedpos > 200) settedpos = 200;
 
-    texCoord[1] = 2 / ((float)settedpos / 100);
-    texCoord[2] = 2 / ((float)settedpos / 100);
-    texCoord[3] = 2 / ((float)settedpos / 100);
-    texCoord[4] = 2 / ((float)settedpos / 100);
-
+    _SetVertex(rd, vertex, settedpos);
     st->trackbar_size = (float)pos / 100;
 
     sprintf(st->str_size, "Scale (%.0f%%)", st->trackbar_size * 100);
@@ -2135,6 +2209,54 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
     }
     else
         ShowFrame(window, dt, rd, st);
+}
+
+void _SetVertex(Render* rd, float* vertex, int settedpos)
+{
+    switch (rd->pos) {
+        case POS_LTC:
+            vertex[0] = -1;
+            vertex[1] = 1;
+            vertex[2] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[3] = 1;
+            vertex[4] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[5] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[6] = -1;
+            vertex[7] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            break;
+        case POS_LLC:
+            vertex[0] = -1;
+            vertex[1] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[2] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[3] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[4] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[5] = -1;
+            vertex[6] = -1;
+            vertex[7] = -1;
+            break;
+        case POS_RTC:
+            vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[5] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[7] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            break;
+        case POS_RLC:
+            vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[1] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[3] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            break;
+        case POS_C:
+            vertex[0] = -(float)settedpos / 200;
+            vertex[1] =  (float)settedpos / 200;
+            vertex[2] =  (float)settedpos / 200;
+            vertex[3] =  (float)settedpos / 200;
+            vertex[4] =  (float)settedpos / 200;
+            vertex[5] = -(float)settedpos / 200;
+            vertex[6] = -(float)settedpos / 200;
+            vertex[7] = -(float)settedpos / 200;
+            break;
+    }
 }
 
 void* ShowPopupThread(void* arg)
@@ -2195,7 +2317,7 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glVertexPointer(3, GL_FLOAT, 0, vertex);
+    glVertexPointer(2, GL_FLOAT, 0, vertex);
     glTexCoordPointer(2, GL_FLOAT, 0, texCoord);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 

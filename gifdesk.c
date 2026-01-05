@@ -28,7 +28,7 @@ int Run(GIFDesk* gf)
              &gf->btn_move_topright, &gf->btn_move_center, &gf->btn_move_left, &gf->btn_move_right, &gf->btn_close_window,
              &gf->btn_taskbar);
 
-    LoadWindow(&gf->window, &gf->settings, NULL, "Window", 0, 0, 1, 1, MAIN_WINDOW);
+    LoadWindow(&gf->window, &gf->settings, NULL, &gf->rd, "Window", 0, 0, 1, 1, MAIN_WINDOW);
 
     /** Check settings and file **/
 

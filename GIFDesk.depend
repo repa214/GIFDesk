@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1767125900 source:d:\projects\gifdesk\main.c
+1767575279 source:d:\projects\gifdesk\main.c
 	<windows.h>
 	"gifdesk.h"
 
@@ -8,7 +8,7 @@
 
 1763034321 d:\projects\gifdesk\resource.h
 
-1766999171 source:d:\projects\gifdesk\gifdesk.c
+1767573549 source:d:\projects\gifdesk\gifdesk.c
 	"gifdesk.h"
 
 1766999159 d:\projects\gifdesk\gifdesk.h
@@ -18,11 +18,11 @@
 	"data.h"
 	"render.h"
 
-1766336692 d:\projects\gifdesk\window.h
+1767573518 d:\projects\gifdesk\window.h
 	"types.h"
 	"render.h"
 
-1766880455 source:d:\projects\gifdesk\window.c
+1767573508 source:d:\projects\gifdesk\window.c
 	"window.h"
 
 1766865490 d:\projects\gifdesk\settings.h
@@ -37,7 +37,7 @@
 	"types.h"
 	"render.h"
 
-1767120958 source:d:\projects\gifdesk\data.c
+1767574690 source:d:\projects\gifdesk\data.c
 	"data.h"
 
 1762457676 d:\projects\gifdesk\gif\gif_load.h
@@ -80,16 +80,14 @@
 	<string.h>
 	"./types.h"
 
-1767114048 d:\projects\gifdesk\types.h
+1767582412 d:\projects\gifdesk\types.h
 	<stdint.h>
 	<stdio.h>
 	<stdlib.h>
 	<gl/gl.h>
 	<windows.h>
-	<tchar.h>
 	<commctrl.h>
 	<locale.h>
-	<inttypes.h>
 	<pthread.h>
 	"gif/gif_lib.h"
 	"apng/png.h"
@@ -97,12 +95,12 @@
 	"webp/demux.h"
 	"avif/avif.h"
 
-1766999200 d:\projects\gifdesk\render.h
+1767582702 d:\projects\gifdesk\render.h
 	"types.h"
 	"window.h"
 	"settings.h"
 
-1767126278 source:d:\projects\gifdesk\render.c
+1767587815 source:d:\projects\gifdesk\render.c
 	"render.h"
 
 1571412343 d:\projects\gifdesk\gif\gif_lib.h

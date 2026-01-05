@@ -156,7 +156,7 @@ int _gifr(GifFileType* gif, GifByteType* bytes, int size)
     return to_read;
 }
 
-uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
+uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
 {
     int gif_error = 0;
 
@@ -177,7 +177,7 @@ uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict 
     dt->width = gif->SWidth;
     dt->height = gif->SHeight;
     int num = gif->ImageCount;
-    long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
+    long pixcount = dt->width * dt->height * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { gif_error = 15; goto _loadgif_release; }
@@ -220,16 +220,16 @@ uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict 
         int frxd = imageDesc.Width;
         int fryd = imageDesc.Height;
 
-        unsigned long index = ((dt->width + 1) * fryo) * 4;
+        unsigned long index = dt->width * fryo * 4 + frxo * 4;
         for (int y = 0; y < fryd; y++) {
-            index += frxo * 4;
             for (int x = 0; x < frxd; x++) {
                 int colorIndex = savedImage.RasterBits[y * frxd + x];
 
                 if (colorIndex == transparent) {
                     index += 4;
                     continue;
-                } else {
+                }
+                else {
                     GifColorType color = colorMap->Colors[colorIndex];
                     dt->frame[index] = color.Red;
                     dt->frame[index + 1] = color.Green;
@@ -242,10 +242,11 @@ uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict 
                     dt->frame[index] = 1;
                     dt->frame[index + 1] = 1;
                     dt->frame[index + 2] = 1;
+
                 }
                 index += 4;
             }
-            index += ((dt->width + 1) - frxd - frxo) * 4;
+            index += (dt->width - frxd) * 4;
         }
 
         if (gcb.DisposalMode != DISPOSE_PREVIOUS) memcpy(dt->buff, dt->frame, pixcount);
@@ -262,14 +263,14 @@ uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict 
             case DISPOSE_BACKGROUND:
             {
                 /// Cleaning frame`s region
-                unsigned long index = ((dt->width + 1) * fryo) * 4;
+                unsigned long index = dt->width * fryo * 4;
                 for (int y = 0; y < fryd; y++) {
                     index += frxo * 4;
                     for (int x = 0; x < frxd; x++) {
                         memset(&dt->frame[index], 0, 4);
                         index += 4;
                     }
-                    index += ((dt->width + 1) - frxd - frxo) * 4;
+                    index += (dt->width - frxd - frxo) * 4;
                 }
             }   break;
             case DISPOSE_PREVIOUS:
@@ -282,10 +283,10 @@ uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict 
 
         dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
         if (dt->frame_points == NULL) { gif_error = 15; goto _loadgif_release; }
-        dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 0.9999f;
-        dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 0.9999f );
-        dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 1.0001f;
-        dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 1.0001f );
+        dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1)) * 2 - 0.9999f;
+        dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1)) * 2 - 0.9999f );
+        dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1)) * 2 - 1.0001f;
+        dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1)) * 2 - 1.0001f );
     }
 
     if (dt->frame != NULL)          { free(dt->frame);          dt->frame = NULL; }
@@ -370,7 +371,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 
     png_read_update_info(png_ptr, info_ptr);
 
-    long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
+    long pixcount = dt->width * dt->height * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { png_error = 15; goto _loadpng_release; }
@@ -417,7 +418,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
                 /// to fully transparent black before rendering the next frame
                 case PNG_DISPOSE_OP_BACKGROUND:
                 {
-                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    unsigned long index = (dt->width * fryo) * 4;
                     for (long y = 0; y < fryd; y++) {
                         index += frxo * 4;
                         for (long x = 0; x < frxd; x++) {
@@ -425,7 +426,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 
                             index += 4;
                         }
-                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                        index += (dt->width - frxd - frxo) * 4;
                     }
                 }   break;
                 /// APNG_DISPOSE_OP_PREVIOUS: the frame's region of the output
@@ -433,7 +434,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
                 /// rendering the next frame
                 case PNG_DISPOSE_OP_PREVIOUS:
                 {
-                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    unsigned long index = (dt->width * fryo) * 4;
                     for (long y = 0; y < fryd; y++) {
                         index += frxo * 4;
                         for (long x = 0; x < frxd; x++) {
@@ -441,7 +442,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 
                             index += 4;
                         }
-                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                        index += (dt->width - frxd - frxo) * 4;
                     }
                 }   break;
                 default: break;
@@ -467,7 +468,7 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
                 /// output buffer region
                 case PNG_BLEND_OP_SOURCE:
                 {
-                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    unsigned long index = (dt->width * fryo) * 4;
                     for (long y = 0; y < fryd; y++) {
                         index += frxo * 4;
 
@@ -484,14 +485,14 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 
                             index += 4;
                         }
-                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                        index += (dt->width - frxd - frxo) * 4;
                     }
                 }   break;
                 /// APNG_BLEND_OP_OVER the frame should be composited onto the output
                 /// buffer based on its alpha, using a simple OVER operation
                 case PNG_BLEND_OP_OVER:
                 {
-                    unsigned long index = ((dt->width + 1) * fryo) * 4;
+                    unsigned long index = (dt->width * fryo) * 4;
                     for (long y = 0; y < fryd; y++) {
                         index += frxo * 4;
                         png_bytep row = row_pointers[y];
@@ -530,15 +531,13 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
                             }
 
                             dt->frame[index + 3] = (unsigned char)(out_a * 255.0f);
-
-                            /// RGBA(0, 0, 0, >0) -> RGBA(1, 1, 1, >0) for compatibility with OpenGL
                             if (dt->frame[index]     == 0 && dt->frame[index + 3] > 0) dt->frame[index]++;
                             if (dt->frame[index + 1] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 1]++;
                             if (dt->frame[index + 2] == 0 && dt->frame[index + 3] > 0) dt->frame[index + 2]++;
 
                             index += 4;
                         }
-                        index += ((dt->width + 1) - frxd - frxo) * 4;
+                        index += (dt->width - frxd - frxo) * 4;
                     }
                 }   break;
             }
@@ -549,10 +548,10 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 
             dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
             if (dt->frame_points == NULL) { png_error = 15; goto _loadpng_release; }
-            dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 0.9999f;
-            dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 0.9999f );
-            dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1) - 1) * 2 - 1.0001f;
-            dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1) - 1) * 2 - 1.0001f );
+            dt->frame_points[(dt->count - 1) * 4] = ((float)frxo) / ((float)_GetCollisionSize(dt->width, 1)) * 2 - 0.9999f;
+            dt->frame_points[(dt->count - 1) * 4 + 1] = -( ((float)fryo) / ((float)_GetCollisionSize(dt->height, 1)) * 2 - 0.9999f );
+            dt->frame_points[(dt->count - 1) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(dt->width, 1)) * 2 - 1.0001f;
+            dt->frame_points[(dt->count - 1) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(dt->height, 1)) * 2 - 1.0001f );
 
             _GLImage(window, dt, st);
             ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
@@ -697,7 +696,7 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
     dt->height = anim_info.canvas_height;
     int num = anim_info.frame_count;
 
-    long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
+    long pixcount = dt->width * (dt->height + 1) * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { webp_error = 15; goto _loadwebp_release; }
@@ -727,7 +726,7 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
         for (int y = 0; y < dt->height; y++) {
             for (int x = 0; x < dt->width; x++) {
                 int src_idx = 4 * (y * dt->width + x);
-                int dst_idx = 4 * (y * (dt->width + 1) + x);
+                int dst_idx = 4 * (y * dt->width + x);
                 memcpy(dt->frame + dst_idx, dt->buff + src_idx, 4);
             }
         }
@@ -855,7 +854,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
     dt->height = decoder->image->height;
     int num = decoder->imageCount;
 
-    long pixcount = (dt->width + 1) * (dt->height + 1) * 4;
+    long pixcount = dt->width * (dt->height + 1) * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { avif_error = 15; goto _loadavif_release; }
@@ -888,7 +887,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         for (int y = 0; y < dt->height; y++) {
             for (int x = 0; x < dt->width; x++) {
                 int src_idx = 4 * (y * dt->width + x);
-                int dst_idx = 4 * (y * (dt->width + 1) + x);
+                int dst_idx = 4 * (y * dt->width + x);
 
                 dt->frame[dst_idx]     = rgb.pixels[src_idx]     ? rgb.pixels[src_idx] : 1;
                 dt->frame[dst_idx + 1] = rgb.pixels[src_idx + 1] ? rgb.pixels[src_idx + 1] : 1;
@@ -937,12 +936,14 @@ void _GLImage(Window* window, Data* dt, Settings* st)
     glGenTextures(1, &dt->textures[dt->count - 1]);
     glBindTexture(GL_TEXTURE_2D, dt->textures[dt->count - 1]);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    rptr.rd->major == 1 && rptr.rd->minor < 2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                    rptr.rd->major == 1 && rptr.rd->minor < 2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width + 1, dt->height + 1,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width, dt->height,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, dt->frame);
 
     glBindTexture(GL_TEXTURE_2D, 0);

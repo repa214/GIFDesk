@@ -12,7 +12,7 @@ int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc)
 }
 
 int LoadWindow(Window* window, Settings* st, Window* parent,
-               const char* classname,
+               Render* rd, const char* classname,
                int xoffset, int yoffset, int width, int height,
                int settb, int settm, int setdaf, int setgl)
 /**
@@ -49,7 +49,7 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->isactive = 1;
     DragAcceptFiles(window->hwnd, (setdaf) ? TRUE : FALSE);
 
-    if (setgl) EnableOpenGL(window->hwnd, &window->hdc, &window->hrc);
+    if (setgl) EnableOpenGL(rd, window->hwnd, &window->hdc, &window->hrc);
 
     return 0;
 }
@@ -149,7 +149,7 @@ void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTAN
 
 /** OpenGL Processing **/
 
-void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC) {
+void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     PIXELFORMATDESCRIPTOR pfd;
 
     int iFormat;
@@ -174,8 +174,10 @@ void EnableOpenGL(HWND hwnd, HDC* hdc, HGLRC* hRC) {
 
     wglMakeCurrent(*hdc, *hRC);
 
+    sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);
+
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.75f);
+    glAlphaFunc(GL_GREATER, 0.5f);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {

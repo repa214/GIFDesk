@@ -7,11 +7,9 @@
 #include <gl/gl.h>
 
 #include <windows.h>
-#include <tchar.h>
 
 #include <commctrl.h>
 #include <locale.h>
-#include <inttypes.h>
 
 #include <pthread.h>
 
@@ -22,7 +20,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.1.3"
+#define APP_NAME_VER "GIFDesk 1.1.4"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -34,6 +32,8 @@
 #define IDD_DIALOG_BEXIT_E 1001
 #define IDD_DIALOG_BCANCEL 1002
 #define IDD_DIALOG_BCANCEL_E 1003
+
+enum {POS_LTC, POS_LLC, POS_RTC, POS_RLC, POS_C};
 
 typedef struct
 {
@@ -205,9 +205,8 @@ typedef struct
 
     double start_time, current_time, inaccuracy;
 
-    int change_frames;
-    int framed_trackbar;
-    int loading;
+    uint8_t change_frames, framed_trackbar, loading, pos;
+    int major, minor;
 } Render;
 
 #endif // TYPES_H_INCLUDED

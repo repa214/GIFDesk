@@ -5,6 +5,8 @@
 #include "window.h"
 #include "settings.h"
 
+#define GL_CLAMP_TO_EDGE 0x812F
+
 #define BTN_TEXT_COLOR RGB(30, 30, 30)
 #define BTN_MARLETT_COLOR RGB(90, 90, 90)
 #define BTN_MARLETT_FLAG_COLOR RGB(90, 90, 90)
@@ -173,6 +175,8 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
                           Trackbar* scale_trackbar, Button* scale_button,
                           Settings* st, Data* dt,
                           Render* rd, int pos);
+
+void _SetVertex(Render* rd, float* vertex, int settedpos);
 
 /**
         OpenGL Proccessing
