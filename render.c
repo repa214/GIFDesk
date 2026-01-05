@@ -191,8 +191,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             else if (res.left + (res.right - res.left) / 2 >= rect.right / 2 &&
                 res.top + (res.bottom - res.top) / 2 >= rect.bottom / 2)
                 rptr.rd->pos = POS_RLC;
-            if (res.bottom >= rect.bottom) rptr.rd->pos = POS_LTC;
-            else if (res.right >= rect.right) rptr.rd->pos = POS_LTC;
+            if (res.bottom > rect.bottom + 5) rptr.rd->pos = POS_LTC;
+            else if (res.right > rect.right + 5) rptr.rd->pos = POS_LTC;
 
             switch (rptr.rd->pos) {
                 case POS_LTC:
@@ -1838,6 +1838,12 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
+
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_LTC;
+
+                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                     rptr.st->x = 0; rptr.st->y = 0;
                     WriteSettings(rptr.st);
                 }   break;
@@ -1851,8 +1857,13 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
-                    GetWindowRect(hwnd, &rect);
-                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_RTC;
+
+                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                    rptr.st->x = res.left; rptr.st->y = res.top;
                     WriteSettings(rptr.st);
                 }   break;
 
@@ -1867,8 +1878,13 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
-                    GetWindowRect(hwnd, &rect);
-                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_LTC;
+
+                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                    rptr.st->x = res.left; rptr.st->y = res.top;
                     WriteSettings(rptr.st);
                 }   break;
 
@@ -1883,8 +1899,13 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
-                    GetWindowRect(hwnd, &rect);
-                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_LLC;
+
+                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                    rptr.st->x = res.left; rptr.st->y = res.top;
                     WriteSettings(rptr.st);
                 }   break;
 
@@ -1899,8 +1920,13 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  SWP_NOSIZE);
-                    GetWindowRect(hwnd, &rect);
-                    rptr.st->x = rect.left; rptr.st->y = rect.top;
+
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_RLC;
+
+                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                    rptr.st->x = res.left; rptr.st->y = res.top;
                     WriteSettings(rptr.st);
                 }   break;
 
@@ -2213,6 +2239,7 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
 
 void _SetVertex(Render* rd, float* vertex, int settedpos)
 {
+    printf("RD_POS: %u\n", rd->pos);
     switch (rd->pos) {
         case POS_LTC:
             vertex[0] = -1;
