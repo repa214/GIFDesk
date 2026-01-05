@@ -1850,17 +1850,17 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
                 /// -------------------
                 case 2: {
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_RTC;
+
                     SetWindowPos(rptr.window->hwnd,
                                  NULL,
-                                 GetSystemMetrics(SM_CXSCREEN) - (rptr.dt->width) * rptr.st->trackbar_size,
+                                 GetSystemMetrics(SM_CXSCREEN) - rptr.dt->width * 2,
                                  0,
                                  0,
                                  0,
                                  SWP_NOSIZE);
-
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-                    rptr.rd->pos = POS_RTC;
 
                     _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                     rptr.st->x = res.left; rptr.st->y = res.top;
@@ -1869,19 +1869,17 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
                 /// -------------------
                 case 3: {
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_C;
 
                     SetWindowPos(rptr.window->hwnd,
                                  NULL,
-                                 (res.right - res.left - rptr.dt->width * rptr.st->trackbar_size) / 2,
-                                 (res.bottom - res.top - rptr.dt->height * rptr.st->trackbar_size) / 2,
+                                 (rect.right - rect.left - rptr.dt->width * 2) / 2,
+                                 (rect.bottom - rect.top - rptr.dt->height * 2) / 2,
                                  0,
                                  0,
                                  SWP_NOSIZE);
-
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-                    rptr.rd->pos = POS_LTC;
 
                     _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                     rptr.st->x = res.left; rptr.st->y = res.top;
@@ -1890,19 +1888,17 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
                 /// -------------------
                 case 4: {
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
+                    GetWindowRect(rptr.window->hwnd, &res);
+                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    rptr.rd->pos = POS_LLC;
 
                     SetWindowPos(rptr.window->hwnd,
                                  NULL,
                                  0,
-                                 res.bottom - res.top - (rptr.dt->height) * rptr.st->trackbar_size,
+                                 rect.bottom - rect.top - (rptr.dt->height) * 2,
                                  0,
                                  0,
                                  SWP_NOSIZE);
-
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-                    rptr.rd->pos = POS_LLC;
 
                     _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                     rptr.st->x = res.left; rptr.st->y = res.top;
@@ -1911,19 +1907,17 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
                 /// -------------------
                 case 5: {
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &res, 0);
-
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 res.right - res.left - (rptr.dt->width) * rptr.st->trackbar_size,
-                                 res.bottom - res.top - (rptr.dt->height) * rptr.st->trackbar_size,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE);
-
                     GetWindowRect(rptr.window->hwnd, &res);
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
                     rptr.rd->pos = POS_RLC;
+
+                    SetWindowPos(rptr.window->hwnd,
+                                 NULL,
+                                 rect.right - rect.left - (rptr.dt->width) * 2,
+                                 rect.bottom - rect.top - (rptr.dt->height) * 2,
+                                 0,
+                                 0,
+                                 SWP_NOSIZE);
 
                     _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                     rptr.st->x = res.left; rptr.st->y = res.top;
@@ -2239,7 +2233,6 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
 
 void _SetVertex(Render* rd, float* vertex, int settedpos)
 {
-    printf("RD_POS: %u\n", rd->pos);
     switch (rd->pos) {
         case POS_LTC:
             vertex[0] = -1;
@@ -2263,6 +2256,10 @@ void _SetVertex(Render* rd, float* vertex, int settedpos)
             break;
         case POS_RTC:
             vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[1] = 1;
+            vertex[2] = 1;
+            vertex[3] = 1;
+            vertex[4] = 1;
             vertex[5] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
             vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
             vertex[7] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
@@ -2270,8 +2267,12 @@ void _SetVertex(Render* rd, float* vertex, int settedpos)
         case POS_RLC:
             vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
             vertex[1] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[2] = 1;
             vertex[3] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
+            vertex[4] = 1;
+            vertex[5] = -1;
             vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
+            vertex[7] = -1;
             break;
         case POS_C:
             vertex[0] = -(float)settedpos / 200;
