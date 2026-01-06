@@ -5,6 +5,7 @@
 #include "window.h"
 #include "settings.h"
 
+/// Not native
 #define GL_CLAMP_TO_EDGE 0x812F
 
 #define BTN_TEXT_COLOR RGB(30, 30, 30)
@@ -14,7 +15,6 @@
 // #define BTN_HOVERED RGB(190, 190, 190)
 #define BTN_NOT_HOVERED RGB(250, 250, 250)
 
-/// for 2560x1440 res
 /// minimal height: 36
 
 #define POPUP_WIDTH 250
@@ -39,8 +39,6 @@
 #define POPUP_MENU 0, 1, 0, 0
 
 #define WM_UPDATE_ALPHA (WM_USER + 1)
-
-extern HANDLE thread;
 
 typedef struct
 {
@@ -185,7 +183,7 @@ void _SetVertex(Render* rd, float* vertex, int settedpos);
 void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st);
 void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt);
 
-DWORD WINAPI RenderThread(LPVOID arg);
+void* RenderThread(void* arg);
 void* ShowPopupThread(LPVOID arg);
 void* ShowLowerPopupThread(LPVOID arg);
 

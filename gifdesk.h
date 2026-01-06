@@ -60,7 +60,7 @@ typedef struct
 /**
         Enable Drag n` Drop
         Only tray icon (disable RMB)
-        Ignore all input (except Esc)
+        Ignore all input (Esc to disable)
 **/
         Button btn_enable_dnd;
         Button btn_only_tray;

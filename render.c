@@ -11,7 +11,6 @@ float texCoord[] = {0, 0,
                     0, 1};
 
 RenderPtr rptr;
-HANDLE thread;
 pthread_t thread_t;
 MSG msg;
 
@@ -145,14 +144,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
         /// -------------------
         case WM_LBUTTONDOWN: {
-            thread = CreateThread(
-                        NULL,
-                        0,
-                        RenderThread,
-                        &rptr,
-                        0,
-                        NULL
-                    );
+            pthread_create(&thread_t, 0, RenderThread, &rptr);
 
             if (!rptr.window_popup->isactive) SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
             GetWindowRect(hwnd, &rect);
@@ -160,7 +152,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             WriteSettings(rptr.st);
 
             rptr.rd->render_thread = 0;
-            WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
+            pthread_join(thread_t, NULL);
             rptr.rd->render_thread = 1;
         }   break;
 
@@ -200,45 +192,37 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                                  0,
                                  0,
                                  _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOMOVE);
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOMOVE | SWP_NOREDRAW);
                     break;
                 case POS_LLC:
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  res.left,
                                  res.top - (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
                                  _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
                     break;
                 case POS_RTC:
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  res.left - (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
                                  res.top,
                                  _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
                     break;
                 case POS_RLC:
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  res.left - (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
                                  res.top - (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
                                  _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
                     break;
             }
+            rptr.st->trackbar_size = rptr.st->size; rptr.st->size = 2;
+            _SetVertex(rptr.rd, vertex, rptr.st->trackbar_size * 100);
             rptr.rd->loading = 0;
 
-            rptr.st->trackbar_size = rptr.st->size; rptr.st->size = 2;
-
-            _SetVertex(rptr.rd, vertex, rptr.st->trackbar_size * 100);
             DragAcceptFiles(rptr.window->hwnd, FALSE);
 
-            thread = CreateThread(
-                        NULL,
-                        0,
-                        RenderThread,
-                        &rptr,
-                        0,
-                        NULL
-                    );
+            pthread_create(&thread_t, 0, RenderThread, &rptr);
 
             /** Popup Menu **/
 
@@ -283,7 +267,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                          0,
                          POPUP_WIDTH,
                          POPUP_HEIGHT,
-                         SWP_NOMOVE);
+                         SWP_NOMOVE | SWP_NOREDRAW);
 
             hrgn = CreateRoundRectRgn(0, 0,
                                       POPUP_WIDTH, POPUP_HEIGHT,
@@ -291,9 +275,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
             SetWindowRgn(rptr.window_popup->hwnd, hrgn, TRUE);
 
-            rptr.rd->render_thread = 0;
-            WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
-            rptr.rd->render_thread = 1;
+            rptr.rd->render_thread = 0; pthread_join(thread_t, NULL); rptr.rd->render_thread = 1;
         }   break;
 
         /// -------------------
@@ -306,16 +288,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             switch (wparam) {
                 /// -------------------
                 case 1:
-                    thread = CreateThread(
-                        NULL,
-                        0,
-                        _LoadSettings,
-                        &rptr,
-                        0,
-                        NULL
-                    );
+                    pthread_create(&thread_t, 0, _LoadSettings, &rptr);
 
-                    CloseHandle(thread);
                     break;
             }
         }   break;
@@ -438,7 +412,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
         /// -------------------
         case WM_DESTROY: {
             rptr.rd->render_thread = 0;
-            WaitForSingleObject(thread, INFINITE); CloseHandle(thread);
+            pthread_join(thread_t, NULL);
             rptr.rd->render_thread = 1;
 
             GetWindowRect(rptr.window->hwnd, &res);
@@ -449,6 +423,8 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             if (rptr.dt->height * rptr.st->size < 10)
                 rptr.st->size = (10 / (float)rptr.dt->height);
 
+            rptr.rd->loading = 1;
+
             vertex[0] = -1;
             vertex[1] =  1;
             vertex[2] =  1;
@@ -457,8 +433,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             vertex[5] = -1;
             vertex[6] = -1;
             vertex[7] = -1;
-
-            rptr.rd->loading = 1;
             switch (rptr.rd->pos) {
                 case POS_LTC:
                     SetWindowPos(rptr.window->hwnd,
@@ -466,7 +440,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                  0,
                                  0,
                                  _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOMOVE);
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOMOVE | SWP_NOREDRAW);
                     break;
                 case POS_LLC:
                     SetWindowPos(rptr.window->hwnd,
@@ -474,7 +448,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                  res.left,
                                  res.top + (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
                                  _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
                     break;
                 case POS_RTC:
                     SetWindowPos(rptr.window->hwnd,
@@ -482,7 +456,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                  res.left + (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
                                  res.top,
                                  _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
                     break;
                 case POS_RLC:
                     SetWindowPos(rptr.window->hwnd,
@@ -490,7 +464,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                  res.left + (rptr.dt->width * 2 - rptr.dt->width * rptr.st->size),
                                  res.top + (rptr.dt->height * 2 - rptr.dt->height * rptr.st->size),
                                  _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOACTIVATE);
+                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
                     break;
             }
             rptr.rd->loading = 0;
@@ -545,21 +519,12 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
         /// -------------------
         case WM_LBUTTONDOWN: {
-            thread = CreateThread(
-                        NULL,
-                        0,
-                        RenderThread,
-                        &rptr,
-                        0,
-                        NULL
-                    );
+            pthread_create(&thread_t, 0, RenderThread, &rptr);
 
             SetFocus(rptr.window_popup->hwnd);
             SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 
-            rptr.rd->render_thread = 0;
-            WaitForSingleObject(thread, INFINITE);
-            rptr.rd->render_thread = 1;
+            rptr.rd->render_thread = 0; pthread_join(thread_t, NULL); rptr.rd->render_thread = 1;
         }   break;
 
         /// -------------------
@@ -2421,7 +2386,7 @@ void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt)
     wglMakeCurrent(NULL, NULL);
 }
 
-DWORD WINAPI RenderThread(LPVOID arg)
+void* RenderThread(void* arg)
 {
     RenderPtr* rptr = (RenderPtr*)arg;
     while (rptr->rd->render_thread) {

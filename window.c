@@ -15,12 +15,6 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                Render* rd, const char* classname,
                int xoffset, int yoffset, int width, int height,
                int settb, int settm, int setdaf, int setgl)
-/**
-        settb:  set WS_EX_TOOLWINDOW
-        settm:  set HWND_TOPMOST
-        setdaf: set DragAcceptFiles
-        setgl:  set OPENGL
-**/
 {
     LONG_PTR style = WS_EX_LAYERED;
     if (settb && st->taskbar)
@@ -177,7 +171,7 @@ void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);
 
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.5f);
+    glAlphaFunc(GL_GREATER, 0.75f);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {
