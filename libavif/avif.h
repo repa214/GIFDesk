@@ -7,10 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // ---------------------------------------------------------------------------
 // Export macros
 
@@ -48,26 +44,16 @@ extern "C" {
 #define AVIF_API
 #endif // defined(AVIF_DLL)
 
-// [[nodiscard]] requires C++17 and C23.
 //
 // If the -std=c2x or -std=gnu2x option is specified, __STDC_VERSION__ is
 //   * 202000L in GCC 13.2.0, Clang 16.0.6, and Apple Clang 15.0.0; or
 //   * 202311L in Clang 19.0.0git.
 // If the /std:clatest option is specified, __STDC_VERSION__ is
 //   * 202312L in Microsoft Visual Studio 17.10.5.
-#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L
 #define AVIF_NODISCARD [[nodiscard]]
 #else
-// Starting with 3.9, clang allows defining the warn_unused_result attribute for enums.
-#if defined(__clang__) && defined(__has_attribute) && ((__clang_major__ << 8) | __clang_minor__) >= ((3 << 8) | 9)
-#if __has_attribute(warn_unused_result)
-#define AVIF_NODISCARD __attribute__((warn_unused_result))
-#else
 #define AVIF_NODISCARD
-#endif
-#else
-#define AVIF_NODISCARD
-#endif
 #endif
 
 // ---------------------------------------------------------------------------
@@ -1731,8 +1717,5 @@ AVIF_API avifResult avifImageComputeGainMap(const avifImage * baseImage,
                                             avifGainMap * gainMap,
                                             avifDiagnostics * diag);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif // ifndef AVIF_AVIF_H
