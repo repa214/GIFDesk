@@ -7,10 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-
 // ---------------------------------------------------------------------------
 // Export macros
 
@@ -1717,8 +1713,5 @@ AVIF_API avifResult avifImageComputeGainMap(const avifImage * baseImage,
                                             avifGainMap * gainMap,
                                             avifDiagnostics * diag);
 
-//#ifdef __cplusplus
-//} // extern "C"
-//#endif
 
 #endif // ifndef AVIF_AVIF_H
