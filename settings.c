@@ -2,6 +2,11 @@
 
 
 /// Gets the path to the "settings" file
+
+/// BYTE CONFIG: filename, size,  x,   y,   speed, transparency, taskbar, topmost, lang, ignore_input, hide_on_hover
+//               char,     float, int, int, byte,  byte,         byte,    byte,    byte  byte          byte
+/// returns 0 if settings file is invalid
+/// returns 1 if settings file is valid
 void GetSettingsPath(Settings* st)
 {
     st->size = 1;
@@ -9,7 +14,10 @@ void GetSettingsPath(Settings* st)
     st->topmost = 1;
     st->lang = 0;
     st->sfu = 0;
-    st->ili = 0;
+    st->ignore_input = 0;
+    st->hide_on_hover = 0;
+    st->click_through = 0;
+    st->disable_moving = 0;
     st->transparency = 255;
     st->speed = 16;
     st->x = 0;
@@ -110,8 +118,8 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
     window->wcex.lpfnWndProc = MainWindowProc;
 }
 
-/// BYTE CONFIG: filename, size,  x,   y,   speed, transparency, taskbar, topmost, lang, ili
-//               char,     float, int, int, byte,  byte,         byte,    byte,    byte  byte
+/// BYTE CONFIG: filename, size,  x,   y,   speed, transparency, taskbar, topmost, lang, ignore_input, hide_on_hover
+//               char,     float, int, int, byte,  byte,         byte,    byte,    byte  byte          byte
 /// returns 0 if settings file is invalid
 /// returns 1 if settings file is valid
 uint8_t GetSettings(Settings* st)
@@ -128,7 +136,10 @@ uint8_t GetSettings(Settings* st)
         if (fread(&st->taskbar, sizeof(uint8_t), 1, f) < 1) goto nofile;
         if (fread(&st->topmost, sizeof(uint8_t), 1, f) < 1) goto nofile;
         if (fread(&st->lang, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->ili, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->ignore_input, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->hide_on_hover, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->click_through, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->disable_moving, sizeof(uint8_t), 1, f) < 1) goto nofile;
     }
     else goto nofile;
 
@@ -184,7 +195,10 @@ void WriteSettings(Settings* st)
     fwrite(&st->taskbar, sizeof(uint8_t), 1, f);
     fwrite(&st->topmost, sizeof(uint8_t), 1, f);
     fwrite(&st->lang, sizeof(uint8_t), 1, f);
-    fwrite(&st->ili, sizeof(uint8_t), 1, f);
+    fwrite(&st->ignore_input, sizeof(uint8_t), 1, f);
+    fwrite(&st->hide_on_hover, sizeof(uint8_t), 1, f);
+    fwrite(&st->click_through, sizeof(uint8_t), 1, f);
+    fwrite(&st->disable_moving, sizeof(uint8_t), 1, f);
 
     fclose(f);
 }

@@ -32,6 +32,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-mwindows" />
 		</Compiler>
 		<Linker>
 			<Add library="opengl32" />

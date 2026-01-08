@@ -12,12 +12,6 @@ void DataInit(Data* dt)
     dt->count = 0; dt->size = 0;
     dt->width = 0; dt->height = 0;
     dt->error = 0;
-
-    dt->prev_mode = 0;
-    dt->prev_frxo = 0;
-    dt->prev_fryo = 0;
-    dt->prev_frxd = 0;
-    dt->prev_fryd = 0;
 }
 
 /// Just checking their headers
@@ -976,11 +970,6 @@ void ClearMedia(Data* dt)
     if (dt->delays != NULL)         { free(dt->delays);         dt->delays = NULL; }
     if (dt->frame_points != NULL)   { free(dt->frame_points);   dt->frame_points = NULL; }
 
-    dt->prev_mode = 0;
-    dt->prev_frxo = 0;
-    dt->prev_fryo = 0;
-    dt->prev_frxd = 0;
-    dt->prev_fryd = 0;
     dt->count = 0;
     dt->width = 0; dt->height = 0;
 }
@@ -1004,11 +993,6 @@ void ClearData(Data* dt)
     if (dt->delays != NULL)         { free(dt->delays);         dt->delays = NULL; }
     if (dt->frame_points != NULL)   { free(dt->frame_points);   dt->frame_points = NULL; }
 
-    dt->prev_mode = 0;
-    dt->prev_frxo = 0;
-    dt->prev_fryo = 0;
-    dt->prev_frxd = 0;
-    dt->prev_fryd = 0;
     dt->count = 0; dt->size = 0;
     dt->width = 0; dt->height = 0;
 }

@@ -58,12 +58,14 @@ typedef struct
     /// Interaction
     Button label_interaction;
 /**
-        Enable Drag n` Drop
-        Only tray icon (disable RMB)
+        Disable moving
+        Hide on hover
+        Click-through
         Ignore all input (Esc to disable)
 **/
-        Button btn_enable_dnd;
-        Button btn_only_tray;
+        Button btn_disable_moving;
+        Button btn_hide_hover;
+        Button btn_click_through;
         Button btn_ignore_input;
 
     /// Window

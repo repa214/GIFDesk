@@ -8,12 +8,22 @@
 /// Not native
 #define GL_CLAMP_TO_EDGE 0x812F
 
-#define BTN_TEXT_COLOR RGB(30, 30, 30)
-#define BTN_MARLETT_COLOR RGB(90, 90, 90)
-#define BTN_MARLETT_FLAG_COLOR RGB(90, 90, 90)
+#define BTN_COLOR_TEXT RGB(30, 30, 30)
+#define BTN_COLOR_TEXT_DEACTIVATED RGB(110, 110, 110)
+///
+#define BTN_COLOR_MARLETT RGB(90, 90, 90)
+#define BTN_COLOR_MARLETT_DEACTIVATED RGB(180, 180, 180)
+///
 #define BTN_HOVERED RGB(242, 242, 242)
 // #define BTN_HOVERED RGB(190, 190, 190)
-#define BTN_NOT_HOVERED RGB(250, 250, 250)
+#define BTN_HOVERED_NOT RGB(250, 250, 250)
+
+//#define BTN_TEXT_COLOR RGB(30, 30, 30)
+//#define BTN_MARLETT_COLOR RGB(90, 90, 90)
+//#define BTN_MARLETT_FLAG_COLOR RGB(90, 90, 90)
+//#define BTN_HOVERED RGB(242, 242, 242)
+// #define BTN_HOVERED RGB(190, 190, 190)
+//#define BTN_NOT_HOVERED RGB(250, 250, 250)
 
 /// minimal height: 36
 
@@ -24,7 +34,7 @@
 #define PB_HEIGHT 192
 
 #define IM_WIDTH 223
-#define IM_HEIGHT 36
+#define IM_HEIGHT 111
 
 #define WC_WIDTH 223
 #define WC_HEIGHT 127 // 182
@@ -93,6 +103,9 @@ typedef struct
 
     Button* label_interaction;
 
+    Button* btn_disable_moving;
+    Button* btn_hide_hover;
+    Button* btn_click_through;
     Button* btn_ignore_input;
 
     Button* label_pin_window;
@@ -129,7 +142,8 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
               Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
               Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind,
               Button* btn_fast_wind, Button* label_transparency, Button* btn_frame_updates,
-              Button* label_interaction, Button* label_ignore_input,
+              Button* label_interaction, Button* btn_disable_moving, Button* btn_hide_hover,
+              Button* btn_click_through, Button* btn_ignore_input,
               Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
               Button* btn_move_topright, Button* btn_move_center, Button* btn_move_left, Button* btn_move_right, Button* btn_close_window,
               Button* btn_taskbar);
@@ -156,8 +170,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd);
         0b00000100 - slow_left_rewind
         0b00001000 - slow_right_rewind
         0b00010000 - pause
-        0b00100000 - fast_left_rewind
-        0b01000000 - fast_right_rewind
+        0b00100000 - deactivated text
 
 **/
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,

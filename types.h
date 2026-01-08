@@ -20,7 +20,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.1.7"
+#define APP_NAME_VER "GIFDesk 1.2b"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -72,10 +72,12 @@ typedef struct
 
 typedef struct
 {
+    const char ofnfilter[233];
+
     char settings_path[MAX_PATH];
     char filename[MAX_PATH];
     char buff_filename[MAX_PATH];
-    const char ofnfilter[233];
+
     char str_size[32];
     char str_frame[32];
     char str_transparency[32];
@@ -84,7 +86,8 @@ typedef struct
     /** contains in settings file **/
 
     float size;
-    uint8_t taskbar, topmost, lang, speed, transparency, ili;
+    uint8_t taskbar, topmost, lang, speed, transparency,
+            ignore_input, hide_on_hover, click_through, disable_moving;
     int x, y;
 
     /** doesn`t contains in settings file **/
@@ -106,21 +109,10 @@ typedef struct
     void* data; long size;
 
     GLuint* textures;
-    float* frame_points;
-    float* delays;
+    float *frame_points, *delays;
+    unsigned char *frame, *buff;
 
-    unsigned char* frame;
-    unsigned char* buff;
-
-    int width;
-    int height;
-    int count;
-
-    unsigned char prev_mode;
-    unsigned char prev_frxo;
-    unsigned char prev_fryo;
-    unsigned char prev_frxd;
-    unsigned char prev_fryd;
+    int width, height, count;
 
     uint8_t error;
     /// returns 0 if fine and >1 if file is not valid
