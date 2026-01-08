@@ -50,7 +50,11 @@
 //   * 202311L in Clang 19.0.0git.
 // If the /std:clatest option is specified, __STDC_VERSION__ is
 //   * 202312L in Microsoft Visual Studio 17.10.5.
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L
 #define AVIF_NODISCARD [[nodiscard]]
+#else
+#define AVIF_NODISCARD
+#endif
 
 // ---------------------------------------------------------------------------
 // Constants
