@@ -174,6 +174,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
         /// -------------------
         case WM_RBUTTONDOWN: {
+            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
             ReleaseWindow(rptr.window_popup);
             ReleaseHover(&rptr, NULL);
 
@@ -233,18 +234,15 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                     break;
             }
             rptr.st->trackbar_size = rptr.st->size; rptr.st->size = 2;
-            _SetVertex(rptr.rd, vertex, rptr.st->trackbar_size * 100);
             rptr.rd->loading = 0;
 
             DragAcceptFiles(rptr.window->hwnd, FALSE);
-
-            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
 
             /** Popup Menu **/
 
             LoadWindow(rptr.window_popup, rptr.st, NULL, rptr.rd,
                        "window_popup", p.x + 5, p.y + 5,
-                       1, 1, POPUP_MENU);
+                       1, 1, POPUP_MENU_DEFAULT);
 
             /** Buttons **/
 
@@ -291,7 +289,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
             SetWindowRgn(rptr.window_popup->hwnd, hrgn, TRUE);
 
-            rptr.rd->render_thread = 0; // pthread_join(thread_t, NULL); rptr.rd->render_thread = 1;
+            rptr.rd->render_thread = 0;
         }   break;
 
         /// -------------------
@@ -311,7 +309,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                 /// -------------------
                 case 1:
                     pthread_create(&thread_t, 0, _LoadSettings, &rptr);
-
                     break;
             }
         }   break;
@@ -508,14 +505,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
             rptr.rd->loading = 1;
 
-            vertex[0] = -1;
-            vertex[1] =  1;
-            vertex[2] =  1;
-            vertex[3] =  1;
-            vertex[4] =  1;
-            vertex[5] = -1;
-            vertex[6] = -1;
-            vertex[7] = -1;
             switch (rptr.rd->pos) {
                 case POS_LTC:
                     SetWindowPos(rptr.window->hwnd,
@@ -583,7 +572,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                          0,
                          0,
                          0,
-                         SWP_NOMOVE | SWP_NOSIZE);
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW);
             DestroyWindow(hwnd);
         }   break;
 
@@ -646,7 +635,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + PB_WIDTH > res.right) popup_left = rect.left - PB_WIDTH;
                     if (popup_top + PB_HEIGHT > res.bottom) popup_top = res.bottom - PB_HEIGHT;
 
-                    LoadWindow(rptr.window_pb, rptr.st, NULL, rptr.rd, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_pb, rptr.st, NULL, rptr.rd, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, POPUP_MENU_MINOR);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -708,7 +697,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + IM_WIDTH > res.right) popup_left = rect.left - IM_WIDTH;
                     if (popup_top + IM_HEIGHT > res.bottom) popup_top = res.bottom - IM_HEIGHT;
 
-                    LoadWindow(rptr.window_im, rptr.st, NULL, rptr.rd, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_im, rptr.st, NULL, rptr.rd, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, POPUP_MENU_MINOR);
 
                     if (IsWindow(rptr.window_mwt->hwnd))
                         PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
@@ -751,7 +740,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + WC_WIDTH > res.right) popup_left = rect.left - WC_WIDTH;
                     if (popup_top + WC_HEIGHT > res.bottom) popup_top = res.bottom - WC_HEIGHT;
 
-                    LoadWindow(rptr.window_wc, rptr.st, NULL, rptr.rd, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_wc, rptr.st, NULL, rptr.rd, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, POPUP_MENU_MINOR);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -817,7 +806,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + MWT_WIDTH > res.right) popup_left = rect.left - MWT_WIDTH;
                     if (popup_top + MWT_HEIGHT > res.bottom) popup_top = res.bottom - MWT_HEIGHT;
 
-                    LoadWindow(rptr.window_mwt, rptr.st, NULL, rptr.rd, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, 0, 0, 0, 0);
+                    LoadWindow(rptr.window_mwt, rptr.st, NULL, rptr.rd, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, POPUP_MENU_MINOR);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -1183,6 +1172,8 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_TIMER: {
+            InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
+            SendMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, rptr.rd->frame + 1);
             switch (wparam) {
                 case 1:
                     GetCursorPos(&p);
@@ -1236,6 +1227,9 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 case 327683: {
                     if (rptr.rd->change_frames) rptr.rd->change_frames = 0;
                     else rptr.rd->change_frames = 1;
+
+                    InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
+                    SendMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, rptr.rd->frame + 1);
 
                     SetFocus(rptr.window_popup->hwnd);
                 }   break;
@@ -1995,13 +1989,11 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  0,
-                                 SWP_NOSIZE);
+                                 SWP_NOSIZE | SWP_NOREDRAW);
 
                     GetWindowRect(rptr.window->hwnd, &res);
                     SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
                     rptr.rd->pos = POS_LTC;
-
-                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
                 }   break;
 
                 /// -------------------
@@ -2016,9 +2008,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  0,
                                  0,
                                  0,
-                                 SWP_NOSIZE);
-
-                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
@@ -2033,9 +2023,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  (rect.bottom - rect.top - rptr.dt->height * 2) / 2,
                                  0,
                                  0,
-                                 SWP_NOSIZE);
-
-                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
@@ -2050,9 +2038,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  rect.bottom - rect.top - (rptr.dt->height) * 2,
                                  0,
                                  0,
-                                 SWP_NOSIZE);
-
-                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
@@ -2067,9 +2053,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                  rect.bottom - rect.top - (rptr.dt->height) * 2,
                                  0,
                                  0,
-                                 SWP_NOSIZE);
-
-                    _SetVertex(rptr.rd, vertex, (int)(rptr.st->trackbar_size * 100));
+                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 default: break;
@@ -2372,7 +2356,6 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
     if (settedpos < 1) settedpos = 1;
     else if (settedpos > 200) settedpos = 200;
 
-    _SetVertex(rd, vertex, settedpos);
     st->trackbar_size = (float)pos / 100;
 
     sprintf(st->str_size, "Scale (%.0f%%)", st->trackbar_size * 100);
@@ -2384,62 +2367,6 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
     }
     else
         ShowFrame(window, dt, rd, st);
-}
-
-void _SetVertex(Render* rd, float* vertex, int settedpos)
-{
-    switch (rd->pos) {
-        case POS_LTC:
-            vertex[0] = -1;
-            vertex[1] = 1;
-            vertex[2] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[3] = 1;
-            vertex[4] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[5] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[6] = -1;
-            vertex[7] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            break;
-        case POS_LLC:
-            vertex[0] = -1;
-            vertex[1] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[2] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[3] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[4] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[5] = -1;
-            vertex[6] = -1;
-            vertex[7] = -1;
-            break;
-        case POS_RTC:
-            vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[1] = 1;
-            vertex[2] = 1;
-            vertex[3] = 1;
-            vertex[4] = 1;
-            vertex[5] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[7] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            break;
-        case POS_RLC:
-            vertex[0] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[1] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[2] = 1;
-            vertex[3] = settedpos < 100 ? -1 + (float)settedpos / 100 : ((float)settedpos - 100) / 100;
-            vertex[4] = 1;
-            vertex[5] = -1;
-            vertex[6] = settedpos < 100 ? 1 - (float)settedpos / 100 : -((float)settedpos - 100) / 100;
-            vertex[7] = -1;
-            break;
-        case POS_C:
-            vertex[0] = -(float)settedpos / 200;
-            vertex[1] =  (float)settedpos / 200;
-            vertex[2] =  (float)settedpos / 200;
-            vertex[3] =  (float)settedpos / 200;
-            vertex[4] =  (float)settedpos / 200;
-            vertex[5] = -(float)settedpos / 200;
-            vertex[6] = -(float)settedpos / 200;
-            vertex[7] = -(float)settedpos / 200;
-            break;
-    }
 }
 
 void* ShowPopupThread(void* arg)
@@ -2470,6 +2397,8 @@ void* ShowLowerPopupThread(void* arg)
 
 void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
 {
+    if (rd->loading) return;
+
     wglMakeCurrent(window->hdc, window->hrc);
 
     RECT rect; GetWindowRect(window->hwnd, &rect);
@@ -2483,8 +2412,43 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
 //           dt->frame_points[(rd->frame * 4) + 2],
 //           dt->frame_points[(rd->frame * 4) + 3]);
 
-    glViewport(0, 0, _GetCollisionSize(dt->width, st->size),
-                     _GetCollisionSize(dt->height, st->size));
+    if (IsWindow(rptr.window_popup->hwnd))
+        switch (rd->pos) {
+            case POS_LTC:
+                glViewport(0,
+                           dt->height * 2 - dt->height * st->trackbar_size,
+                           dt->width * st->trackbar_size,
+                           dt->height * st->trackbar_size);
+                break;
+            case POS_LLC:
+                glViewport(0,
+                           0,
+                           dt->width * st->trackbar_size,
+                           dt->height * st->trackbar_size);
+                break;
+            case POS_RTC:
+                glViewport(dt->width * 2 - dt->width * st->trackbar_size,
+                           dt->height * 2 - dt->height * st->trackbar_size,
+                           dt->width * st->trackbar_size,
+                           dt->height * st->trackbar_size);
+                break;
+            case POS_RLC:
+                glViewport(dt->width * 2 - dt->width * st->trackbar_size,
+                           0,
+                           dt->width * st->trackbar_size,
+                           dt->height * st->trackbar_size);
+                break;
+            case POS_C:
+                glViewport((dt->width * 2 - dt->width * st->trackbar_size) / 2,
+                           (dt->height * 2 - dt->height * st->trackbar_size) / 2,
+                           (dt->width * st->trackbar_size),
+                           (dt->height * st->trackbar_size));
+                break;
+        }
+    else
+        glViewport(0, 0,
+                   dt->width * st->trackbar_size,
+                   dt->height * st->trackbar_size);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2514,11 +2478,6 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
     /** **/
     if (st->sfu)
     {
-        glViewport(0,
-                   _GetCollisionSize(dt->height, st->size) - _GetCollisionSize(dt->height, st->trackbar_size),
-                   _GetCollisionSize(dt->width, st->trackbar_size),
-                   _GetCollisionSize(dt->height, st->trackbar_size));
-
         glColor4f(1.0, 0.0, 0.0, 1.0);
         glLineWidth(1.0f);
 
@@ -2534,13 +2493,7 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
         glEnd();
     }
 
-    if (rptr.window_pb->isactive)
-        InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
-
     SwapBuffers(window->hdc);
-
-    if (!rd->framed_trackbar)
-        PostMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, rd->frame + 1);
 
     if (rd->frame == dt->count - 1 && rd->change_frames) rd->frame = 0;
     else if (rd->change_frames) rd->frame++;

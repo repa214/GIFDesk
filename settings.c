@@ -10,6 +10,7 @@
 void GetSettingsPath(Settings* st)
 {
     st->size = 1;
+    st->trackbar_size = 1;
     st->taskbar = 1;
     st->topmost = 1;
     st->lang = 0;
@@ -129,6 +130,7 @@ uint8_t GetSettings(Settings* st)
     {
         if (fread(st->filename, sizeof(char), 261, f) < 261) goto nofile;
         if (fread(&st->size, sizeof(float), 1, f) < 1) goto nofile;
+        st->trackbar_size = st->size;
         if (fread(&st->x, sizeof(int), 1, f) < 1) goto nofile;                ///
         if (fread(&st->y, sizeof(int), 1, f) < 1) goto nofile;                ///
         if (fread(&st->speed, sizeof(uint8_t), 1, f) < 1) goto nofile;        ///

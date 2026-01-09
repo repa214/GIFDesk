@@ -9,7 +9,7 @@ int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc);
 int LoadWindow(Window* window, Settings* st, Window* parent,
                Render* rd, const char* classname,
                int xoffset, int yoffset, int width, int height,
-               int settb, int settm, int setdaf, int setgl);
+               int settb, int settm, int setdaf, int setgl, int alpha);
 
 void LoadTrackBar(Trackbar* trackbar, Window* main_window,
                   int xoffset, int yoffset, int width, int height, int tooltip,

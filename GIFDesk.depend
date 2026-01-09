@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1767876469 source:d:\projects\gifdesk\main.c
+1767959991 source:d:\projects\gifdesk\main.c
 	<windows.h>
 	"gifdesk.h"
 
@@ -8,7 +8,7 @@
 
 1763034321 d:\projects\gifdesk\resource.h
 
-1767697368 source:d:\projects\gifdesk\gifdesk.c
+1767892075 source:d:\projects\gifdesk\gifdesk.c
 	"gifdesk.h"
 
 1767696997 d:\projects\gifdesk\gifdesk.h
@@ -18,11 +18,11 @@
 	"data.h"
 	"render.h"
 
-1767573518 d:\projects\gifdesk\window.h
+1767892067 d:\projects\gifdesk\window.h
 	"types.h"
 	"render.h"
 
-1767744440 source:d:\projects\gifdesk\window.c
+1767891955 source:d:\projects\gifdesk\window.c
 	"window.h"
 
 1767665030 d:\projects\gifdesk\settings.h
@@ -30,7 +30,7 @@
 	"render.h"
 	"data.h"
 
-1767875503 source:d:\projects\gifdesk\settings.c
+1767958748 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 
 1766935498 d:\projects\gifdesk\data.h
@@ -62,11 +62,11 @@
 	<stddef.h>
 	"./types.h"
 
-1749049078 d:\projects\gifdesk\webp\types.h
+1767889932 d:\projects\gifdesk\webp\types.h
 	<stddef.h>
 	<inttypes.h>
 
-1749154831 d:\projects\gifdesk\avif\avif.h
+1767889504 d:\projects\gifdesk\avif\avif.h
 	<stddef.h>
 	<stdint.h>
 
@@ -80,7 +80,7 @@
 	<string.h>
 	"./types.h"
 
-1767876486 d:\projects\gifdesk\types.h
+1767892531 d:\projects\gifdesk\types.h
 	<stdint.h>
 	<stdio.h>
 	<stdlib.h>
@@ -95,12 +95,12 @@
 	"webp/demux.h"
 	"avif/avif.h"
 
-1767876852 d:\projects\gifdesk\render.h
+1767958793 d:\projects\gifdesk\render.h
 	"types.h"
 	"window.h"
 	"settings.h"
 
-1767876674 source:d:\projects\gifdesk\render.c
+1767959817 source:d:\projects\gifdesk\render.c
 	"render.h"
 
 1571412343 d:\projects\gifdesk\gif\gif_lib.h

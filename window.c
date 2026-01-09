@@ -14,7 +14,7 @@ int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc)
 int LoadWindow(Window* window, Settings* st, Window* parent,
                Render* rd, const char* classname,
                int xoffset, int yoffset, int width, int height,
-               int settb, int settm, int setdaf, int setgl)
+               int settb, int settm, int setdaf, int setgl, int alpha)
 {
     LONG_PTR style = WS_EX_LAYERED;
     if (settb && st->taskbar)
@@ -37,8 +37,10 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
 
     if (settm) SetWindowPos(window->hwnd, (st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
 
-    SetLayeredWindowAttributes(window->hwnd, 0x0, 0, LWA_COLORKEY);
-//    SetLayeredWindowAttributes(window->hwnd, 0, st->transparency, LWA_ALPHA);
+    if (alpha)
+        SetLayeredWindowAttributes(window->hwnd, 0, alpha, LWA_ALPHA);
+    else
+        SetLayeredWindowAttributes(window->hwnd, 0x0, 0, LWA_COLORKEY);
 
     ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->isactive = 1;
     DragAcceptFiles(window->hwnd, (setdaf) ? TRUE : FALSE);

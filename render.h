@@ -45,8 +45,9 @@
 #define MWT_WIDTH 223
 #define MWT_HEIGHT 137
 
-#define MAIN_WINDOW 1, 1, 1, 1
-#define POPUP_MENU 0, 1, 0, 0
+#define MAIN_WINDOW 1, 1, 1, 1, 0
+#define POPUP_MENU_DEFAULT 0, 1, 0, 0, 1
+#define POPUP_MENU_MINOR 0, 0, 0, 0, 1
 
 #define WM_UPDATE_ALPHA (WM_USER + 1)
 
@@ -186,8 +187,6 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
                           Trackbar* scale_trackbar, Button* scale_button,
                           Settings* st, Data* dt,
                           Render* rd, int pos);
-
-void _SetVertex(Render* rd, float* vertex, int settedpos);
 
 /**
         OpenGL Proccessing
