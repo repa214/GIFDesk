@@ -198,6 +198,7 @@ void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt);
 void* RenderThread(void* arg);
 void* ShowPopupThread(LPVOID arg);
 void* ShowLowerPopupThread(LPVOID arg);
+void* ShowLink();
 
 /**
         Time Proccessing

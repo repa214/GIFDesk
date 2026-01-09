@@ -18,7 +18,7 @@ void DataInit(Data* dt)
 /// returns INCORRECT (0)
 /// or >1 if FORMAT
 
-uint8_t CheckFile(const char* filename, Data* dt)
+uint8_t CheckFile(const char* restrict filename, Data* restrict dt)
 {
     /** file, filesize, filedata **/
     FILE *file = fopen(filename, "rb");
@@ -41,7 +41,7 @@ uint8_t CheckFile(const char* filename, Data* dt)
     else return INCORRECT;
 }
 
-uint8_t _CheckGIF(void* data, long size)
+uint8_t _CheckGIF(void* restrict data, long size)
 {
     struct GIF_GHDR {
         uint8_t head[6];
@@ -67,14 +67,14 @@ uint8_t _CheckGIF(void* data, long size)
     return 1;
 }
 
-uint8_t _CheckAPNG(void* data, long size)
+uint8_t _CheckAPNG(void* restrict data, long size)
 {
     if (png_sig_cmp((png_bytep)data, 0, 8)) return 0;
 
     return 1;
 }
 
-uint8_t _CheckWEBP(void* data, long size)
+uint8_t _CheckWEBP(void* restrict data, long size)
 {
     WebPData webp_data = { data, (size_t)size };
     WebPAnimDecoderOptions dec_options;
@@ -92,7 +92,7 @@ uint8_t _CheckWEBP(void* data, long size)
     return 1;
 }
 
-uint8_t _CheckAVIF(void* data, long size)
+uint8_t _CheckAVIF(void* restrict data, long size)
 {
     avifDecoder* decoder = avifDecoderCreate();
     if (!decoder) return 0;
@@ -108,11 +108,11 @@ uint8_t _CheckAVIF(void* data, long size)
     return 1;
 }
 
-uint8_t _CheckMNG(void* data, long size) { return 0; }
+uint8_t _CheckMNG(void* restrict data, long size) { return 0; }
 
 /// sets to data->error
 
-uint8_t LoadFile(Window* window, Settings* st, Data* dt, unsigned char filetype)
+uint8_t LoadFile(Window* restrict window, Settings* restrict st, Data* restrict dt, unsigned char filetype)
 {
     switch (filetype)
     {
@@ -150,7 +150,7 @@ int _gifr(GifFileType* gif, GifByteType* bytes, int size)
     return to_read;
 }
 
-uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
+uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
 {
     int gif_error = 0;
 
@@ -307,7 +307,7 @@ static void _pngr(png_structp png_ptr, png_bytep data, png_size_t length)
     *data_ptr = current_pos + length;
 }
 
-uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
+uint8_t _LoadAPNG(Window* restrict window, Settings* restrict st, Data* restrict dt) /// or PNG
 {
     uint8_t png_error = 0;
 
@@ -628,7 +628,7 @@ _loadpng_release:
     return png_error;
 }
 
-uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
+uint8_t _LoadWEBP(Window* restrict window, Settings* restrict st, Data* restrict dt)
 {
     uint8_t webp_error = 0;
     WebPAnimDecoder* dec = NULL;
@@ -767,7 +767,7 @@ _loadwebp_release:
     return webp_error;
 }
 
-uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
+uint8_t _LoadAVIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
 {
     uint8_t avif_error = 0;
     avifDecoder* decoder = NULL;
@@ -918,10 +918,10 @@ _loadavif_release:
     return avif_error;
 }
 
-uint8_t _LoadMNG(Window* window, Settings* st, Data* dt) { return 0xE0; }
+uint8_t _LoadMNG(Window* restrict window, Settings* restrict st, Data* restrict dt) { return 0xE0; }
 
 
-void _GLImage(Window* window, Data* dt, Settings* st)
+void _GLImage(Window* restrict window, Data* restrict dt, Settings* restrict st)
 {
     wglMakeCurrent(window->hdc, window->hrc);
 
@@ -945,7 +945,7 @@ void _GLImage(Window* window, Data* dt, Settings* st)
     wglMakeCurrent(NULL, NULL);
 }
 
-void _ChangeTexFilt(Window* window, Data* dt, GLint param)
+void _ChangeTexFilt(Window* restrict window, Data* restrict dt, GLint param)
 {
     wglMakeCurrent(window->hdc, window->hrc);
 
@@ -961,7 +961,7 @@ void _ChangeTexFilt(Window* window, Data* dt, GLint param)
     wglMakeCurrent(NULL, NULL);
 }
 
-void ClearMedia(Data* dt)
+void ClearMedia(Data* restrict dt)
 {
     if (dt->count > 0) glDeleteTextures(dt->count, dt->textures);
 
@@ -974,14 +974,14 @@ void ClearMedia(Data* dt)
     dt->width = 0; dt->height = 0;
 }
 
-void ClearFileData(Data* dt)
+void ClearFileData(Data* restrict dt)
 {
     if (dt->data != NULL)       { free(dt->data);         dt->data = NULL; }
 
     dt->size = 0;
 }
 
-void ClearData(Data* dt)
+void ClearData(Data* restrict dt)
 {
     if (dt->count > 0) glDeleteTextures(dt->count, dt->textures);
 
@@ -997,7 +997,7 @@ void ClearData(Data* dt)
     dt->width = 0; dt->height = 0;
 }
 
-void ShowData(Data* dt)
+void ShowData(Data* restrict dt)
 {
     printf("Frames: %d, fs: %ld, Res: %dx%d\n", dt->count, dt->size, dt->width, dt->height);
 }

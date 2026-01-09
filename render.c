@@ -174,7 +174,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
         /// -------------------
         case WM_RBUTTONDOWN: {
-            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
             ReleaseWindow(rptr.window_popup);
             ReleaseHover(&rptr, NULL);
 
@@ -288,8 +287,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                                       10, 10);
 
             SetWindowRgn(rptr.window_popup->hwnd, hrgn, TRUE);
-
-            rptr.rd->render_thread = 0;
         }   break;
 
         /// -------------------
@@ -309,6 +306,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                 /// -------------------
                 case 1:
                     pthread_create(&thread_t, 0, _LoadSettings, &rptr);
+                    pthread_detach(thread_t);
                     break;
             }
         }   break;
@@ -342,6 +340,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
                     if (_GetCollisionSize(rptr.dt->height, rptr.st->size) > res.bottom / 2)
                         rptr.st->size = (float)res.bottom / 2 / (float)rptr.dt->height;
+
+                    rptr.st->trackbar_size = rptr.st->size;
 
                     SetWindowPos(rptr.window->hwnd,
                              (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
@@ -486,6 +486,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowPopupThread, hwnd);
+            pthread_detach(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -566,13 +567,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             if (rptr.window_pw->isactive) PostMessage(rptr.window_pw->hwnd, WM_CLOSE, 0, 0);
             if (rptr.window_mwt->isactive) PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
 
-            SetWindowPos(rptr.window->hwnd,
-                         (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                         0,
-                         0,
-                         0,
-                         0,
-                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOREDRAW);
             DestroyWindow(hwnd);
         }   break;
 
@@ -932,7 +926,9 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                 /// -------------------
                 case 1: {
                     PostMessage(rptr.window_popup->hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-                    system("start https://github.com/repa214/GIFDesk/releases");
+                    pthread_create(&thread_t, 0, ShowLink, NULL);
+                    pthread_detach(thread_t);
+                    printf("Браузер открыт!\n");
                 }   break;
 
                 /// Open file...
@@ -997,6 +993,7 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            pthread_detach(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1276,6 +1273,7 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            pthread_detach(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1507,6 +1505,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            pthread_detach(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1810,6 +1809,7 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         /// -------------------
         case WM_CREATE: {
             pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+            pthread_detach(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -2391,14 +2391,18 @@ void* ShowLowerPopupThread(void* arg)
     return NULL;
 }
 
+void* ShowLink()
+{
+    system("start https://github.com/repa214/GIFDesk/releases");
+    return NULL;
+}
+
 /**
         OpenGL Proccessing
 **/
 
 void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
 {
-    if (rd->loading) return;
-
     wglMakeCurrent(window->hdc, window->hrc);
 
     RECT rect; GetWindowRect(window->hwnd, &rect);
