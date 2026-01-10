@@ -7,6 +7,7 @@ void DataInit(Data* dt)
     dt->buff = NULL;
     dt->frame = NULL;
     dt->delays = NULL;
+    dt->lengths = NULL;
     dt->frame_points = NULL;
 
     dt->count = 0; dt->size = 0;
@@ -249,6 +250,11 @@ uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
         if (dt->delays == NULL) { gif_error = 15; goto _loadgif_release; }
         dt->delays[i] = (gcb.DelayTime == 0) ? 0.1 : (float)gcb.DelayTime / 100;
 
+        dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
+        if (dt->lengths == NULL) { gif_error = 15; goto _loadgif_release; }
+        if (dt->count == 1) dt->lengths[0] = dt->delays[0];
+        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[0];
+
         _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
 
@@ -454,6 +460,11 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
             dt->delays = (float *)realloc(dt->delays, sizeof(float) * dt->count);
             if (dt->delays == NULL) { png_error = 15; goto _loadpng_release; }
             dt->delays[i] = (den == 0) ? 0.1 : (float)delay / (float)den;
+
+            dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
+            if (dt->lengths == NULL) { png_error = 15; goto _loadpng_release; }
+            if (dt->count == 1) dt->lengths[0] = dt->delays[0];
+            else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[0];
 
             switch (blend)
             {
@@ -717,6 +728,11 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
         if (dt->delays == NULL) { webp_error = 15; goto _loadwebp_release; }
         dt->delays[dt->count - 1] = (float)(stamp - prev_stamp) / 1000;
 
+        dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
+        if (dt->lengths == NULL) { webp_error = 15; goto _loadwebp_release; }
+        if (dt->count == 1) dt->lengths[0] = dt->delays[0];
+        else dt->lengths[dt->count - 1] = dt->lengths[dt->count - 2] + dt->delays[0];
+
         for (int y = 0; y < dt->height; y++) {
             for (int x = 0; x < dt->width; x++) {
                 int src_idx = 4 * (y * dt->width + x);
@@ -858,9 +874,16 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
 
     for (int i = 0; i < num; i++) {
         dt->count++;
+
         dt->delays = (float *)realloc(dt->delays, sizeof(float) * dt->count);
         if (dt->delays == NULL) { avif_error = 15; goto _loadavif_release; }
         dt->delays[i] = (float)decoder->imageTiming.duration;
+
+        dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
+        if (dt->lengths == NULL) { avif_error = 15; goto _loadavif_release; }
+        if (dt->count == 1) dt->lengths[0] = dt->delays[0];
+        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[0];
+
         dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
         if (dt->delays == NULL) { avif_error = 15; goto _loadavif_release; }
 
@@ -968,6 +991,7 @@ void ClearMedia(Data* restrict dt)
     if (dt->textures != NULL)       { free(dt->textures);       dt->textures = NULL; }
     if (dt->frame != NULL)          { free(dt->frame);          dt->frame = NULL; }
     if (dt->delays != NULL)         { free(dt->delays);         dt->delays = NULL; }
+    if (dt->lengths != NULL)        { free(dt->lengths);        dt->lengths = NULL; }
     if (dt->frame_points != NULL)   { free(dt->frame_points);   dt->frame_points = NULL; }
 
     dt->count = 0;
@@ -990,7 +1014,7 @@ void ClearData(Data* restrict dt)
     if (dt->textures != NULL)       { free(dt->textures);       dt->textures = NULL; }
     if (dt->frame != NULL)          { free(dt->frame);          dt->frame = NULL; }
     if (dt->buff != NULL)           { free(dt->buff);           dt->buff = NULL; }
-    if (dt->delays != NULL)         { free(dt->delays);         dt->delays = NULL; }
+    if (dt->lengths != NULL)        { free(dt->lengths);        dt->lengths = NULL; }
     if (dt->frame_points != NULL)   { free(dt->frame_points);   dt->frame_points = NULL; }
 
     dt->count = 0; dt->size = 0;

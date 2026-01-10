@@ -20,7 +20,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.2.2"
+#define APP_NAME_VER "GIFDesk 1.2.3"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -104,7 +104,7 @@ typedef struct
     void* data; long size;
 
     GLuint* textures;
-    float *frame_points, *delays;
+    float *frame_points, *delays, *lengths;
     unsigned char *frame, *buff;
 
     int width, height, count;

@@ -105,11 +105,6 @@ void Loop(RenderPtr* rptr)
     rptr->rd->framed_trackbar = 0;
     rptr->rd->loading = 0;
 
-//    SetWindowPos(rptr->window->hwnd, NULL, 0, 0,
-//                 _GetCollisionSize(rptr->dt->width, rptr->st->trackbar_size),
-//                 _GetCollisionSize(rptr->dt->width, rptr->st->trackbar_size),
-//                 SWP_NOMOVE | SWP_FRAMECHANGED);
-
     /// Main Loop
 
     while (IsWindow(rptr->window->hwnd)) {
@@ -120,7 +115,9 @@ void Loop(RenderPtr* rptr)
 
         if (!IsWindow(rptr->window->hwnd)) continue;
 
-        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
+        if (!rptr->rd->loading /** && ChangeFrame(rptr->dt, rptr->rd, rptr->st) **/ )
+//        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st))
+            ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st, 0);
         Sleep(1);
     }
 
@@ -479,7 +476,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 {
     static POINT p;
     static RECT rect, res;
-    static RECT wcrect, pbrect, imrect, pwrect, mwtrect;
+    static RECT wcrect, pbrect, imrect, mwtrect;
     static HBRUSH brush = NULL;
     static PAINTSTRUCT ps;
     static HDC hdc = NULL;
@@ -583,7 +580,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             GetWindowRect(rptr.window_wc->hwnd, &wcrect);
             GetWindowRect(rptr.window_pb->hwnd, &pbrect);
             GetWindowRect(rptr.window_im->hwnd, &imrect);
-            GetWindowRect(rptr.window_pw->hwnd, &pwrect);
             GetWindowRect(rptr.window_mwt->hwnd, &mwtrect);
 
             if (wparam != WA_INACTIVE ||
@@ -593,7 +589,6 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                 (PtInRect(&wcrect, p) && rptr.window_wc->isactive) ||
                 (PtInRect(&pbrect, p) && rptr.window_pb->isactive) ||
                 (PtInRect(&imrect, p) && rptr.window_im->isactive) ||
-                (PtInRect(&pwrect, p) && rptr.window_pw->isactive) ||
                 (PtInRect(&mwtrect, p) && rptr.window_mwt->isactive)) { break; }
 
             PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
@@ -1202,11 +1197,16 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             if ((HWND)lparam == rptr.trackbar_frames->hwnd) {
                 SetFocus(rptr.window_popup->hwnd);
                 rptr.rd->frame = SendMessage(rptr.trackbar_frames->hwnd, TBM_GETPOS, 0, 0) - 1;
-                rptr.rd->framed_trackbar = 1; ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st); rptr.rd->framed_trackbar = 0;
+                rptr.rd->framed_trackbar = 1; ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st, 1); rptr.rd->framed_trackbar = 0;
             }
             if ((HWND)lparam == rptr.trackbar_speed->hwnd) {
                 SetFocus(rptr.window_popup->hwnd);
                 rptr.st->speed = SendMessage(rptr.trackbar_speed->hwnd, TBM_GETPOS, 0, 0);
+
+                printf("frame: %d [%f]\n", GetCurrentFrame(rptr.dt, rptr.rd, rptr.st), rptr.dt->lengths[GetCurrentFrame(rptr.dt, rptr.rd, rptr.st)]);
+                rptr.rd->start_time = GetTime() - (double)rptr.dt->lengths[rptr.rd->frame] / ((double)rptr.st->speed * 0.05 + 0.2);
+                ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st, 1);
+
                 InvalidateRect(rptr.label_speed->hwnd, NULL, TRUE);
             }
             WriteSettings(rptr.st);
@@ -1224,6 +1224,8 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 case 2:
                 case 327682: {
                     if (--rptr.rd->frame < 0) rptr.rd->frame = rptr.dt->count - 1;
+                    rptr.rd->start_time = GetTime() - (double)rptr.dt->lengths[rptr.rd->frame] / ((double)rptr.st->speed * 0.05 + 0.2);
+                    ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st, 1);
                 }   break;
 
                 case 3:
@@ -1233,6 +1235,7 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
                     InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
                     SendMessage(rptr.trackbar_frames->hwnd, TBM_SETPOS, TRUE, rptr.rd->frame + 1);
+                    rptr.rd->start_time = GetTime() - (double)rptr.dt->lengths[rptr.rd->frame] / ((double)rptr.st->speed * 0.05 + 0.2);
 
                     SetFocus(rptr.window_popup->hwnd);
                 }   break;
@@ -1240,6 +1243,8 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 case 4:
                 case 327684: {
                     if (++rptr.rd->frame > rptr.dt->count - 1) rptr.rd->frame = 0;
+                    rptr.rd->start_time = GetTime() - (double)rptr.dt->lengths[rptr.rd->frame] / ((double)rptr.st->speed * 0.05 + 0.2);
+                    ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st, 1);
                 }   break;
 
                 case 6:
@@ -1713,12 +1718,12 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                      rptr.st, rptr.dt, rptr.rd,
                                      rptr.st->pos);
             }
-            if ((HWND)lparam == rptr.trackbar_transparency->hwnd) {
-                rptr.st->transparency = (uint8_t)(((float)SendMessage(rptr.trackbar_transparency->hwnd, TBM_GETPOS, 0, 0)) * 2.55 + 0.555555555);
-                SetLayeredWindowAttributes(rptr.window->hwnd, 0x0, rptr.st->transparency, LWA_ALPHA);
-
-                InvalidateRect(rptr.label_transparency->hwnd, NULL, TRUE);
-            }
+//            if ((HWND)lparam == rptr.trackbar_transparency->hwnd) {
+//                rptr.st->transparency = (uint8_t)(((float)SendMessage(rptr.trackbar_transparency->hwnd, TBM_GETPOS, 0, 0)) * 2.55 + 0.555555555);
+//                SetLayeredWindowAttributes(rptr.window->hwnd, 0x0, rptr.st->transparency, LWA_ALPHA);
+//
+//                InvalidateRect(rptr.label_transparency->hwnd, NULL, TRUE);
+//            }
         }   break;
 
         /// -------------------
@@ -2356,25 +2361,25 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
     SetFocus(window_popup->hwnd);
 
     int settedpos = pos;
-    if (dt->width * ((float)pos / 100) < 10)
-        settedpos = (10 / (float)dt->width * 100);
-    if (dt->height * ((float)pos / 100) < 10)
-        settedpos = (10 / (float)dt->height * 100);
+    if (dt->width * ((float)pos / 100) < WINDOW_MIN_SIZE)
+        settedpos = (WINDOW_MIN_SIZE / (float)dt->width * 100);
+    else if (dt->height * ((float)pos / 100) < WINDOW_MIN_SIZE)
+        settedpos = (WINDOW_MIN_SIZE / (float)dt->height * 100);
 
     if (settedpos < 1) settedpos = 1;
     else if (settedpos > 200) settedpos = 200;
 
-    st->trackbar_size = (float)pos / 100;
+    st->trackbar_size = (float)settedpos / 100;
 
     sprintf(st->str_size, "Scale (%.0f%%)", st->trackbar_size * 100);
     SetWindowText(scale_button->hwnd, st->str_size);
 
     if (rd->change_frames)
     {
-        rd->change_frames = 0; ShowFrame(window, dt, rd, st); rd->change_frames = 1;
+        rd->change_frames = 0; ShowFrame(window, dt, rd, st, 1); rd->change_frames = 1;
     }
     else
-        ShowFrame(window, dt, rd, st);
+        ShowFrame(window, dt, rd, st, 1);
 }
 
 void* ShowPopupThread(void* arg)
@@ -2409,8 +2414,14 @@ void* ShowLink()
         OpenGL Proccessing
 **/
 
-void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, Settings* restrict st)
+void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, Settings* restrict st, uint8_t skip)
 {
+    int cframe = rd->frame;
+    if (rd->change_frames)
+        rd->frame = GetCurrentFrame(dt, rd, st);
+    if (cframe == rd->frame && !skip)
+        return;
+
     wglMakeCurrent(window->hdc, window->hrc);
 
     RECT rect; GetWindowRect(window->hwnd, &rect);
@@ -2506,9 +2517,6 @@ void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, 
 
     SwapBuffers(window->hdc);
 
-    if (rd->frame == dt->count - 1 && rd->change_frames) rd->frame = 0;
-    else if (rd->change_frames) rd->frame++;
-
     wglMakeCurrent(NULL, NULL);
 }
 
@@ -2553,7 +2561,9 @@ void* RenderThread(void* arg)
 
         if (!IsWindow(rptr->window->hwnd)) continue;
 
-        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
+        if (!rptr->rd->loading /** && ChangeFrame(rptr->dt, rptr->rd, rptr->st) **/ )
+//        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st))
+            ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st, 0);
         Sleep(1);
     }
 
@@ -2563,6 +2573,19 @@ void* RenderThread(void* arg)
 /**
         Time Proccessing
 **/
+
+int GetCurrentFrame(Data* dt, Render* rd, Settings* st)
+{
+    rd->current_time = GetTime();
+    int b = 0;
+
+    while ((float)((int)((rd->current_time - rd->start_time) * 100) %
+           (int)((dt->lengths[dt->count - 1] / ((float)st->speed * 0.05 + 0.2)) * 100)) / 100
+           > (dt->lengths[b] / ((float)st->speed * 0.05 + 0.2)))
+        b++;
+
+    return b;
+}
 
 double GetTime()
 {
@@ -2584,7 +2607,7 @@ uint8_t ChangeFrame(Data* dt, Render* rd, Settings* st)
         if (rd->inaccuracy < -delay * 2)
             rd->inaccuracy = 0;
 
-        // printf("%f | %f | %f | %f\n", rd->start_time, rd->current_time, delay, rd->inaccuracy);
+//        printf("%f | %f | %f | %f\n", rd->start_time, rd->current_time, delay, rd->inaccuracy);
 
         rd->start_time = rd->current_time;
         return 1;

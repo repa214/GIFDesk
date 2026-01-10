@@ -115,7 +115,7 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
 
     }   while (1);
 
-    ReloadWindow(window, st, dt, 1); rd->loading = 0; rd->frame = 0; rd->change_frames = 1;
+    ReloadWindow(window, st, dt, 1); rd->loading = 0; rd->start_time = GetTime(); rd->change_frames = 1;
     window->wcex.lpfnWndProc = MainWindowProc;
 }
 

@@ -41,6 +41,8 @@
 #define POPUP_MENU_DEFAULT 0, 1, 0, 0, 1
 #define POPUP_MENU_MINOR 0, 0, 0, 0, 1
 
+#define WINDOW_MIN_SIZE 10
+
 #define WM_UPDATE_ALPHA (WM_USER + 1)
 
 typedef struct
@@ -184,7 +186,7 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
         OpenGL Proccessing
 **/
 
-void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st);
+void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st, uint8_t skip);
 void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt);
 
 void* RenderThread(void* arg);
@@ -196,7 +198,7 @@ void* ShowLink();
         Time Proccessing
 **/
 
+int GetCurrentFrame(Data* dt, Render* rd, Settings* st);
 double GetTime();
-uint8_t ChangeFrame(Data* dt, Render* rd, Settings* st);
 
 #endif // RENDER_H_INCLUDED
