@@ -89,7 +89,7 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
         ClearMedia(dt);
 
         /// Checking selected file
-//        rd->loading = 1;
+        rd->loading = 1;
         uint8_t valid = LoadFile(window, st, dt, filetype); dt->error = valid;
         if (valid == 0) {
             SwapFilenames(st); strcpy(st->buff_filename, ""); WriteSettings(st);
