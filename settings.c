@@ -89,7 +89,7 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
         ClearMedia(dt);
 
         /// Checking selected file
-        rd->loading = 1;
+//        rd->loading = 1;
         uint8_t valid = LoadFile(window, st, dt, filetype); dt->error = valid;
         if (valid == 0) {
             SwapFilenames(st); strcpy(st->buff_filename, ""); WriteSettings(st);
@@ -142,6 +142,10 @@ uint8_t GetSettings(Settings* st)
         if (fread(&st->hide_on_hover, sizeof(uint8_t), 1, f) < 1) goto nofile;
         if (fread(&st->click_through, sizeof(uint8_t), 1, f) < 1) goto nofile;
         if (fread(&st->disable_moving, sizeof(uint8_t), 1, f) < 1) goto nofile;
+
+//        printf("filename: %s\nsize: %f, [%d, %d]\nspeed: %u\ntransparency: %u\ntaskbar: %u\ntopmost: %u\nlang: %u\nignore_input: %u\nhide_on_hover: %u\nclick_through: %u\ndisable_moving: %u\n",
+//               st->filename, st->size, st->x, st->y, st->speed, st->transparency, st->taskbar,
+//               st->topmost, st->lang, st->ignore_input, st->hide_on_hover, st->click_through, st->disable_moving);
     }
     else goto nofile;
 

@@ -1,5 +1,8 @@
 #include "window.h"
 
+HDC currenthdc = NULL;
+HGLRC currenthrc = NULL;
+
 /** Windows Processing **/
 
 int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc)
@@ -151,29 +154,28 @@ void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     int iFormat;
 
     *hdc = GetDC(hwnd);
+    currenthdc = *hdc;
 
     ZeroMemory(&pfd, sizeof(pfd));
 
     pfd.nSize = sizeof(pfd);
     pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_DRAW_TO_BITMAP;
+    pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
     pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 24;
-    pfd.cDepthBits = 32;
-    pfd.iLayerType = PFD_MAIN_PLANE;
+    pfd.cColorBits = 32;
+    pfd.cDepthBits = 16;
 
     iFormat = ChoosePixelFormat(*hdc, &pfd);
-
     SetPixelFormat(*hdc, iFormat, &pfd);
 
     *hRC = wglCreateContext(*hdc);
-
-    wglMakeCurrent(*hdc, *hRC);
+    currenthrc = *hRC;
 
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.75f);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {

@@ -18,15 +18,7 @@
 // #define BTN_HOVERED RGB(190, 190, 190)
 #define BTN_HOVERED_NOT RGB(250, 250, 250)
 
-//#define BTN_TEXT_COLOR RGB(30, 30, 30)
-//#define BTN_MARLETT_COLOR RGB(90, 90, 90)
-//#define BTN_MARLETT_FLAG_COLOR RGB(90, 90, 90)
-//#define BTN_HOVERED RGB(242, 242, 242)
-// #define BTN_HOVERED RGB(190, 190, 190)
-//#define BTN_NOT_HOVERED RGB(250, 250, 250)
-
 /// minimal height: 36
-
 #define POPUP_WIDTH 250
 #define POPUP_HEIGHT 206
 

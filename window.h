@@ -4,6 +4,9 @@
 #include "types.h"
 #include "render.h"
 
+extern HDC currenthdc;
+extern HGLRC currenthrc;
+
 int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc);
 
 int LoadWindow(Window* window, Settings* st, Window* parent,

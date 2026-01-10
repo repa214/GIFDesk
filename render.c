@@ -96,6 +96,7 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
 void Loop(RenderPtr* rptr)
 {
     MSG msg;
+    rptr->st->trackbar_size = rptr->st->size;
     rptr->rd->frame = 0;
     rptr->rd->render_thread = 1;
     rptr->rd->start_time = GetTime();
@@ -103,6 +104,11 @@ void Loop(RenderPtr* rptr)
     rptr->rd->inaccuracy = 0;
     rptr->rd->framed_trackbar = 0;
     rptr->rd->loading = 0;
+
+//    SetWindowPos(rptr->window->hwnd, NULL, 0, 0,
+//                 _GetCollisionSize(rptr->dt->width, rptr->st->trackbar_size),
+//                 _GetCollisionSize(rptr->dt->width, rptr->st->trackbar_size),
+//                 SWP_NOMOVE | SWP_FRAMECHANGED);
 
     /// Main Loop
 
@@ -369,7 +375,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         /// -------------------
         case WM_TIMER: {
             GetCursorPos(&p); GetWindowRect(hwnd, &rect);
-            if (!PtInRect(&rect, p)) {
+            if (!PtInRect(&rect, p) && rptr.st->hide_on_hover) {
                 SetLayeredWindowAttributes(hwnd, 0x0, 0, LWA_COLORKEY);
             }
             else if (rptr.st->click_through) {
@@ -1728,6 +1734,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                      rptr.st, rptr.dt, rptr.rd,
                                      rptr.st->pos);
 
+                        InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
                         PostMessage(rptr.trackbar_scale->hwnd, TBM_SETPOS, TRUE, rptr.st->pos);
                     }
                 }   break;
@@ -1742,6 +1749,7 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                                              rptr.st, rptr.dt, rptr.rd,
                                              rptr.st->pos);
 
+                        InvalidateRect(rptr.label_frames->hwnd, NULL, TRUE);
                         PostMessage(rptr.trackbar_scale->hwnd, TBM_SETPOS, TRUE, rptr.st->pos);
                     }
                 }   break;
@@ -2401,14 +2409,14 @@ void* ShowLink()
         OpenGL Proccessing
 **/
 
-void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
+void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, Settings* restrict st)
 {
     wglMakeCurrent(window->hdc, window->hrc);
 
     RECT rect; GetWindowRect(window->hwnd, &rect);
 
 //    printf("\33[2K\r");
-//    printf("Frame: %d | [%ld, %ld] | [%f, %f] [%f, %f]\n", rd->frame + 1,
+//    printf("Frame: %d | [%ld, %ld] | [%f, %f] [%f, %f]", rd->frame + 1,
 //           rect.right - rect.left,
 //           rect.bottom - rect.top,
 //           dt->frame_points[rd->frame * 4],
@@ -2416,7 +2424,7 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
 //           dt->frame_points[(rd->frame * 4) + 2],
 //           dt->frame_points[(rd->frame * 4) + 3]);
 
-    if (IsWindow(rptr.window_popup->hwnd))
+    if (rptr.window_popup->isactive)
         switch (rd->pos) {
             case POS_LTC:
                 glViewport(0,
@@ -2454,48 +2462,47 @@ void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st)
                    dt->width * st->trackbar_size,
                    dt->height * st->trackbar_size);
 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); glClear(GL_COLOR_BUFFER_BIT);
+
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glClearColor(0, 0, 0, 0); glClear(GL_COLOR_BUFFER_BIT);
-
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, dt->textures[rd->frame]);
 
-    glColor4f(1, 1, 1, 1);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     glPushMatrix();
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glVertexPointer(2, GL_FLOAT, 0, vertex);
-    glTexCoordPointer(2, GL_FLOAT, 0, texCoord);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, vertex);
+        glTexCoordPointer(2, GL_FLOAT, 0, texCoord);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
+
+        if (st->sfu)
+        {
+            glColor4f(1.0, 0.0, 0.0, 1.0);
+            glLineWidth(1.0f);
+
+            glBegin(GL_LINE_LOOP);
+                glVertex2f(dt->frame_points[rd->frame * 4],
+                           dt->frame_points[rd->frame * 4 + 3]);
+                glVertex2f(dt->frame_points[rd->frame * 4 + 2],
+                           dt->frame_points[rd->frame * 4 + 3]);
+                glVertex2f(dt->frame_points[rd->frame * 4 + 2],
+                           dt->frame_points[rd->frame * 4 + 1]);
+                glVertex2f(dt->frame_points[rd->frame * 4],
+                           dt->frame_points[rd->frame * 4 + 1]);
+            glEnd();
+        }
 
     glPopMatrix();
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-
-    /** **/
-    if (st->sfu)
-    {
-        glColor4f(1.0, 0.0, 0.0, 1.0);
-        glLineWidth(1.0f);
-
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(dt->frame_points[rd->frame * 4],
-                       dt->frame_points[rd->frame * 4 + 3]);
-            glVertex2f(dt->frame_points[rd->frame * 4 + 2],
-                       dt->frame_points[rd->frame * 4 + 3]);
-            glVertex2f(dt->frame_points[rd->frame * 4 + 2],
-                       dt->frame_points[rd->frame * 4 + 1]);
-            glVertex2f(dt->frame_points[rd->frame * 4],
-                       dt->frame_points[rd->frame * 4 + 1]);
-        glEnd();
-    }
 
     SwapBuffers(window->hdc);
 
@@ -2536,8 +2543,17 @@ void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt)
 void* RenderThread(void* arg)
 {
     RenderPtr* rptr = (RenderPtr*)arg;
+
+    MSG msg;
     while (rptr->rd->render_thread) {
-        if (ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        if (!IsWindow(rptr->window->hwnd)) continue;
+
+        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st)) ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st);
         Sleep(1);
     }
 

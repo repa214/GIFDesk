@@ -24,7 +24,6 @@ uint8_t _CheckWEBP(void* data, long size);
 uint8_t _CheckAVIF(void* data, long size);
 uint8_t _CheckMNG(void* data, long size);
 
-
 uint8_t LoadFile(Window* window, Settings* st, Data* dt, unsigned char filetype);
 
 uint8_t _LoadGIF(Window* window, Settings* st, Data* dt);

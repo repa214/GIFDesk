@@ -32,12 +32,8 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-ansi" />
-			<Add option="-fPIC" />
-			<Add option="-mwindows" />
 		</Compiler>
 		<Linker>
-			<Add option="-static" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="gdi32" />

@@ -20,7 +20,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.2.1"
+#define APP_NAME_VER "GIFDesk 1.2.2"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -51,10 +51,7 @@ typedef struct
 typedef struct
 {
     HWND hwnd;
-    HDC hdc;
-    HGLRC hrc;
     HFONT font;
-    HFONT arrow;
 
     int hovered;
     int isactive;
@@ -63,8 +60,6 @@ typedef struct
 typedef struct
 {
     HWND hwnd;
-    HDC hdc;
-    HGLRC hrc;
 
     int hovered;
     int isactive;

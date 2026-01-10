@@ -16,7 +16,7 @@ void DataInit(Data* dt)
 
 /// Just checking their headers
 /// returns INCORRECT (0)
-/// or >1 if FORMAT
+/// or 1 if FORMAT
 
 uint8_t CheckFile(const char* restrict filename, Data* restrict dt)
 {
@@ -150,7 +150,7 @@ int _gifr(GifFileType* gif, GifByteType* bytes, int size)
     return to_read;
 }
 
-uint8_t _LoadGIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
+uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
 {
     int gif_error = 0;
 
@@ -307,7 +307,7 @@ static void _pngr(png_structp png_ptr, png_bytep data, png_size_t length)
     *data_ptr = current_pos + length;
 }
 
-uint8_t _LoadAPNG(Window* restrict window, Settings* restrict st, Data* restrict dt) /// or PNG
+uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
 {
     uint8_t png_error = 0;
 
@@ -628,7 +628,7 @@ _loadpng_release:
     return png_error;
 }
 
-uint8_t _LoadWEBP(Window* restrict window, Settings* restrict st, Data* restrict dt)
+uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
 {
     uint8_t webp_error = 0;
     WebPAnimDecoder* dec = NULL;
@@ -690,7 +690,7 @@ uint8_t _LoadWEBP(Window* restrict window, Settings* restrict st, Data* restrict
     dt->height = anim_info.canvas_height;
     int num = anim_info.frame_count;
 
-    long pixcount = dt->width * (dt->height + 1) * 4;
+    long pixcount = dt->width * dt->height * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { webp_error = 15; goto _loadwebp_release; }
@@ -767,7 +767,7 @@ _loadwebp_release:
     return webp_error;
 }
 
-uint8_t _LoadAVIF(Window* restrict window, Settings* restrict st, Data* restrict dt)
+uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
 {
     uint8_t avif_error = 0;
     avifDecoder* decoder = NULL;
@@ -848,7 +848,7 @@ uint8_t _LoadAVIF(Window* restrict window, Settings* restrict st, Data* restrict
     dt->height = decoder->image->height;
     int num = decoder->imageCount;
 
-    long pixcount = dt->width * (dt->height + 1) * 4;
+    long pixcount = dt->width * dt->height * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { avif_error = 15; goto _loadavif_release; }
@@ -918,7 +918,7 @@ _loadavif_release:
     return avif_error;
 }
 
-uint8_t _LoadMNG(Window* restrict window, Settings* restrict st, Data* restrict dt) { return 0xE0; }
+uint8_t _LoadMNG(Window* window, Settings* st, Data* dt) { return 0xE0; }
 
 
 void _GLImage(Window* restrict window, Data* restrict dt, Settings* restrict st)
