@@ -2419,7 +2419,7 @@ void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, 
     int cframe = rd->frame;
     if (rd->change_frames)
         rd->frame = GetCurrentFrame(dt, rd, st);
-    if (cframe == rd->frame && !skip)
+    if (cframe == rd->frame && !skip && dt->count > 1)
         return;
 
     wglMakeCurrent(window->hdc, window->hrc);
@@ -2577,14 +2577,13 @@ void* RenderThread(void* arg)
 int GetCurrentFrame(Data* dt, Render* rd, Settings* st)
 {
     rd->current_time = GetTime();
-    int b = 0;
+    int frame = 0;
 
     while ((float)((int)((rd->current_time - rd->start_time) * 100) %
            (int)((dt->lengths[dt->count - 1] / ((float)st->speed * 0.05 + 0.2)) * 100)) / 100
-           > (dt->lengths[b] / ((float)st->speed * 0.05 + 0.2)))
-        b++;
-
-    return b;
+           > (dt->lengths[frame] / ((float)st->speed * 0.05 + 0.2)))
+        frame++;
+    return frame;
 }
 
 double GetTime()
