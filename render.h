@@ -189,10 +189,15 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
 void ShowFrame(Window* window, Data* dt, Render* rd, Settings* st, uint8_t skip);
 void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt);
 
-void* RenderThread(void* arg);
-void* ShowPopupThread(LPVOID arg);
-void* ShowLowerPopupThread(LPVOID arg);
-void* ShowLink();
+//void* RenderThread(void* arg);
+//void* ShowPopupThread(void* arg);
+//void* ShowLowerPopupThread(void* arg);
+//void* ShowLink();
+
+unsigned __stdcall RenderThread(void* arg);
+unsigned __stdcall ShowPopupThread(void* arg);
+unsigned __stdcall ShowLowerPopupThread(void* arg);
+unsigned __stdcall ShowLink();
 
 /**
         Time Proccessing

@@ -169,8 +169,13 @@ uint8_t _LoadGIF(Window* window, Settings* st, Data* dt)
         return 1;
     }
 
-    dt->width = gif->SWidth;
-    dt->height = gif->SHeight;
+    dt->width = gif->SWidth; dt->npotwidth = dt->width;
+    dt->height = gif->SHeight; dt->npotheight = dt->height;
+
+    if (rptr.rd->major < 2) {
+        dt->width = GetPOTSize(dt->width, dt->height); dt->height = dt->width;
+    }
+
     int num = gif->ImageCount;
     long pixcount = dt->width * dt->height * 4;
     if (dt->frame == NULL) {
@@ -342,8 +347,12 @@ uint8_t _LoadAPNG(Window* window, Settings* st, Data* dt) /// or PNG
     png_set_read_fn(png_ptr, &dt->data, _pngr);
     png_read_info(png_ptr, info_ptr);
 
-    dt->width = png_get_image_width(png_ptr, info_ptr);
-    dt->height = png_get_image_height(png_ptr, info_ptr);
+    dt->width = png_get_image_width(png_ptr, info_ptr); dt->npotwidth = dt->width;
+    dt->height = png_get_image_height(png_ptr, info_ptr); dt->npotheight = dt->height;
+
+    if (rptr.rd->major < 2) {
+        dt->width = GetPOTSize(dt->width, dt->height); dt->height = dt->width;
+    }
 
     png_byte color_type = png_get_color_type(png_ptr, info_ptr);
     png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
@@ -628,7 +637,6 @@ _loadpng_release:
         free(row_pointers);
     }
 
-    if (row_pointers != NULL) free(row_pointers);
     row_pointers = NULL;
     ClearMedia(dt);
 
@@ -697,23 +705,28 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
     }
     WebPAnimDecoderGetInfo(dec, &anim_info);
 
-    dt->width = anim_info.canvas_width;
-    dt->height = anim_info.canvas_height;
+    dt->width = anim_info.canvas_width; dt->npotwidth = dt->width;
+    dt->height = anim_info.canvas_height; dt->npotheight = dt->height;
+
+    if (rptr.rd->major < 2) {
+        dt->width = GetPOTSize(dt->width, dt->height); dt->height = dt->width;
+    }
+
     int num = anim_info.frame_count;
 
     long pixcount = dt->width * dt->height * 4;
+    long npotpixcount = dt->npotwidth * dt->npotheight * 4;
     if (dt->frame == NULL) {
         dt->frame = malloc(pixcount);
         if (dt->frame == NULL) { webp_error = 15; goto _loadwebp_release; }
         memset(dt->frame, 0, pixcount);
     }
-    if (dt->buff == NULL) {
-        dt->buff = malloc(pixcount);
-        if (dt->buff == NULL) { webp_error = 15; goto _loadwebp_release; }
-        memset(dt->buff, 0, pixcount);
-    }
 
-    memset(dt->frame, 0, pixcount);
+    if (dt->buff == NULL) {
+        dt->buff = malloc(dt->npotwidth * dt->npotheight * 4);
+        if (dt->buff == NULL) { webp_error = 15; goto _loadwebp_release; }
+        memset(dt->buff, 0, npotpixcount);
+    }
 
     int prev_stamp = 0;
     while (WebPAnimDecoderHasMoreFrames(dec)) {
@@ -733,9 +746,9 @@ uint8_t _LoadWEBP(Window* window, Settings* st, Data* dt)
         if (dt->count == 1) dt->lengths[0] = dt->delays[0];
         else dt->lengths[dt->count - 1] = dt->lengths[dt->count - 2] + dt->delays[0];
 
-        for (int y = 0; y < dt->height; y++) {
-            for (int x = 0; x < dt->width; x++) {
-                int src_idx = 4 * (y * dt->width + x);
+        for (int y = 0; y < dt->npotheight; y++) {
+            for (int x = 0; x < dt->npotwidth; x++) {
+                int src_idx = 4 * (y * dt->npotwidth + x);
                 int dst_idx = 4 * (y * dt->width + x);
                 memcpy(dt->frame + dst_idx, dt->buff + src_idx, 4);
             }
@@ -857,11 +870,15 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         goto _loadavif_release;
     }
 
-
     avifRGBImage rgb;
 
-    dt->width = decoder->image->width;
-    dt->height = decoder->image->height;
+    dt->width = decoder->image->width; dt->npotwidth = dt->width;
+    dt->height = decoder->image->height; dt->npotheight = dt->height;
+
+    if (rptr.rd->major < 2) {
+        dt->width = GetPOTSize(dt->width, dt->height); dt->height = dt->width;
+    }
+
     int num = decoder->imageCount;
 
     long pixcount = dt->width * dt->height * 4;
@@ -870,7 +887,6 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         if (dt->frame == NULL) { avif_error = 15; goto _loadavif_release; }
         memset(dt->frame, 0, pixcount);
     }
-    memset(dt->frame, 0, pixcount);
 
     for (int i = 0; i < num; i++) {
         dt->count++;
@@ -882,7 +898,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
         if (dt->lengths == NULL) { avif_error = 15; goto _loadavif_release; }
         if (dt->count == 1) dt->lengths[0] = dt->delays[0];
-        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[0];
+        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[i - 2];
 
         dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
         if (dt->delays == NULL) { avif_error = 15; goto _loadavif_release; }
@@ -901,9 +917,9 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
         if (result != AVIF_RESULT_OK)
             break;
 
-        for (int y = 0; y < dt->height; y++) {
-            for (int x = 0; x < dt->width; x++) {
-                int src_idx = 4 * (y * dt->width + x);
+        for (int y = 0; y < dt->npotheight; y++) {
+            for (int x = 0; x < dt->npotwidth; x++) {
+                int src_idx = 4 * (y * dt->npotwidth + x);
                 int dst_idx = 4 * (y * dt->width + x);
 
                 dt->frame[dst_idx]     = rgb.pixels[src_idx]     ? rgb.pixels[src_idx] : 1;
@@ -957,12 +973,12 @@ void _GLImage(Window* restrict window, Data* restrict dt, Settings* restrict st)
                     rptr.rd->major == 1 && rptr.rd->minor < 2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                     rptr.rd->major == 1 && rptr.rd->minor < 2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (st->size == 1) ? GL_NEAREST : GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dt->width, dt->height,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, dt->frame);
-
     glBindTexture(GL_TEXTURE_2D, 0);
 
     wglMakeCurrent(NULL, NULL);
@@ -982,6 +998,13 @@ void _ChangeTexFilt(Window* restrict window, Data* restrict dt, GLint param)
     }
 
     wglMakeCurrent(NULL, NULL);
+}
+
+int GetPOTSize(int width, int height)
+{
+    int s = 1, n = (width > height) ? width : height;
+    while (s < n) s *= 2;
+    return s;
 }
 
 void ClearMedia(Data* restrict dt)

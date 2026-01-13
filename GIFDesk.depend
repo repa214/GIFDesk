@@ -1,6 +1,5 @@
 # depslib dependency file v1.0
-1768059236 source:d:\projects\gifdesk\main.c
-	<windows.h>
+1768284957 source:d:\projects\gifdesk\main.c
 	"gifdesk.h"
 
 1763034318 source:d:\projects\gifdesk\resource.rc
@@ -18,11 +17,11 @@
 	"data.h"
 	"render.h"
 
-1768025319 d:\projects\gifdesk\window.h
+1768214515 d:\projects\gifdesk\window.h
 	"types.h"
 	"render.h"
 
-1768044609 source:d:\projects\gifdesk\window.c
+1768230577 source:d:\projects\gifdesk\window.c
 	"window.h"
 
 1767665030 d:\projects\gifdesk\settings.h
@@ -33,11 +32,11 @@
 1768050566 source:d:\projects\gifdesk\settings.c
 	"settings.h"
 
-1768040739 d:\projects\gifdesk\data.h
+1768214977 d:\projects\gifdesk\data.h
 	"types.h"
 	"render.h"
 
-1768048869 source:d:\projects\gifdesk\data.c
+1768283347 source:d:\projects\gifdesk\data.c
 	"data.h"
 
 1762457676 d:\projects\gifdesk\gif\gif_load.h
@@ -80,27 +79,26 @@
 	<string.h>
 	"./types.h"
 
-1768048380 d:\projects\gifdesk\types.h
+1768285300 d:\projects\gifdesk\types.h
 	<stdint.h>
 	<stdio.h>
 	<stdlib.h>
 	<gl/gl.h>
-	<windows.h>
 	<commctrl.h>
 	<locale.h>
-	<pthread.h>
+	<process.h>
 	"gif/gif_lib.h"
 	"apng/png.h"
 	"webp/decode.h"
 	"webp/demux.h"
 	"avif/avif.h"
 
-1768059401 d:\projects\gifdesk\render.h
+1768283549 d:\projects\gifdesk\render.h
 	"types.h"
 	"window.h"
 	"settings.h"
 
-1768063718 source:d:\projects\gifdesk\render.c
+1768283699 source:d:\projects\gifdesk\render.c
 	"render.h"
 
 1571412343 d:\projects\gifdesk\gif\gif_lib.h

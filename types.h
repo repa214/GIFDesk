@@ -4,14 +4,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gl/gl.h>
 
-#include <windows.h>
+#include <gl/gl.h>
 
 #include <commctrl.h>
 #include <locale.h>
-
-#include <pthread.h>
+#include <process.h>
 
 #include "gif/gif_lib.h"
 #include "apng/png.h"
@@ -20,7 +18,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.2.3"
+#define APP_NAME_VER "GIFDesk 1.2.4"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -42,6 +40,7 @@ typedef struct
     HGLRC hrc;
     WNDCLASSEX wcex;
     HINSTANCE hinstance;
+    NOTIFYICONDATA icondata;
 
     int hovered;
     int isactive;
@@ -107,7 +106,7 @@ typedef struct
     float *frame_points, *delays, *lengths;
     unsigned char *frame, *buff;
 
-    int width, height, count;
+    int width, height, npotwidth, npotheight, count;
 
     uint8_t error;
     /// returns 0 if fine and >1 if file is not valid

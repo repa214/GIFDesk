@@ -29,7 +29,7 @@ void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTAN
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC);
+void EnableOpenGL(Window* window, Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC);
 void DisableOpenGL(HWND hwnd, HDC hdc, HGLRC hRC);
 
 #endif // WINDOW_H_INCLUDED

@@ -25,6 +25,9 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     else
         style |= WS_EX_TOOLWINDOW;
 
+//    if (setgl)
+//        style |= WS_SYSMENU | WS_CAPTION;
+
     window->hwnd = CreateWindowEx(style,
                                   classname,
                                   APP_NAME,
@@ -38,7 +41,10 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                                   window->hinstance,
                                   NULL);
 
-    if (settm) SetWindowPos(window->hwnd, (st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
+    if (settm)
+        SetWindowPos(window->hwnd,
+                     (st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                     0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
 
     if (alpha)
         SetLayeredWindowAttributes(window->hwnd, 0, alpha, LWA_ALPHA);
@@ -48,7 +54,7 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->isactive = 1;
     DragAcceptFiles(window->hwnd, (setdaf) ? TRUE : FALSE);
 
-    if (setgl) EnableOpenGL(rd, window->hwnd, &window->hdc, &window->hrc);
+    if (setgl) EnableOpenGL(window, rd, window->hwnd, &window->hdc, &window->hrc);
 
     return 0;
 }
@@ -148,7 +154,7 @@ void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTAN
 
 /** OpenGL Processing **/
 
-void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
+void EnableOpenGL(Window* window, Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     PIXELFORMATDESCRIPTOR pfd;
 
     int iFormat;
@@ -171,11 +177,14 @@ void EnableOpenGL(Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     *hRC = wglCreateContext(*hdc);
     currenthrc = *hRC;
 
+    wglMakeCurrent(window->hdc, window->hrc);
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);
+
+    printf("OpenGL: %d.%d\n", rptr.rd->major, rptr.rd->minor);
+    wglMakeCurrent(NULL, NULL);
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.75f);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {

@@ -35,6 +35,8 @@ uint8_t _LoadMNG(Window* window, Settings* st, Data* dt);
 void _GLImage(Window* window, Data* dt, Settings* st);
 void _ChangeTexFilt(Window* window, Data* dt, GLint param);
 
+int GetPOTSize(int width, int height);
+
 void ClearMedia(Data* dt);
 void ClearFileData(Data* dt);
 void ClearData(Data* dt);

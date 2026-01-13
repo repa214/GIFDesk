@@ -11,7 +11,8 @@ float texCoord[] = {0, 0,
                     0, 1};
 
 RenderPtr rptr;
-pthread_t thread_t;
+//pthread_t thread_t;
+HANDLE thread_t;
 
 void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
               Window* window, Window* window_popup, Window* window_debug,
@@ -91,6 +92,9 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
     rptr->dt = dt;
     rptr->rd = rd;
     rptr->st = st;
+
+    rptr->rd->major = 0;
+    rptr->rd->minor = 0;
 }
 
 void Loop(RenderPtr* rptr)
@@ -115,8 +119,7 @@ void Loop(RenderPtr* rptr)
 
         if (!IsWindow(rptr->window->hwnd)) continue;
 
-        if (!rptr->rd->loading /** && ChangeFrame(rptr->dt, rptr->rd, rptr->st) **/ )
-//        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st))
+        if (!rptr->rd->loading)
             ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st, 0);
         Sleep(1);
     }
@@ -164,7 +167,11 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         case WM_LBUTTONDOWN: {
             if (rptr.st->ignore_input) break;
 
-            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
+//            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
+            rptr.rd->render_thread = 1;
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))RenderThread,
+                                              &rptr, 0, NULL);
 
             if (!rptr.window_popup->isactive && !rptr.st->disable_moving)
                 SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
@@ -172,7 +179,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             rptr.st->x = rect.left; rptr.st->y = rect.top;
             WriteSettings(rptr.st);
 
-            rptr.rd->render_thread = 0; pthread_join(thread_t, NULL);
+            rptr.rd->render_thread = 0; // pthread_join(thread_t, NULL);
+            WaitForSingleObject(thread_t, INFINITE); CloseHandle(thread_t);
         }   break;
 
         /// -------------------
@@ -187,9 +195,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             if (p.x + POPUP_WIDTH > rect.right - rect.left) { p.x -= POPUP_WIDTH; }
             if (p.y + POPUP_HEIGHT > rect.bottom - rect.top) { p.y -= POPUP_HEIGHT; }
 
-            /** Resize Window **/
-
             rptr.rd->loading = 1;
+
             if (res.left + (res.right - res.left) / 2 < rect.right / 2 &&
                 res.top + (res.bottom - res.top) / 2 < rect.bottom / 2)
                 rptr.rd->pos = POS_LTC;
@@ -205,36 +212,45 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             if (res.bottom > rect.bottom + 5) rptr.rd->pos = POS_LTC;
             else if (res.right > rect.right + 5) rptr.rd->pos = POS_LTC;
 
+            float rl_ = (float)res.left,           rt_ = (float)res.top,
+                  dwh = (float)rptr.dt->npotwidth, dhh = (float)rptr.dt->npotheight,
+                  sts = rptr.st->size;
+
+            int coordw_LLC = (int) (rl_ + 0.5),
+                coordh_LLC = (int) (rt_ - (dhh * 2 - dhh * sts) + 0.5),
+                coordw_RTC = (int) (rl_ - (dwh * 2 - dwh * sts) + 0.5),
+                coordh_RTC = (int) (rt_ + 0.5),
+
+                coordw     = (int) (dwh * 2 + 0.5),
+                coordh     = (int) (dhh * 2 + 0.5);
+
+
             switch (rptr.rd->pos) {
                 case POS_LTC:
+                    printf("POS_LTC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
-                                 0,
-                                 0,
-                                 _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOMOVE | SWP_NOREDRAW);
+                                 0, 0, coordw, coordh, SWP_NOMOVE | SWP_NOREDRAW);
                     break;
                 case POS_LLC:
+                    printf("POS_LLC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
-                                 res.left,
-                                 res.top - (rptr.dt->height * 2 - ((float)rptr.dt->height * rptr.st->size + 0.5)) + 1,
-                                 _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
+                                 coordw_LLC, coordh_LLC,
+                                 coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RTC:
+                    printf("POS_RTC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
-                                 res.left - (rptr.dt->width * 2 - ((float)rptr.dt->width * rptr.st->size + 0.5)) + 1,
-                                 res.top,
-                                 _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
+                                 coordw_RTC, coordh_RTC,
+                                 coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RLC:
+                    printf("POS_RLC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
-                                 res.left - (rptr.dt->width * 2 - ((float)rptr.dt->width * rptr.st->size + 0.5)) + 1,
-                                 res.top - (rptr.dt->height * 2 - ((float)rptr.dt->height * rptr.st->size + 0.5)) + 1,
-                                 _GetCollisionSize(rptr.dt->width, 2),
-                                 _GetCollisionSize(rptr.dt->height, 2), SWP_NOREDRAW);
+                                 coordw_RTC, coordh_LLC,
+                                 coordw, coordh, SWP_NOREDRAW);
                     break;
             }
+
             rptr.st->trackbar_size = rptr.st->size; rptr.st->size = 2;
             rptr.rd->loading = 0;
 
@@ -308,8 +324,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             switch (wparam) {
                 /// -------------------
                 case 1:
-                    pthread_create(&thread_t, 0, _LoadSettings, &rptr);
-                    pthread_detach(thread_t);
+//                    pthread_create(&thread_t, 0, _LoadSettings, &rptr);
+//                    pthread_detach(thread_t);
+                    thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                                      (unsigned(__stdcall*)(void*))_LoadSettings,
+                                                      &rptr, 0, NULL);
+                    CloseHandle(thread_t);
                     break;
             }
         }   break;
@@ -488,15 +508,20 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
     {
         /// -------------------
         case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowPopupThread, hwnd);
-            pthread_detach(thread_t);
+//            pthread_create(&thread_t, 0, ShowPopupThread, hwnd);
+//            pthread_detach(thread_t);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))ShowPopupThread,
+                                              hwnd, 0, NULL);
+            CloseHandle(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
         /// -------------------
         case WM_DESTROY: {
             rptr.rd->render_thread = 0;
-            pthread_join(thread_t, NULL);
+//            pthread_join(thread_t, NULL);
+            WaitForSingleObject(thread_t, INFINITE); CloseHandle(thread_t);
             rptr.rd->render_thread = 1;
 
             GetWindowRect(rptr.window->hwnd, &res);
@@ -509,46 +534,47 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
             rptr.rd->loading = 1;
 
+            float rl_ = (float)res.left,           rt_ = (float)res.top,
+                  dw_ = (float)rptr.dt->width,     dh_ = (float)rptr.dt->height,
+                  dwh = (float)rptr.dt->npotwidth, dhh = (float)rptr.dt->npotheight,
+                  sts = rptr.st->size;
+
+            int coordw_LLC = (int) (rl_ + 0.5),
+                coordh_LLC = (int) (rt_ + (dhh * 2 - dhh * sts) + 0.5) - 1,
+                coordw_RTC = (int) (rl_ + (dwh * 2 - dwh * sts) + 0.5),
+                coordh_RTC = (int) (rt_ + 0.5),
+
+                coordw_C   = (int) ((rl_ + (dwh * 2 - dwh * sts) / 2) + 0.5),
+                coordh_C   = (int) ((rt_ + (dhh * 2 - dhh * sts) / 2) + 0.5),
+
+                coordw     = (int) (dw_ * sts + 0.5),
+                coordh     = (int) (dh_ * sts + 0.5);
+
             switch (rptr.rd->pos) {
                 case POS_LTC:
                     SetWindowPos(rptr.window->hwnd,
                                  (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                 0,
-                                 0,
-                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOMOVE | SWP_NOREDRAW);
+                                 0, 0, coordw, coordh, SWP_NOMOVE | SWP_NOREDRAW);
                     break;
                 case POS_LLC:
                     SetWindowPos(rptr.window->hwnd,
                                  (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                 res.left,
-                                 res.top + (rptr.dt->height * 2 - ((float)rptr.dt->height * rptr.st->size + 0.5)),
-                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
+                                 coordw_LLC, coordh_LLC, coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RTC:
                     SetWindowPos(rptr.window->hwnd,
                                  (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                 res.left + (rptr.dt->width * 2 - ((float)rptr.dt->width * rptr.st->size + 0.5)),
-                                 res.top,
-                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
+                                 coordw_RTC, coordh_RTC, coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RLC:
                     SetWindowPos(rptr.window->hwnd,
                                  (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                 res.left + (rptr.dt->width * 2 - ((float)rptr.dt->width * rptr.st->size + 0.5)),
-                                 res.top + (rptr.dt->height * 2 - ((float)rptr.dt->height * rptr.st->size + 0.5)),
-                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
+                                 coordw_RTC, coordh_LLC, coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_C:
                     SetWindowPos(rptr.window->hwnd,
                                  (rptr.st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
-                                 res.left + (rptr.dt->width * 2 - ((float)rptr.dt->width * rptr.st->size + 0.5)) / 2,
-                                 res.top + (rptr.dt->height * 2 - ((float)rptr.dt->height * rptr.st->size + 0.5)) / 2,
-                                 _GetCollisionSize(rptr.dt->width, rptr.st->size),
-                                 _GetCollisionSize(rptr.dt->height, rptr.st->size), SWP_NOREDRAW);
+                                 coordw_C, coordh_C, coordw, coordh, SWP_NOREDRAW);
                     break;
             }
             rptr.rd->loading = 0;
@@ -596,12 +622,16 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
         /// -------------------
         case WM_LBUTTONDOWN: {
-            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
+//            rptr.rd->render_thread = 1; pthread_create(&thread_t, 0, RenderThread, &rptr);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))RenderThread,
+                                              &rptr, 0, NULL);
 
             SetFocus(rptr.window_popup->hwnd);
             SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 
-            rptr.rd->render_thread = 0; pthread_join(thread_t, NULL);
+            rptr.rd->render_thread = 0; // pthread_join(thread_t, NULL);
+            WaitForSingleObject(thread_t, INFINITE); CloseHandle(thread_t);
         }   break;
 
         /// -------------------
@@ -927,9 +957,12 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                 /// -------------------
                 case 1: {
                     PostMessage(rptr.window_popup->hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-                    pthread_create(&thread_t, 0, ShowLink, NULL);
-                    pthread_detach(thread_t);
-                    printf("Браузер открыт!\n");
+//                    pthread_create(&thread_t, 0, ShowLink, NULL);
+//                    pthread_detach(thread_t);
+                    thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                                      (unsigned(__stdcall*)(void*))ShowLink,
+                                                      NULL, 0, NULL);
+                    CloseHandle(thread_t);
                 }   break;
 
                 /// Open file...
@@ -993,8 +1026,12 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
-            pthread_detach(thread_t);
+//            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+//            pthread_detach(thread_t);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))ShowLowerPopupThread,
+                                              hwnd, 0, NULL);
+            CloseHandle(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1203,7 +1240,6 @@ LRESULT CALLBACK PBProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 SetFocus(rptr.window_popup->hwnd);
                 rptr.st->speed = SendMessage(rptr.trackbar_speed->hwnd, TBM_GETPOS, 0, 0);
 
-                printf("frame: %d [%f]\n", GetCurrentFrame(rptr.dt, rptr.rd, rptr.st), rptr.dt->lengths[GetCurrentFrame(rptr.dt, rptr.rd, rptr.st)]);
                 rptr.rd->start_time = GetTime() - (double)rptr.dt->lengths[rptr.rd->frame] / ((double)rptr.st->speed * 0.05 + 0.2);
                 ShowFrame(rptr.window, rptr.dt, rptr.rd, rptr.st, 1);
 
@@ -1283,8 +1319,12 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
-            pthread_detach(thread_t);
+//            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+//            pthread_detach(thread_t);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))ShowLowerPopupThread,
+                                              hwnd, 0, NULL);
+            CloseHandle(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1515,8 +1555,12 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     switch (msg) {
         /// -------------------
         case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
-            pthread_detach(thread_t);
+//            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+//            pthread_detach(thread_t);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))ShowLowerPopupThread,
+                                              hwnd, 0, NULL);
+            CloseHandle(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1821,8 +1865,12 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
         /// -------------------
         case WM_CREATE: {
-            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
-            pthread_detach(thread_t);
+//            pthread_create(&thread_t, 0, ShowLowerPopupThread, hwnd);
+//            pthread_detach(thread_t);
+            thread_t = (HANDLE)_beginthreadex(NULL, 0,
+                                              (unsigned(__stdcall*)(void*))ShowLowerPopupThread,
+                                              hwnd, 0, NULL);
+            CloseHandle(thread_t);
             SetTimer(hwnd, 1, 100, NULL);
         }   break;
 
@@ -1993,80 +2041,47 @@ LRESULT CALLBACK MWTProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
         /// -------------------
         case WM_COMMAND: {
+            GetWindowRect(rptr.window->hwnd, &res);
+            SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+
+            float rr_ = (float)rect.right,         rb_ = (float)rect.bottom,
+                  dwh = (float)rptr.dt->npotwidth, dhh = (float)rptr.dt->npotheight;
+
+            int coordw_RTC = (int) (rr_ - dwh * 2 + 0.5),
+                coordh_LLC = (int) (rb_ - dhh * 2 + 0.5),
+
+                coordw_C   = (int) ((rr_ - dwh * 2) / 2 + 0.5),
+                coordh_C   = (int) ((rb_ - dhh * 2) / 2 + 0.5);
+
             switch (wparam) {
                 /// -------------------
                 case 1: {
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 0,
-                                 0,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE | SWP_NOREDRAW);
-
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    SetWindowPos(rptr.window->hwnd, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOREDRAW);
                     rptr.rd->pos = POS_LTC;
                 }   break;
 
                 /// -------------------
                 case 2: {
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    SetWindowPos(rptr.window->hwnd, NULL, coordw_RTC, 0, 0, 0, SWP_NOSIZE | SWP_NOREDRAW);
                     rptr.rd->pos = POS_RTC;
-
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 GetSystemMetrics(SM_CXSCREEN) - rptr.dt->width * 2,
-                                 0,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
                 case 3: {
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    SetWindowPos(rptr.window->hwnd, NULL, coordw_C, coordh_C, 0, 0, SWP_NOSIZE | SWP_NOREDRAW);
                     rptr.rd->pos = POS_C;
-
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 (rect.right - rect.left - rptr.dt->width * 2) / 2,
-                                 (rect.bottom - rect.top - rptr.dt->height * 2) / 2,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
                 case 4: {
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    SetWindowPos(rptr.window->hwnd, NULL, 0, coordh_LLC, 0, 0, SWP_NOSIZE | SWP_NOREDRAW);
                     rptr.rd->pos = POS_LLC;
-
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 0,
-                                 rect.bottom - rect.top - (rptr.dt->height) * 2,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 /// -------------------
                 case 5: {
-                    GetWindowRect(rptr.window->hwnd, &res);
-                    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                    SetWindowPos(rptr.window->hwnd, NULL, coordw_RTC, coordh_LLC, 0, 0, SWP_NOSIZE | SWP_NOREDRAW);
                     rptr.rd->pos = POS_RLC;
-
-                    SetWindowPos(rptr.window->hwnd,
-                                 NULL,
-                                 rect.right - rect.left - (rptr.dt->width) * 2,
-                                 rect.bottom - rect.top - (rptr.dt->height) * 2,
-                                 0,
-                                 0,
-                                 SWP_NOSIZE | SWP_NOREDRAW);
                 }   break;
 
                 default: break;
@@ -2350,7 +2365,7 @@ int _IsButtonHovered(Button* button, POINT* p, int arrowed)
 
 int _GetCollisionSize(int n, float size)
 {
-    return (n * size < 10.0) ? 10.0 : n * size;
+    return ((int)((float)n * size + 0.5) < 10) ? 10 : (int)((float)n * size + 0.5);
 }
 
 void _ChangeScaleTrackBar(Window* window, Window* window_popup,
@@ -2382,32 +2397,32 @@ void _ChangeScaleTrackBar(Window* window, Window* window_popup,
         ShowFrame(window, dt, rd, st, 1);
 }
 
-void* ShowPopupThread(void* arg)
+unsigned __stdcall ShowPopupThread(void* arg)
 {
     Sleep(10);
     for (uint16_t i = 20; i <= 255; i += 20) {
         PostMessage(arg, WM_UPDATE_ALPHA, 0, (LPARAM)i);
-        Sleep(1);
+        Sleep(20);
     }
-    PostMessage(arg, WM_UPDATE_ALPHA, 0, 255);
-    return NULL;
+    PostMessage((HWND)arg, WM_UPDATE_ALPHA, 0, 255);
+    return 0;
 }
 
-void* ShowLowerPopupThread(void* arg)
+unsigned __stdcall ShowLowerPopupThread(void* arg)
 {
     Sleep(10);
     for (uint16_t i = 20; i <= 255; i += 40) {
         PostMessage(arg, WM_UPDATE_ALPHA, 0, (LPARAM)i);
-        Sleep(1);
+        Sleep(20);
     }
-    PostMessage(arg, WM_UPDATE_ALPHA, 0, 255);
-    return NULL;
+    PostMessage((HWND)arg, WM_UPDATE_ALPHA, 0, 255);
+    return 0;
 }
 
-void* ShowLink()
+unsigned __stdcall ShowLink()
 {
     system("start https://github.com/repa214/GIFDesk/releases");
-    return NULL;
+    return 0;
 }
 
 /**
@@ -2417,66 +2432,49 @@ void* ShowLink()
 void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, Settings* restrict st, uint8_t skip)
 {
     int cframe = rd->frame;
-    if (rd->change_frames)
-        rd->frame = GetCurrentFrame(dt, rd, st);
-    if (cframe == rd->frame && !skip && dt->count > 1)
-        return;
+    if (rd->change_frames) rd->frame = GetCurrentFrame(dt, rd, st);
+    if (cframe == rd->frame && !skip && dt->count > 1) return;
 
     wglMakeCurrent(window->hdc, window->hrc);
 
-    RECT rect; GetWindowRect(window->hwnd, &rect);
+    float dw_ = (float)dt->width,     dh_ = (float)dt->height,
+          dwh = (float)dt->npotwidth, dhh = (float)dt->npotheight,
+          stt = st->trackbar_size;
 
-//    printf("\33[2K\r");
-//    printf("Frame: %d | [%ld, %ld] | [%f, %f] [%f, %f]", rd->frame + 1,
-//           rect.right - rect.left,
-//           rect.bottom - rect.top,
-//           dt->frame_points[rd->frame * 4],
-//           dt->frame_points[(rd->frame * 4) + 1],
-//           dt->frame_points[(rd->frame * 4) + 2],
-//           dt->frame_points[(rd->frame * 4) + 3]);
+    int coordh_LTC = (int)   (dhh * 2 - dhh * stt - (dh_ - dhh) * stt + 0.5),
+        coordh_LLC = (int) - ((dh_ - dhh) * stt + 0.5),
+        coordw_RTC = (int)   (dwh * 2 - dwh * stt + 0.5),
+        coordh_RTC = (int)   (dhh * 2 - dhh * stt - (dh_ - dhh) * stt + 0.5),
+
+        coordw_C   = (int)   ((dwh * 2 - dwh * stt) / 2 + 0.5),
+        coordh_C   = (int)   ((dhh * 2 - dhh * stt) / 2 - ((dh_ - dhh) * stt) + 0.5),
+
+        coordw     = (int)   (dw_ * stt + 0.5),
+        coordh     = (int)   (dh_ * stt + 0.5);
 
     if (rptr.window_popup->isactive)
         switch (rd->pos) {
             case POS_LTC:
-                glViewport(0,
-                           dt->height * 2 - dt->height * st->trackbar_size,
-                           dt->width * st->trackbar_size,
-                           dt->height * st->trackbar_size);
+                glViewport(0, coordh_LTC, coordw, coordh);
                 break;
             case POS_LLC:
-                glViewport(0,
-                           0,
-                           dt->width * st->trackbar_size,
-                           dt->height * st->trackbar_size);
+                glViewport(0, coordh_LLC, coordw, coordh);
                 break;
             case POS_RTC:
-                glViewport(dt->width * 2 - dt->width * st->trackbar_size,
-                           dt->height * 2 - dt->height * st->trackbar_size,
-                           dt->width * st->trackbar_size,
-                           dt->height * st->trackbar_size);
+                glViewport(coordw_RTC, coordh_RTC, coordw, coordh);
                 break;
             case POS_RLC:
-                glViewport(dt->width * 2 - dt->width * st->trackbar_size,
-                           0,
-                           dt->width * st->trackbar_size,
-                           dt->height * st->trackbar_size);
+                glViewport(coordw_RTC, coordh_LLC, coordw, coordh);
                 break;
             case POS_C:
-                glViewport((dt->width * 2 - dt->width * st->trackbar_size) / 2,
-                           (dt->height * 2 - dt->height * st->trackbar_size) / 2,
-                           (dt->width * st->trackbar_size),
-                           (dt->height * st->trackbar_size));
+                glViewport(coordw_C, coordh_C, coordw, coordh);
                 break;
         }
     else
-        glViewport(0, 0,
-                   dt->width * st->trackbar_size,
-                   dt->height * st->trackbar_size);
+        glViewport(0, 0, coordw, coordh);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f); glClear(GL_COLOR_BUFFER_BIT);
-
-    glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND); glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, dt->textures[rd->frame]);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -2496,8 +2494,7 @@ void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, 
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
 
-        if (st->sfu)
-        {
+        if (st->sfu) {
             glColor4f(1.0, 0.0, 0.0, 1.0);
             glLineWidth(1.0f);
 
@@ -2512,7 +2509,6 @@ void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, 
                            dt->frame_points[rd->frame * 4 + 1]);
             glEnd();
         }
-
     glPopMatrix();
 
     SwapBuffers(window->hdc);
@@ -2548,7 +2544,7 @@ void ShowLoadLine(Window* window, Data* dt, Settings* st, float pt)
     wglMakeCurrent(NULL, NULL);
 }
 
-void* RenderThread(void* arg)
+unsigned __stdcall RenderThread(void* arg)
 {
     RenderPtr* rptr = (RenderPtr*)arg;
 
@@ -2561,8 +2557,7 @@ void* RenderThread(void* arg)
 
         if (!IsWindow(rptr->window->hwnd)) continue;
 
-        if (!rptr->rd->loading /** && ChangeFrame(rptr->dt, rptr->rd, rptr->st) **/ )
-//        if (!rptr->rd->loading && ChangeFrame(rptr->dt, rptr->rd, rptr->st))
+        if (!rptr->rd->loading)
             ShowFrame(rptr->window, rptr->dt, rptr->rd, rptr->st, 0);
         Sleep(1);
     }
@@ -2579,10 +2574,13 @@ int GetCurrentFrame(Data* dt, Render* rd, Settings* st)
     rd->current_time = GetTime();
     int frame = 0;
 
-    while ((float)((int)((rd->current_time - rd->start_time) * 100) %
-           (int)((dt->lengths[dt->count - 1] / ((float)st->speed * 0.05 + 0.2)) * 100)) / 100
-           > (dt->lengths[frame] / ((float)st->speed * 0.05 + 0.2)))
+    while (
+           (float)((int)((rd->current_time - rd->start_time) * 100) %
+           (int)((dt->lengths[dt->count - 1] / ((float)st->speed * 0.05 + 0.2)) * 100)) / 100 >
+           (dt->lengths[frame] / ((float)st->speed * 0.05 + 0.2))
+           )
         frame++;
+
     return frame;
 }
 
