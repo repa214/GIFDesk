@@ -21,7 +21,7 @@
 ## Установка
 
 <!-- ![photo_2026-01-10_19-16-10](https://github.com/user-attachments/assets/230c89b6-7ba2-447c-81a9-26e2cf19ed68) -->
-<a href="https://github.com/repa214/GIFDesk/releases/download/1.2.3/GIFDesk.exe"><img title="Актуальный релиз для Windows" src="https://img.shields.io/badge/WINDOWS-438499?style=for-the-badge" /></a><a href="https://github.com/repa214/GIFDesk/releases"><img title="Перейти в список релизов" src="https://img.shields.io/badge/ALL%20VERSIONS-555555?style=for-the-badge" /></a>
+<a href="https://github.com/repa214/GIFDesk/releases/download/1.2.4/GIFDesk.exe"><img title="Актуальный релиз для Windows" src="https://img.shields.io/badge/WINDOWS-438499?style=for-the-badge" /></a><a href="https://github.com/repa214/GIFDesk/releases"><img title="Перейти в список релизов" src="https://img.shields.io/badge/ALL%20VERSIONS-555555?style=for-the-badge" /></a>
 
 ## Автор
 
