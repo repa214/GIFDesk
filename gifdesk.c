@@ -21,8 +21,8 @@ int Run(GIFDesk* gf)
 
              &gf->btn_title, &gf->btn_openfile, &gf->label_window_scale, &gf->label_scale, &gf->btn_add_scale,
              &gf->btn_subtract_scale, &gf->label_playback, &gf->label_frames, &gf->btn_prev_frame, &gf->btn_play,
-             &gf->btn_next_frame, &gf->label_speed, &gf->btn_slow_rewind, &gf->btn_fast_rewind, &gf->btn_slow_wind,
-             &gf->btn_fast_wind, &gf->label_transparency, &gf->btn_frame_updates,
+             &gf->btn_next_frame, &gf->label_speed, &gf->btn_slow_rewind, &gf->btn_slow_wind,
+             &gf->label_transparency, &gf->btn_frame_updates,
              &gf->label_interaction, &gf->btn_disable_moving, &gf->btn_hide_hover,
              &gf->btn_click_through, &gf->btn_ignore_input,
              &gf->btn_pin_top, &gf->label_move_window, &gf->btn_move_topleft,

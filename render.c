@@ -22,8 +22,8 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
 
               Button* btn_title, Button* btn_openfile, Button* label_window_scale, Button* label_scale, Button* btn_add_scale,
               Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
-              Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind,
-              Button* btn_fast_wind, Button* label_transparency, Button* btn_frame_updates,
+              Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_slow_wind,
+              Button* label_transparency, Button* btn_frame_updates,
               Button* label_interaction, Button* btn_disable_moving, Button* btn_hide_hover,
               Button* btn_click_through, Button* btn_ignore_input,
               Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
@@ -64,9 +64,7 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
     rptr->btn_next_frame = btn_next_frame;
     rptr->label_speed = label_speed;
     rptr->btn_slow_rewind = btn_slow_rewind;
-    rptr->btn_fast_rewind = btn_fast_rewind;
     rptr->btn_slow_wind = btn_slow_wind;
-    rptr->btn_fast_wind = btn_fast_wind;
 
     rptr->label_transparency = label_transparency;
     rptr->btn_frame_updates = btn_frame_updates;
@@ -135,18 +133,44 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
     static POINT p;
     static RECT rect, res;
     static HRGN hrgn = NULL;
+    static NOTIFYICONDATA nid;
 
     switch (msg)
     {
         /// -------------------
         case WM_CREATE: {
             SetTimer(hwnd, 100, 100, NULL);
+
+            nid.cbSize            = sizeof(NOTIFYICONDATA);
+            nid.uID               = ID_TRAY;
+            nid.hWnd              = hwnd;
+            nid.hIcon             = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
+            nid.uFlags            = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+            nid.uCallbackMessage  = WM_TRAYNOTIFY;
+            strcpy(nid.szTip,       APP_NAME);
+
+            Shell_NotifyIcon(NIM_ADD, &nid);
+
+        }   break;
+
+        /// -------------------
+        case WM_TRAYNOTIFY: {
+            switch (lparam) {
+                case WM_LBUTTONDOWN:
+                    PostMessage(hwnd, WM_LBUTTONDOWN, 0, 0);
+                    break;
+                case WM_RBUTTONDOWN:
+                    PostMessage(hwnd, WM_RBUTTONDOWN, 0, 0);
+                    break;
+            }
         }   break;
 
         /// -------------------
         case WM_CLOSE: {
             if (IsWindow(rptr.window->hwnd))
                 DestroyWindow(rptr.window->hwnd);
+
+            Shell_NotifyIcon(NIM_DELETE, &nid);
         }   break;
 
         /// -------------------
@@ -2177,9 +2201,7 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd)
     rptr->btn_next_frame->hovered = 0;
     rptr->label_speed->hovered = 0;
     rptr->btn_slow_rewind->hovered = 0;
-    rptr->btn_fast_rewind->hovered = 0;
     rptr->btn_slow_wind->hovered = 0;
-    rptr->btn_fast_wind->hovered = 0;
     rptr->label_transparency->hovered = 0;
     rptr->btn_frame_updates->hovered = 0;
     rptr->label_interaction->hovered = 0;
@@ -2402,7 +2424,7 @@ unsigned __stdcall ShowPopupThread(void* arg)
     Sleep(10);
     for (uint16_t i = 20; i <= 255; i += 20) {
         PostMessage(arg, WM_UPDATE_ALPHA, 0, (LPARAM)i);
-        Sleep(20);
+        Sleep(10);
     }
     PostMessage((HWND)arg, WM_UPDATE_ALPHA, 0, 255);
     return 0;
@@ -2413,7 +2435,7 @@ unsigned __stdcall ShowLowerPopupThread(void* arg)
     Sleep(10);
     for (uint16_t i = 20; i <= 255; i += 40) {
         PostMessage(arg, WM_UPDATE_ALPHA, 0, (LPARAM)i);
-        Sleep(20);
+        Sleep(10);
     }
     PostMessage((HWND)arg, WM_UPDATE_ALPHA, 0, 255);
     return 0;

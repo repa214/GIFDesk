@@ -25,8 +25,8 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     else
         style |= WS_EX_TOOLWINDOW;
 
-//    if (setgl)
-//        style |= WS_SYSMENU | WS_CAPTION;
+    if (setgl)
+        style |= WS_SYSMENU | WS_CAPTION;
 
     window->hwnd = CreateWindowEx(style,
                                   classname,

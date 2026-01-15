@@ -44,6 +44,8 @@
 #define WINDOW_MIN_SIZE 10
 
 #define WM_UPDATE_ALPHA (WM_USER + 1)
+#define ID_TRAY         900
+#define WM_TRAYNOTIFY   (ID_TRAY + 1)
 
 typedef struct
 {
@@ -82,9 +84,7 @@ typedef struct
 
     Button* label_speed;
     Button* btn_slow_rewind;
-    Button* btn_fast_rewind;
     Button* btn_slow_wind;
-    Button* btn_fast_wind;
 
     Trackbar* trackbar_speed;
 
@@ -135,8 +135,8 @@ void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
 
               Button* btn_title, Button* btn_openfile, Button* label_window_scale, Button* label_scale, Button* btn_add_scale,
               Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
-              Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind,
-              Button* btn_fast_wind, Button* label_transparency, Button* btn_frame_updates,
+              Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_slow_wind,
+              Button* label_transparency, Button* btn_frame_updates,
               Button* label_interaction, Button* btn_disable_moving, Button* btn_hide_hover,
               Button* btn_click_through, Button* btn_ignore_input,
               Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
