@@ -801,7 +801,6 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
     uint8_t avif_error = 0;
     avifDecoder* decoder = NULL;
     decoder = avifDecoderCreate();
-    decoder = avifDecoderCreate();
     if (decoder == NULL) {
         avif_error = 192;
         goto _loadavif_release;
@@ -893,18 +892,20 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
 
         dt->delays = (float *)realloc(dt->delays, sizeof(float) * dt->count);
         if (dt->delays == NULL) { avif_error = 15; goto _loadavif_release; }
-        dt->delays[i] = (float)decoder->imageTiming.duration;
 
         dt->lengths = (float *)realloc(dt->lengths, sizeof(float) * dt->count);
         if (dt->lengths == NULL) { avif_error = 15; goto _loadavif_release; }
-        if (dt->count == 1) dt->lengths[0] = dt->delays[0];
-        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[i - 2];
 
         dt->frame_points = realloc(dt->frame_points, sizeof(float) * dt->count * 4);
         if (dt->delays == NULL) { avif_error = 15; goto _loadavif_release; }
 
         result = avifDecoderNextImage(decoder);
         avifRGBImageSetDefaults(&rgb, decoder->image);
+
+        dt->delays[i] = (float)decoder->imageTiming.duration;
+
+        if (dt->count == 1) dt->lengths[0] = dt->delays[0];
+        else dt->lengths[i] = dt->lengths[i - 1] + dt->delays[i - 2];
 
         rgb.format = AVIF_RGB_FORMAT_RGBA;
         result = avifRGBImageAllocatePixels(&rgb);
@@ -914,18 +915,15 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
             goto _loadavif_release;
         }
 
-        if (result != AVIF_RESULT_OK)
-            break;
-
         for (int y = 0; y < dt->npotheight; y++) {
             for (int x = 0; x < dt->npotwidth; x++) {
-                int src_idx = 4 * (y * dt->npotwidth + x);
-                int dst_idx = 4 * (y * dt->width + x);
+                int spix = 4 * (y * dt->npotwidth + x);
+                int dpix = 4 * (y * dt->width + x);
 
-                dt->frame[dst_idx]     = rgb.pixels[src_idx]     ? rgb.pixels[src_idx] : 1;
-                dt->frame[dst_idx + 1] = rgb.pixels[src_idx + 1] ? rgb.pixels[src_idx + 1] : 1;
-                dt->frame[dst_idx + 2] = rgb.pixels[src_idx + 2] ? rgb.pixels[src_idx + 2] : 1;
-                dt->frame[dst_idx + 3] = rgb.pixels[src_idx + 3] ? 255 : 0;
+                dt->frame[dpix]     = rgb.pixels[spix]     ? rgb.pixels[spix] : 1;
+                dt->frame[dpix + 1] = rgb.pixels[spix + 1] ? rgb.pixels[spix + 1] : 1;
+                dt->frame[dpix + 2] = rgb.pixels[spix + 2] ? rgb.pixels[spix + 2] : 1;
+                dt->frame[dpix + 3] = rgb.pixels[spix + 3] ? 255 : 0;
             }
         }
 
@@ -936,6 +934,7 @@ uint8_t _LoadAVIF(Window* window, Settings* st, Data* dt)
 
         _GLImage(window, dt, st);
         ShowLoadLine(window, dt, st, (float)dt->count / (float)num);
+        memset(dt->frame, 0, pixcount);
     }
 
     avifRGBImageFreePixels(&rgb);

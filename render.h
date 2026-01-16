@@ -39,7 +39,6 @@
 
 #define MAIN_WINDOW 1, 1, 1, 1, 0
 #define POPUP_MENU_DEFAULT 0, 1, 0, 0, 1
-#define POPUP_MENU_MINOR 0, 0, 0, 0, 1
 
 #define WINDOW_MIN_SIZE 10
 
@@ -166,6 +165,8 @@ void ReleaseHover(RenderPtr* rptr, HWND hwnd);
         0b00001000 - slow_right_rewind
         0b00010000 - pause
         0b00100000 - deactivated text
+        0b01000000 - plus
+        0b10000000 - minus
 
 **/
 void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,

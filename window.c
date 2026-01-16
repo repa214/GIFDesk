@@ -180,11 +180,13 @@ void EnableOpenGL(Window* window, Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     wglMakeCurrent(window->hdc, window->hrc);
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);
 
-    printf("OpenGL: %d.%d\n", rptr.rd->major, rptr.rd->minor);
-    wglMakeCurrent(NULL, NULL);
-
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.75f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+//    printf("OpenGL: %d.%d\n", rptr.rd->major, rptr.rd->minor);
+    wglMakeCurrent(NULL, NULL);
 }
 
 void DisableOpenGL (HWND hwnd, HDC hdc, HGLRC hRC) {

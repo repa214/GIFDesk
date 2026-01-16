@@ -251,24 +251,20 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
             switch (rptr.rd->pos) {
                 case POS_LTC:
-                    printf("POS_LTC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  0, 0, coordw, coordh, SWP_NOMOVE | SWP_NOREDRAW);
                     break;
                 case POS_LLC:
-                    printf("POS_LLC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  coordw_LLC, coordh_LLC,
                                  coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RTC:
-                    printf("POS_RTC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  coordw_RTC, coordh_RTC,
                                  coordw, coordh, SWP_NOREDRAW);
                     break;
                 case POS_RLC:
-                    printf("POS_RLC\n");
                     SetWindowPos(rptr.window->hwnd, HWND_NOTOPMOST,
                                  coordw_RTC, coordh_LLC,
                                  coordw, coordh, SWP_NOREDRAW);
@@ -421,7 +417,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             }
             else if (rptr.st->click_through) {
                 if (GetAsyncKeyState(VK_CONTROL) & GetAsyncKeyState(VK_RBUTTON) & 0x8000) {
-                    PostMessage(rptr.window->hwnd, WM_NCHITTEST, 0, 0);
+//                    PostMessage(rptr.window->hwnd, WM_NCHITTEST, 0, 0);
                     PostMessage(rptr.window->hwnd, WM_RBUTTONDOWN, 0, 0);
                 }
             }
@@ -684,7 +680,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + PB_WIDTH > res.right) popup_left = rect.left - PB_WIDTH;
                     if (popup_top + PB_HEIGHT > res.bottom) popup_top = res.bottom - PB_HEIGHT;
 
-                    LoadWindow(rptr.window_pb, rptr.st, NULL, rptr.rd, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, POPUP_MENU_MINOR);
+                    LoadWindow(rptr.window_pb, rptr.st, NULL, rptr.rd, "window_pb", popup_left, popup_top, PB_WIDTH, PB_HEIGHT, POPUP_MENU_DEFAULT);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -746,7 +742,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + IM_WIDTH > res.right) popup_left = rect.left - IM_WIDTH;
                     if (popup_top + IM_HEIGHT > res.bottom) popup_top = res.bottom - IM_HEIGHT;
 
-                    LoadWindow(rptr.window_im, rptr.st, NULL, rptr.rd, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, POPUP_MENU_MINOR);
+                    LoadWindow(rptr.window_im, rptr.st, NULL, rptr.rd, "window_im", popup_left, popup_top, IM_WIDTH, IM_HEIGHT, POPUP_MENU_DEFAULT);
 
                     if (IsWindow(rptr.window_mwt->hwnd))
                         PostMessage(rptr.window_mwt->hwnd, WM_CLOSE, 0, 0);
@@ -789,7 +785,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + WC_WIDTH > res.right) popup_left = rect.left - WC_WIDTH;
                     if (popup_top + WC_HEIGHT > res.bottom) popup_top = res.bottom - WC_HEIGHT;
 
-                    LoadWindow(rptr.window_wc, rptr.st, NULL, rptr.rd, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, POPUP_MENU_MINOR);
+                    LoadWindow(rptr.window_wc, rptr.st, NULL, rptr.rd, "window_wc", popup_left, popup_top, WC_WIDTH, WC_HEIGHT, POPUP_MENU_DEFAULT);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -814,7 +810,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                                " ", 2, "Segoe UI");
 
                     LoadButton(rptr.btn_subtract_scale, rptr.window_wc,
-                               190, y, 30, 25, 15,
+                               187, y, 30, 25, 15,
                                " ", 3, "Segoe UI");
 
                     LoadTrackBar(rptr.trackbar_scale, rptr.window_wc,
@@ -855,7 +851,7 @@ LRESULT CALLBACK PopupMenuProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                     if (popup_left + MWT_WIDTH > res.right) popup_left = rect.left - MWT_WIDTH;
                     if (popup_top + MWT_HEIGHT > res.bottom) popup_top = res.bottom - MWT_HEIGHT;
 
-                    LoadWindow(rptr.window_mwt, rptr.st, NULL, rptr.rd, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, POPUP_MENU_MINOR);
+                    LoadWindow(rptr.window_mwt, rptr.st, NULL, rptr.rd, "window_mwt", popup_left, popup_top, MWT_WIDTH, MWT_HEIGHT, POPUP_MENU_DEFAULT);
 
                     if (IsWindow(rptr.window_im->hwnd))
                         PostMessage(rptr.window_im->hwnd, WM_CLOSE, 0, 0);
@@ -1521,10 +1517,13 @@ LRESULT CALLBACK IMProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 }   break;
                 /// -------------------
                 case 2:
-                    if (rptr.st->hide_on_hover)
+                    if (rptr.st->hide_on_hover) {
                         rptr.st->hide_on_hover = 0;
+                        SetLayeredWindowAttributes(rptr.window->hwnd, 0x0, 0, LWA_COLORKEY);
+                    }
                     else
                         rptr.st->hide_on_hover = 1;
+
 
                     PostMessage(rptr.window_popup->hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -1661,10 +1660,10 @@ LRESULT CALLBACK WCProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             }
 
             if (item->hwndItem == rptr.btn_add_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_add_scale, "+", 12, L"", 0, 0);
+                _InvalidateButton(item, rptr.btn_add_scale, "", 5, L"", 0, 0x40);
 
             if (item->hwndItem == rptr.btn_subtract_scale->hwnd)
-                _InvalidateButton(item, rptr.btn_subtract_scale, "-", 12, L"", 0, 0);
+                _InvalidateButton(item, rptr.btn_subtract_scale, "", 5, L"", 0, 0x80);
 
 //            if (item->hwndItem == rptr.label_transparency->hwnd) {
 //                sprintf(rptr.st->str_transparency, "Transparency (%u%%)", (uint8_t)((float)rptr.st->transparency / 2.55));
@@ -2353,13 +2352,13 @@ void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
     }
     // pause
     if (flag & 0x10) {
-        int x = rect.left;
-        int y = rect.top + (rect.bottom - rect.top - size) / 2;
-
         size = 18;
         font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        int x = rect.left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2;
 
         SelectObject(hdc, font);
         SetBkMode(hdc, TRANSPARENT);
@@ -2373,6 +2372,36 @@ void _InvalidateButton(LPDRAWITEMSTRUCT item, Button* button,
         TextOutW(hdc, x + 9, y, L"g", 1);
 
         DeleteObject(font);
+    }
+    if (flag & 0x40) {
+        size = 21;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        int x = left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        SelectObject(hdc, font);
+        TextOutW(hdc, x, y, L"5", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_HOVERED_NOT);
+        y += 3;
+        TextOutW(hdc, x, y, L"5", 1);
+    }
+    if (flag & 0x80) {
+        size = 21;
+        font = CreateFont(size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, DEFAULT_PITCH, "Marlett");
+
+        int x = left;
+        int y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        SelectObject(hdc, font);
+        TextOutW(hdc, x, y, L"6", 1);
+        SetTextColor(hdc, (button->hovered) ? BTN_HOVERED : BTN_HOVERED_NOT);
+        y -= 3;
+        TextOutW(hdc, x, y, L"6", 1);
     }
 }
 
@@ -2496,7 +2525,9 @@ void ShowFrame(Window* restrict window, Data* restrict dt, Render* restrict rd, 
         glViewport(0, 0, coordw, coordh);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f); glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_BLEND); glEnable(GL_TEXTURE_2D);
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, dt->textures[rd->frame]);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
