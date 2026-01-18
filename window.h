@@ -19,6 +19,8 @@ void LoadButton(Button* button, Window* main_window,
                 int xoffset, int yoffset, int width, int height, int rgn,
                 const char* text, int menu, const char* font_name);
 
+void LoadNID(Window* window, HWND hwnd);
+
 void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling);
 void ReleaseWindow(Window* window);
 

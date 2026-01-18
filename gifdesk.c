@@ -13,21 +13,33 @@ int Run(GIFDesk* gf)
 
     GetSettingsPath(&gf->settings); DataInit(&gf->data); GetSettings(&gf->settings);
 
-    RptrInit(&rptr, &gf->settings, &gf->data, &gf->rd,
+    RptrInit(&rptr,
              &gf->window, &gf->window_popup, &gf->window_debug,
-             &gf->window_wc, &gf->window_pb, &gf->window_im, &gf->window_pw, &gf->window_mwt,
+             &gf->window_pb, &gf->window_im, &gf->window_wc, &gf->window_pw, &gf->window_mwt,
 
-             &gf->trackbar_scale, &gf->trackbar_frames, &gf->trackbar_speed, &gf->trackbar_transparency,
+             &gf->btn_title, &gf->btn_openfile, &gf->label_playback, &gf->label_frames, &gf->btn_prev_frame,
+             &gf->btn_play, &gf->btn_next_frame,
 
-             &gf->btn_title, &gf->btn_openfile, &gf->label_window_scale, &gf->label_scale, &gf->btn_add_scale,
-             &gf->btn_subtract_scale, &gf->label_playback, &gf->label_frames, &gf->btn_prev_frame, &gf->btn_play,
-             &gf->btn_next_frame, &gf->label_speed, &gf->btn_slow_rewind, &gf->btn_slow_wind,
-             &gf->label_transparency, &gf->btn_frame_updates,
-             &gf->label_interaction, &gf->btn_disable_moving, &gf->btn_hide_hover,
-             &gf->btn_click_through, &gf->btn_ignore_input,
-             &gf->btn_pin_top, &gf->label_move_window, &gf->btn_move_topleft,
-             &gf->btn_move_topright, &gf->btn_move_center, &gf->btn_move_left, &gf->btn_move_right, &gf->btn_close_window,
-             &gf->btn_taskbar);
+             &gf->trackbar_frames,
+
+             &gf->label_speed, &gf->btn_slow_rewind, &gf->btn_fast_rewind, &gf->btn_slow_wind, &gf->btn_fast_wind,
+
+             &gf->trackbar_speed,
+
+             &gf->btn_frame_updates, &gf->label_interaction, &gf->btn_disable_moving, &gf->btn_hide_hover,
+             &gf->btn_click_through, &gf->btn_ignore_input, &gf->label_window_scale, &gf->label_scale,
+             &gf->btn_add_scale, &gf->btn_subtract_scale,
+
+             &gf->trackbar_scale,
+
+             &gf->label_transparency,
+
+             &gf->trackbar_transparency,
+
+             &gf->btn_pin_top, &gf->btn_show_tray, &gf->btn_taskbar, &gf->label_move_window, &gf->btn_move_topleft, &gf->btn_move_topright,
+             &gf->btn_move_center, &gf->btn_move_left, &gf->btn_move_right, &gf->label_debug, &gf->btn_close_window,
+
+             &gf->data, &gf->rd, &gf->settings);
 
     LoadWindow(&gf->window, &gf->settings, NULL, &gf->rd, "Window", 0, 0, 1, 1, MAIN_WINDOW);
 
@@ -78,6 +90,7 @@ int Run(GIFDesk* gf)
         WriteSettings(&gf->settings);
     }
 
+    ShowWindow(gf->window.hwnd, SW_SHOWDEFAULT);
     ReloadWindow(&gf->window, &gf->settings, &gf->data, 0);
 
     Loop(&rptr);
@@ -85,6 +98,7 @@ int Run(GIFDesk* gf)
     goto _gifdesk_release;
 
 _gifdesk_release:
+    printf("_gifdesk_release");
     ReleaseWindow(&gf->window);
 
     ClearData(&gf->data);

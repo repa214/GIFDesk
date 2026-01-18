@@ -9,20 +9,35 @@
 /// returns 1 if settings file is valid
 void GetSettingsPath(Settings* st)
 {
+    /**
+            char              : FILENAME
+            size              : [0.01 ... 2] (2.01 ... 10)
+            x                 : int
+            y                 : int
+            speed             : [1 ... 200]  * 0.05
+            transparency      : [1 ... 255]
+            language          : [ ??? ]
+
+            flags             : [0 ... 255]
+                0b10000000    : show_taskbar
+                0b01000000    : topmost
+                0b00100000    : ignore_input
+                0b00010000    : hide_on_hover
+                0b00001000    : click_through
+                0b00000100    : disable_moving
+                0b00000010    : show_tray_icon
+
+    **/
+
     st->size = 1;
-    st->trackbar_size = 1;
-    st->taskbar = 1;
-    st->topmost = 1;
-    st->lang = 0;
-    st->sfu = 0;
-    st->ignore_input = 0;
-    st->hide_on_hover = 0;
-    st->click_through = 0;
-    st->disable_moving = 0;
-    st->transparency = 255;
-    st->speed = 16;
     st->x = 0;
     st->y = 0;
+    st->speed = 20;
+    st->transparency = 255;
+    st->lang = 255;
+    st->flags = 0xC2;
+    st->sfu = 0;
+
     const char filter[] =
         "Animations (*.gif, *.webp, *.png, *.avif)\0*.gif; *.webp; *.png; *.apng; *.avif; *.avifs\0"
         "GIF (*.gif)\0*.gif\0"
@@ -119,8 +134,6 @@ void _LoadDropFile(HDROP drop, Window* window, Settings* st, Data* dt, Render* r
     window->wcex.lpfnWndProc = MainWindowProc;
 }
 
-/// BYTE CONFIG: filename, size,  x,   y,   speed, transparency, taskbar, topmost, lang, ignore_input, hide_on_hover
-//               char,     float, int, int, byte,  byte,         byte,    byte,    byte  byte          byte
 /// returns 0 if settings file is invalid
 /// returns 1 if settings file is valid
 uint8_t GetSettings(Settings* st)
@@ -131,21 +144,12 @@ uint8_t GetSettings(Settings* st)
         if (fread(st->filename, sizeof(char), 261, f) < 261) goto nofile;
         if (fread(&st->size, sizeof(float), 1, f) < 1) goto nofile;
         st->trackbar_size = st->size;
-        if (fread(&st->x, sizeof(int), 1, f) < 1) goto nofile;                ///
-        if (fread(&st->y, sizeof(int), 1, f) < 1) goto nofile;                ///
-        if (fread(&st->speed, sizeof(uint8_t), 1, f) < 1) goto nofile;        ///
-        if (fread(&st->transparency, sizeof(uint8_t), 1, f) < 1) goto nofile; ///
-        if (fread(&st->taskbar, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->topmost, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->x, sizeof(uint32_t), 1, f) < 1) goto nofile;
+        if (fread(&st->y, sizeof(uint32_t), 1, f) < 1) goto nofile;
+        if (fread(&st->speed, sizeof(uint8_t), 1, f) < 1) goto nofile;
+        if (fread(&st->transparency, sizeof(uint8_t), 1, f) < 1) goto nofile;
         if (fread(&st->lang, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->ignore_input, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->hide_on_hover, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->click_through, sizeof(uint8_t), 1, f) < 1) goto nofile;
-        if (fread(&st->disable_moving, sizeof(uint8_t), 1, f) < 1) goto nofile;
-
-//        printf("filename: %s\nsize: %f, [%d, %d]\nspeed: %u\ntransparency: %u\ntaskbar: %u\ntopmost: %u\nlang: %u\nignore_input: %u\nhide_on_hover: %u\nclick_through: %u\ndisable_moving: %u\n",
-//               st->filename, st->size, st->x, st->y, st->speed, st->transparency, st->taskbar,
-//               st->topmost, st->lang, st->ignore_input, st->hide_on_hover, st->click_through, st->disable_moving);
+        if (fread(&st->flags, sizeof(uint8_t), 1, f) < 1) goto nofile;
     }
     else goto nofile;
 
@@ -194,17 +198,12 @@ void WriteSettings(Settings* st)
     FILE *f = fopen(st->settings_path, "wb");
     fwrite(st->filename, sizeof(char), 261, f);
     fwrite(&st->size, sizeof(float), 1, f);
-    fwrite(&st->x, sizeof(int), 1, f);
-    fwrite(&st->y, sizeof(int), 1, f);
+    fwrite(&st->x, sizeof(uint32_t), 1, f);
+    fwrite(&st->y, sizeof(uint32_t), 1, f);
     fwrite(&st->speed, sizeof(uint8_t), 1, f);
     fwrite(&st->transparency, sizeof(uint8_t), 1, f);
-    fwrite(&st->taskbar, sizeof(uint8_t), 1, f);
-    fwrite(&st->topmost, sizeof(uint8_t), 1, f);
     fwrite(&st->lang, sizeof(uint8_t), 1, f);
-    fwrite(&st->ignore_input, sizeof(uint8_t), 1, f);
-    fwrite(&st->hide_on_hover, sizeof(uint8_t), 1, f);
-    fwrite(&st->click_through, sizeof(uint8_t), 1, f);
-    fwrite(&st->disable_moving, sizeof(uint8_t), 1, f);
+    fwrite(&st->flags, sizeof(uint8_t), 1, f);
 
     fclose(f);
 }

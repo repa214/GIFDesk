@@ -18,7 +18,7 @@
 #include "avif/avif.h"
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.3"
+#define APP_NAME_VER "GIFDesk 1.3.1"
 
 #define IDI_ICON 1
 #define MENU_ICON 2
@@ -31,6 +31,27 @@
 #define IDD_DIALOG_BCANCEL 1002
 #define IDD_DIALOG_BCANCEL_E 1003
 
+#define SHOW_TASKBAR (rptr.st->flags & 0x80 ? 1 : 0)
+#define SHOW_TASKBAR_V 0x80
+
+#define TOPMOST (rptr.st->flags & 0x40 ? 1 : 0)
+#define TOPMOST_V 0x40
+
+#define IGNORE_INPUT (rptr.st->flags & 0x20 ? 1 : 0)
+#define IGNORE_INPUT_V 0x20
+
+#define HIDE_ON_HOVER (rptr.st->flags & 0x10 ? 1 : 0)
+#define HIDE_ON_HOVER_V 0x10
+
+#define CLICK_THROUGH (rptr.st->flags & 0x8 ? 1 : 0)
+#define CLICK_THROUGH_V 0x8
+
+#define DISABLE_MOVING (rptr.st->flags & 0x4 ? 1 : 0)
+#define DISABLE_MOVING_V 0x4
+
+#define SHOW_TRAY (rptr.st->flags & 0x2 ? 1 : 0)
+#define SHOW_TRAY_V 0x2
+
 enum {POS_LTC, POS_LLC, POS_RTC, POS_RLC, POS_C};
 
 typedef struct
@@ -40,7 +61,7 @@ typedef struct
     HGLRC hrc;
     WNDCLASSEX wcex;
     HINSTANCE hinstance;
-    NOTIFYICONDATA icondata;
+    NOTIFYICONDATA nid;
 
     int hovered;
     int isactive;
@@ -66,10 +87,17 @@ typedef struct
 
 typedef struct
 {
+    HWND hwnd;
+
+    int hovered;
+    int isactive;
+} Edit;
+
+typedef struct
+{
     const char ofnfilter[233];
 
     char settings_path[MAX_PATH];
-    char filename[MAX_PATH];
     char buff_filename[MAX_PATH];
 
     char str_size[32];
@@ -79,20 +107,41 @@ typedef struct
 
     /** contains in settings file **/
 
+    char filename[MAX_PATH];
     float size;
-    uint8_t taskbar, topmost, lang, speed, transparency,
-            ignore_input, hide_on_hover, click_through, disable_moving;
-    int x, y;
+    uint32_t x, y;
+    uint8_t speed, transparency, lang;
+    uint8_t flags;
+
+    /**
+            char              : FILENAME
+            size              : [0.01 ... 2] (2.01 ... 10)
+            x                 : int
+            y                 : int
+            speed             : [1 ... 200]  * 0.05
+            transparency      : [1 ... 255]
+            language          : [ ??? ]
+
+            flags             : [0 ... 255]
+                0b10000000    : show_taskbar
+                0b01000000    : topmost
+                0b00100000    : ignore_input
+                0b00010000    : hide_on_hover
+                0b00001000    : click_through
+                0b00000100    : disable_moving
+                0b00000010    : show_tray
+                0b00000001    : drag_n_drop [?]
+
+    **/
 
     /** doesn`t contains in settings file **/
 
     uint8_t sfu;
-    uint8_t dnd;
 
     /** for temporary changes **/
 
     float trackbar_size;
-    int pos;
+    uint8_t pos;
 
     OPENFILENAME ofn;
 

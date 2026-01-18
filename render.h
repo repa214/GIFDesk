@@ -20,6 +20,7 @@
 
 /// minimal height: 36
 #define POPUP_WIDTH 250
+//#define POPUP_HEIGHT 231
 #define POPUP_HEIGHT 206
 
 #define PB_WIDTH 223
@@ -29,7 +30,8 @@
 #define IM_HEIGHT 111
 
 #define WC_WIDTH 223
-#define WC_HEIGHT 127 // 182
+#define WC_HEIGHT 152
+// #define WC_HEIGHT 207 // TRANSPARENCY
 
 #define PW_WIDTH 223
 #define PW_HEIGHT 62
@@ -50,71 +52,68 @@ typedef struct
 {
     Window* window;
     Window* window_popup;
-
-    Window* window_wc;
-    Window* window_pb;
-    Window* window_im;
-    Window* window_pw;
-    Window* window_mwt;
-
     Window* window_debug;
 
-    /** Popup Menu **/
+    Window* window_pb;
+    Window* window_im;
+    Window* window_wc;
+    Window* window_pw;
+    Window* window_mwt;
 
     Button* btn_title;
     Button* btn_openfile;
 
-    Button* label_window_scale;
-
-    Button* label_scale;
-    Button* btn_add_scale;
-    Button* btn_subtract_scale;
-
-    Trackbar* trackbar_scale;
-
     Button* label_playback;
 
-    Button* label_frames;
-    Button* btn_prev_frame;
-    Button* btn_play;
-    Button* btn_next_frame;
+        Button* label_frames;
+        Button* btn_prev_frame;
+        Button* btn_play;
+        Button* btn_next_frame;
 
-    Trackbar* trackbar_frames;
+        Trackbar* trackbar_frames;
 
-    Button* label_speed;
-    Button* btn_slow_rewind;
-    Button* btn_slow_wind;
+        Button* label_speed;
+        Button* btn_slow_rewind;
+        Button* btn_fast_rewind;
+        Button* btn_slow_wind;
+        Button* btn_fast_wind;
 
-    Trackbar* trackbar_speed;
+        Trackbar* trackbar_speed;
 
-    Button* label_transparency;
-
-    Trackbar* trackbar_transparency;
-
-    Button* btn_taskbar;
-
-    Button* btn_frame_updates;
+        Button* btn_frame_updates;
 
     Button* label_interaction;
 
-    Button* btn_disable_moving;
-    Button* btn_hide_hover;
-    Button* btn_click_through;
-    Button* btn_ignore_input;
+        Button* btn_disable_moving;
+        Button* btn_hide_hover;
+        Button* btn_click_through;
+        Button* btn_ignore_input;
 
-    Button* label_pin_window;
+    Button* label_window_scale;
 
-    Button* btn_pin_default;
-    Button* btn_pin_top;
-    Button* btn_pin_bottom;
+        Button* label_scale;
+        Button* btn_add_scale;
+        Button* btn_subtract_scale;
+
+        Trackbar* trackbar_scale;
+
+        Button* label_transparency;
+
+        Trackbar* trackbar_transparency;
+
+        Button* btn_pin_top;
+        Button* btn_show_tray;
+        Button* btn_taskbar;
 
     Button* label_move_window;
 
-    Button* btn_move_topleft;
-    Button* btn_move_topright;
-    Button* btn_move_center;
-    Button* btn_move_left;
-    Button* btn_move_right;
+        Button* btn_move_topleft;
+        Button* btn_move_topright;
+        Button* btn_move_center;
+        Button* btn_move_left;
+        Button* btn_move_right;
+
+    Button* label_debug;
 
     Button* btn_close_window;
 
@@ -126,21 +125,33 @@ typedef struct
 
 extern RenderPtr rptr;
 
-void RptrInit(RenderPtr* rptr, Settings* st, Data* dt, Render* rd,
+void RptrInit(RenderPtr* rptr,
               Window* window, Window* window_popup, Window* window_debug,
-              Window* window_wc, Window* window_pb, Window* window_im, Window* window_pw, Window* window_mwt,
+              Window* window_pb, Window* window_im, Window* window_wc, Window* window_pw, Window* window_mwt,
 
-              Trackbar* trackbar_scale, Trackbar* trackbar_frames, Trackbar* trackbar_speed, Trackbar* trackbar_transparency,
+              Button* btn_title, Button* btn_openfile, Button* label_playback, Button* label_frames, Button* btn_prev_frame,
+              Button* btn_play, Button* btn_next_frame,
 
-              Button* btn_title, Button* btn_openfile, Button* label_window_scale, Button* label_scale, Button* btn_add_scale,
-              Button* btn_subtract_scale, Button* label_playback, Button* label_frames, Button* btn_prev_frame, Button* btn_play,
-              Button* btn_next_frame, Button* label_speed, Button* btn_slow_rewind, Button* btn_slow_wind,
-              Button* label_transparency, Button* btn_frame_updates,
-              Button* label_interaction, Button* btn_disable_moving, Button* btn_hide_hover,
-              Button* btn_click_through, Button* btn_ignore_input,
-              Button* btn_pin_top, Button* label_move_window, Button* btn_move_topleft,
-              Button* btn_move_topright, Button* btn_move_center, Button* btn_move_left, Button* btn_move_right, Button* btn_close_window,
-              Button* btn_taskbar);
+              Trackbar* trackbar_frames,
+
+              Button* label_speed, Button* btn_slow_rewind, Button* btn_fast_rewind, Button* btn_slow_wind, Button* btn_fast_wind,
+
+              Trackbar* trackbar_speed,
+
+              Button* btn_frame_updates, Button* label_interaction, Button* btn_disable_moving, Button* btn_hide_hover,
+              Button* btn_click_through, Button* btn_ignore_input, Button* label_window_scale, Button* label_scale,
+              Button* btn_add_scale, Button* btn_subtract_scale,
+
+              Trackbar* trackbar_scale,
+
+              Button* label_transparency,
+
+              Trackbar* trackbar_transparency,
+
+              Button* btn_pin_top, Button* btn_show_tray, Button* btn_taskbar, Button* label_move_window, Button* btn_move_topleft, Button* btn_move_topright,
+              Button* btn_move_center, Button* btn_move_left, Button* btn_move_right, Button* label_debug, Button* btn_close_window,
+
+              Data* dt, Render* rd, Settings* st);
 
 void Loop(RenderPtr* rptr);
 

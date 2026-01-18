@@ -1,8 +1,5 @@
 #include "window.h"
 
-HDC currenthdc = NULL;
-HGLRC currenthrc = NULL;
-
 /** Windows Processing **/
 
 int WindowInit(Window* window, const char* lpszclassname, WNDPROC proc)
@@ -19,19 +16,18 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                int xoffset, int yoffset, int width, int height,
                int settb, int settm, int setdaf, int setgl, int alpha)
 {
-    LONG_PTR style = WS_EX_LAYERED;
-    if (settb && st->taskbar)
-        style |= WS_EX_APPWINDOW;
+    DWORD exstyle = WS_EX_LAYERED;
+    DWORD dstyle = 0;
+
+    if (settb && SHOW_TASKBAR)
+        exstyle |= WS_EX_APPWINDOW;
     else
-        style |= WS_EX_TOOLWINDOW;
+        exstyle |= WS_EX_TOOLWINDOW;
 
-    if (setgl)
-        style |= WS_SYSMENU | WS_CAPTION;
-
-    window->hwnd = CreateWindowEx(style,
+    window->hwnd = CreateWindowEx(exstyle,
                                   classname,
                                   APP_NAME,
-                                  WS_POPUP,
+                                  dstyle,
                                   xoffset,
                                   yoffset,
                                   width,
@@ -41,9 +37,13 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
                                   window->hinstance,
                                   NULL);
 
+    dstyle = GetWindowLong(window->hwnd, GWL_STYLE);
+    dstyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+    SetWindowLong(window->hwnd, GWL_STYLE, dstyle);
+
     if (settm)
         SetWindowPos(window->hwnd,
-                     (st->topmost) ? HWND_TOPMOST : HWND_NOTOPMOST,
+                     TOPMOST ? HWND_TOPMOST : HWND_NOTOPMOST,
                      0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE);
 
     if (alpha)
@@ -51,10 +51,12 @@ int LoadWindow(Window* window, Settings* st, Window* parent,
     else
         SetLayeredWindowAttributes(window->hwnd, 0x0, 0, LWA_COLORKEY);
 
-    ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->isactive = 1;
     DragAcceptFiles(window->hwnd, (setdaf) ? TRUE : FALSE);
 
     if (setgl) EnableOpenGL(window, rd, window->hwnd, &window->hdc, &window->hrc);
+    else { ShowWindow(window->hwnd, SW_SHOWDEFAULT); window->hrc = NULL; }
+
+    window->isactive = 1;
 
     return 0;
 }
@@ -64,17 +66,17 @@ void LoadTrackBar(Trackbar* trackbar, Window* main_window,
                   int vfrom, int vto, int sp, int id)
 {
     trackbar->hwnd = CreateWindowEx(0,
-                                  TRACKBAR_CLASS,
-                                  NULL,
-                                  WS_TABSTOP | WS_CHILD | WS_VISIBLE | (tooltip ? TBS_TOOLTIPS : 0),
-                                  xoffset,
-                                  yoffset,
-                                  width,
-                                  height,
-                                  main_window->hwnd,
-                                  (HMENU)id,
-                                  NULL,
-                                  NULL);
+                                    TRACKBAR_CLASS,
+                                    NULL,
+                                    WS_TABSTOP | WS_CHILD | WS_VISIBLE | (tooltip ? TBS_TOOLTIPS : 0),
+                                    xoffset,
+                                    yoffset,
+                                    width,
+                                    height,
+                                    main_window->hwnd,
+                                    (HMENU)id,
+                                    NULL,
+                                    NULL);
 
     SendMessage(trackbar->hwnd, TBM_SETRANGE, TRUE, MAKELONG(vfrom, vto));
     SendMessage(trackbar->hwnd, TBM_SETPOS, TRUE, sp);
@@ -86,7 +88,7 @@ void LoadButton(Button* button, Window* main_window,
                 const char* text, int menu, const char* font_name)
 {
     button->hwnd = CreateWindowEx(0,
-                                  "BUTTON",
+                                  "Button",
                                   text,
                                   WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
                                   xoffset,
@@ -116,6 +118,54 @@ void LoadButton(Button* button, Window* main_window,
     SendMessage(button->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
 }
 
+void LoadEdit(Edit* edit, Window* main_window,
+              int xoffset, int yoffset, int width, int height,
+              const char* text, int menu, const char* font_name)
+{
+    edit->hwnd = CreateWindowEx(0,
+                                "Edit",
+                                text,
+                                0,
+                                xoffset,
+                                yoffset,
+                                width,
+                                height,
+                                main_window->hwnd,
+                                (HMENU)menu,
+                                NULL,
+                                NULL);
+
+    HFONT font = CreateFont(16,
+                            0,
+                            0,
+                            0,
+                            FW_NORMAL,
+                            FALSE,
+                            FALSE,
+                            FALSE,
+                            DEFAULT_CHARSET,
+                            OUT_DEFAULT_PRECIS,
+                            CLIP_DEFAULT_PRECIS,
+                            DEFAULT_QUALITY,
+                            DEFAULT_QUALITY,
+                            font_name);
+
+    SendMessage(edit->hwnd, WM_SETFONT, (WPARAM)font, TRUE);
+}
+
+void LoadNID(Window* window, HWND hwnd)
+{
+    window->nid.cbSize            = sizeof(NOTIFYICONDATA);
+    window->nid.uID               = ID_TRAY;
+    window->nid.hWnd              = hwnd;
+    window->nid.hIcon             = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR);
+    window->nid.uFlags            = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+    window->nid.uCallbackMessage  = WM_TRAYNOTIFY;
+    strcpy(window->nid.szTip,       APP_NAME);
+
+    Shell_NotifyIcon(NIM_ADD, &window->nid);
+}
+
 void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling)
 {
     PostMessage(window->hwnd, WM_USER, (autoscaling) ? 4 : 3, 0);
@@ -132,8 +182,11 @@ void ReloadWindow(Window* window, Settings* st, Data* dt, uint8_t autoscaling)
 void ReleaseWindow(Window* window)
 {
     window->isactive = 0;
-    DisableOpenGL(window->hwnd, window->hdc, window->hrc);
-    DestroyWindow(window->hwnd);
+    if (window->hrc)
+        DisableOpenGL(window->hwnd, window->hdc, window->hrc);
+
+    if (IsWindow(window->hwnd))
+        DestroyWindow(window->hwnd);
 }
 
 void WcexInit(WNDCLASSEX* wcex, const char* lpszclassname, WNDPROC proc, HINSTANCE hinstance)
@@ -160,7 +213,6 @@ void EnableOpenGL(Window* window, Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     int iFormat;
 
     *hdc = GetDC(hwnd);
-    currenthdc = *hdc;
 
     ZeroMemory(&pfd, sizeof(pfd));
 
@@ -175,7 +227,6 @@ void EnableOpenGL(Window* window, Render* rd, HWND hwnd, HDC* hdc, HGLRC* hRC) {
     SetPixelFormat(*hdc, iFormat, &pfd);
 
     *hRC = wglCreateContext(*hdc);
-    currenthrc = *hRC;
 
     wglMakeCurrent(window->hdc, window->hrc);
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &rd->major, &rd->minor);

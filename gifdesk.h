@@ -61,6 +61,7 @@ typedef struct
         Trackbar trackbar_transparency;
 
         Button btn_pin_top;
+        Button btn_show_tray;
         Button btn_taskbar;
 
     Button label_move_window;
@@ -70,6 +71,8 @@ typedef struct
         Button btn_move_center;
         Button btn_move_left;
         Button btn_move_right;
+
+    Button label_debug;
 
     Button btn_close_window;
 

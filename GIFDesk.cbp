@@ -35,7 +35,6 @@
 		</Compiler>
 		<Linker>
 			<Add library="opengl32" />
-			<Add library="glu32" />
 			<Add library="gdi32" />
 			<Add library="comdlg32" />
 			<Add library="apng/libapng.a" />
