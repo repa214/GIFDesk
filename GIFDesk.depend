@@ -1,0 +1,62 @@
+# depslib dependency file v1.0
+1777828103 source:c:\users\repa\desktop\projects\gifdesk_(new_winapi)\main.c
+	"manager.h"
+
+1778099382 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\manager.h
+	"types.h"
+	"fonts.h"
+	"handlers.h"
+
+1774738675 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\manager.c
+	"settings.h"
+	"fonts.h"
+
+1777822076 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\settings.h
+	"types.h"
+	"gifdesk.h"
+
+1778096674 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\types.h
+	<windows.h>
+	<windowsx.h>
+	<stdio.h>
+	<stdint.h>
+	<stdlib.h>
+	<stdarg.h>
+	<gl/gl.h>
+	"libgif/gif_lib.h"
+
+1777644900 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\fonts.h
+	"types.h"
+
+1774738675 source:c:\users\repa\desktop\projects\gifdesk_(new_winapi)\manager.c
+	"settings.h"
+	"fonts.h"
+
+1778105630 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\handlers.h
+	"types.h"
+	"render.h"
+	"flags.h"
+	"gifdesk.h"
+
+1778089389 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\render.h
+	"types.h"
+
+1777670485 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\flags.h
+	"types.h"
+
+1778105631 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\gifdesk.h
+	"types.h"
+	"data.h"
+	"render.h"
+	"settings.h"
+
+1777818652 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\data.h
+	"types.h"
+
+1571412343 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\libgif\gif_lib.h
+	<stddef.h>
+	<stdbool.h>
+
+1769986746 source:c:\users\repa\desktop\projects\gifdesk_(new_winapi)\resource.rc
+	"types.h"
+
