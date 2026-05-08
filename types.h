@@ -19,10 +19,10 @@
 //--------------------------------------------------
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.4a"
-#define APP_GENERAL_VER "Version 1.4a"
+#define APP_NAME_VER "GIFDesk 1.4a.2"
+#define APP_GENERAL_VER "Version 1.4a.2"
 // build-NNDDMMYY
-#define APP_BUILD_DESC "Public alpha build-01070526"
+#define APP_BUILD_DESC "Public alpha build-02080526"
 #define RESOURCE_ICON 1
 
 //--------------------------------------------------
@@ -414,6 +414,7 @@ enum {
     MANAGER_WARN_LENGTHS_ALLOC, MANAGER_WARN_FRAMEP_ALLOC, MANAGER_WARN_TEXTURES_ALLOC,
     MANAGER_WARN_CREATE_OBJ, MANAGER_WARN_GFKLOOP_NULL, MANAGER_WARN_CREATE_LOOP,
     MANAGER_WARN_CREATE_THREAD, MANAGER_WARN_QUERY_TOO_MUCH, MANAGER_WARN_REG,
+    MANAGER_WARN_OBJCOUNT_OVERFLOW,
 
     // 12288
     MANAGER_WARN_GIFLIB_OPEN_FAILED = 0x3000, MANAGER_WARN_GIFLIB_READ_FAILED,
@@ -434,7 +435,7 @@ enum {
 };
 
 SINLINE int ManagerDestroy(Manager* manager) {
-    SendMessage(manager->window, WM_COMMAND, POPUP_CLOSEFILES, 0);
+    SendMessage(manager->window, WM_COMMAND, POPUP_CLOSEFILES, 1);
 
     if (manager) {
         if (manager->objects) {
@@ -469,34 +470,34 @@ SINLINE void ManagerHandleError(Manager* manager) {
     char err[256];
     if (manager) {
         if (manager->error < 0x2000) {
-            sprintf(err, "  Something went wrong...\n  Proccess returned %u       ", manager->error);
+            sprintf(err, "  Something went wrong...\n  Proccess returned %X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
             ManagerDestroy(manager);
             return;
         }
         else if (manager->error < 0x3000) {
-            sprintf(err, "  WARNING:\n  Proccess returned %u       ", manager->error);
+            sprintf(err, "  WARNING:\n  Proccess returned %X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
         else if (manager->error < 0x4000) {
-            sprintf(err, "  GIFLIB_ERROR:\n  Proccess returned %u       ", manager->error);
+            sprintf(err, "  GIFLIB_ERROR:\n  Proccess returned %X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
         else if (manager->error < 0x5000) {
-            sprintf(err, "  OPENGL_ERROR:\n  Proccess returned %u       ", manager->error);
+            sprintf(err, "  OPENGL_ERROR:\n  Proccess returned %X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
     }
-    sprintf(err, "  Something went wrong...\n  Proccess returned %u       ", MANAGER_ERR_NULL);
+    sprintf(err, "  Something went wrong...\n  Proccess returned %X       ", MANAGER_ERR_NULL);
     MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
 }
 

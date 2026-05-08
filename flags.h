@@ -252,7 +252,9 @@ SINLINE void _SetScrollObject(Manager* manager, Object* obj, Object* scrollbar) 
 
     RECT rect;
     GetWindowRect(obj->window, &rect);
+    rect.top -= scrollbar->stm_offset;
     MapWindowPoints(HWND_DESKTOP, manager->window, (POINT*)&rect, 2);
+    SetWindowPos(obj->window, NULL, rect.left, rect.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
     if (scrollbar->stm_rect.left > rect.left) {
         scrollbar->stm_rect.left = rect.left;
         scrollbar->stm_object_ids[0] = obj->index;
@@ -269,6 +271,7 @@ SINLINE void _SetScrollObject(Manager* manager, Object* obj, Object* scrollbar) 
         scrollbar->stm_rect.bottom = rect.bottom;
         scrollbar->stm_object_ids[3] = obj->index;
     }
+    InvalidateRect(scrollbar->window, NULL, TRUE);
 }
 
 SINLINE void _SetScrollObjectByID(Manager* manager, Object* obj, int scrollid) {

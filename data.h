@@ -19,7 +19,16 @@ SINLINE int GetPOTSize(int width, int height) {
 
 SINLINE GLenum _GLImage(Manager* manager, uint16_t index) {
     WaitForSingleObject(manager->glmutex, INFINITE);
-    wglMakeCurrent(manager->gfk[index].hdc, manager->gfk[index].hrc);
+
+    if (!manager->gfk[index].hdc || !manager->gfk[index].hrc) {
+        ReleaseMutex(manager->glmutex);
+        return 0;
+    }
+
+    if (!wglMakeCurrent(manager->gfk[index].hdc, manager->gfk[index].hrc)) {
+        ReleaseMutex(manager->glmutex);
+        return 0;
+    }
 
     glGenTextures(1, &manager->gfk[index].textures[manager->gfk[index].count]);
     glBindTexture(GL_TEXTURE_2D, manager->gfk[index].textures[manager->gfk[index].count]);

@@ -138,7 +138,9 @@ SINLINE void ParseSettings(Manager* manager) {
         if (fread(&transparency, sizeof(uint8_t), 1, f) < 1) continue;
         if (fread(&lang, sizeof(uint8_t), 1, f) < 1) continue;
 
+        DragAcceptFiles(manager->window, FALSE);
         GIFDeskFromParams(manager, i, filepath, size, x, y, speed, transparency, lang, flags, 0);
+        DragAcceptFiles(manager->window, TRUE);
     }
 
     fclose(f);

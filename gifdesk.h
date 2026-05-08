@@ -53,14 +53,14 @@ SINLINE void DisableOpenGL(Manager* manager) {
     ReleaseMutex(manager->glmutex);
 }
 
-SINLINE uint8_t GIFDeskWindow(Manager* manager, GIFDesk* gfk) {
+SINLINE uint8_t GIFDeskWindow(Manager* manager, uint16_t index) {
     DWORD exstyle = WS_EX_LAYERED | WS_EX_TOOLWINDOW;
     DWORD dstyle = 0;
 
     HWND window = CreateWindowEx(
         exstyle,
         "GIFDesk",
-        gfk->filename,
+        manager->gfk[index].filename,
         dstyle,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -68,24 +68,24 @@ SINLINE uint8_t GIFDeskWindow(Manager* manager, GIFDesk* gfk) {
         1,
         HWND_DESKTOP,
         NULL,
-        gfk->hinst,
-        (LPVOID)gfk
+        manager->gfk[index].hinst,
+        (LPVOID)&manager->gfk[index]
     );
     if (!window) {
         manager->error = MANAGER_WARN_CREATE_WINDOW;
         ManagerHandleError(manager);
         return 0;
     }
-    gfk->window = window;
+    manager->gfk[index].window = window;
 
-    dstyle = GetWindowLong(gfk->window, GWL_STYLE);
+    dstyle = GetWindowLong(manager->gfk[index].window, GWL_STYLE);
     dstyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
-    SetWindowLong(gfk->window, GWL_STYLE, dstyle);
+    SetWindowLong(manager->gfk[index].window, GWL_STYLE, dstyle);
 
-    EnableOpenGL(gfk);
+    EnableOpenGL(&manager->gfk[index]);
 
-    SetLayeredWindowAttributes(gfk->window, 0x0, 0, LWA_COLORKEY);
-    SetWindowPos(gfk->window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    SetLayeredWindowAttributes(manager->gfk[index].window, 0x0, 0, LWA_COLORKEY);
+    SetWindowPos(manager->gfk[index].window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
     return 1;
 }
@@ -125,8 +125,6 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
     float texcoord[] = {0, 0, 1, 0, 1, 1, 0, 1};
     static DWORD style;
 
-    DragAcceptFiles(manager->window, FALSE);
-
     for (int i = 0; i < manager->gfk_count; i++)
         SetWindowLongPtr(manager->gfk[i].window, GWLP_USERDATA, (LONG_PTR)&manager->gfk[i]);
 
@@ -155,7 +153,7 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
     SwapFilenames(manager, index);
 
     /** Loading the window **/
-    LRESULT msg = SendMessage(manager->window, WM_COMMAND, MANAGER_THREAD_CREATEWINDOW, 0);
+    LRESULT msg = SendMessage(manager->window, WM_COMMAND, MANAGER_THREAD_CREATEWINDOW, index);
     if (!msg) return 0;
 
     /** Loading the file **/
@@ -178,7 +176,7 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
 
     SetWindowLong(manager->gfk[index].window, GWL_EXSTYLE,
                  (manager->gfk[index].flags & SETTINGS_STI) ? (style | WS_EX_APPWINDOW) & ~WS_EX_TOOLWINDOW :
-                                               (style | WS_EX_TOOLWINDOW) & ~WS_EX_APPWINDOW);
+                                                              (style | WS_EX_TOOLWINDOW) & ~WS_EX_APPWINDOW);
 
     ShowWindow(manager->gfk[index].window, SW_HIDE);
     ShowWindow(manager->gfk[index].window, SW_SHOW);
@@ -208,8 +206,6 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
     }
     manager->is_loading = 0;
 
-    /** Apply DragAcceptFiles **/
-    DragAcceptFiles(manager->window, TRUE);
     return 1;
 }
 
@@ -225,6 +221,8 @@ SINLINE DWORD WINAPI GIFDeskNew(LPVOID arg) {
     manager->gfk = buff;
     memset(&manager->gfk[manager->gfk_count], 0, sizeof(GIFDesk));
 
+    DragAcceptFiles(manager->window, FALSE);
+
     GIFDeskFromParams(manager,
                       manager->gfk_count,
                       manager->buff_filepath,
@@ -234,6 +232,8 @@ SINLINE DWORD WINAPI GIFDeskNew(LPVOID arg) {
                       manager->speed, manager->transparency,
                       manager->lang, manager->flags,
                       0);
+
+    DragAcceptFiles(manager->window, TRUE);
     WriteSettings(manager);
     return 0;
 }

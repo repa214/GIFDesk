@@ -523,9 +523,12 @@ LRESULT CALLBACK _GIFDeskProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARA
     RECT rect;
     HCURSOR cur;
     HMENU menu, submenu;
+    gfk = (GIFDesk *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+//    if (gfk) printf("file: %s, msg: %X, %u, %ld\n", gfk->filename, message, wparam, lparam);
 
     switch (message) {
         case WM_CREATE:
+            SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
             return _SetProcedurePtr(hwnd, lparam);
 
         case WM_CLOSE:
@@ -693,7 +696,14 @@ LRESULT CALLBACK _GIFDeskProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARA
                     return 0;
                 default:
                     return 0;
-            }
+                }
+
+        case WM_ERASEBKGND:
+            return 1;
+
+        case WM_PAINT:
+            return _InvalidateManagerBkg(hwnd);
+
         default:
             return DefWindowProc(hwnd, message, wparam, lparam);
     }
@@ -702,6 +712,8 @@ LRESULT CALLBACK _GIFDeskProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARA
 LRESULT WINAPI _ManagerProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
     static Manager* manager;
 //    static RECT rect;
+
+//    if (message != 0x113) printf("file: MANAGER, msg: %X, %u, %ld\n", message, wparam, lparam);
 
     switch (message) {
         case WM_CREATE:
@@ -778,7 +790,7 @@ LRESULT WINAPI _ManagerProcedureTray(HWND hwnd, UINT message, WPARAM wparam, LPA
             manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             switch (LOWORD(wparam)) {
                 case POPUP_OPENGIFDESK:
-                    ShowWindow(manager->window, SW_SHOW);
+                    SetWindowPos(manager->window, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
                     break;
                 case POPUP_QUIT:
                     _SetSizableWindow(manager, NULL, POS_NULL);

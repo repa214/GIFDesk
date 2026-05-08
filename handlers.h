@@ -1224,6 +1224,7 @@ SINLINE int _HandleContextMenu(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 SINLINE int _HandleDropFiles(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     Manager* manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
+    /** Drags multiple file **/
 //    int cnt = (int)DragQueryFile((HDROP)wparam, 0xFFFFFFFF, NULL, 0);
 //    for (int i = 0; i < cnt; i++) {
 //        DragQueryFile((HDROP)wparam, i, manager->buff_filepath, MAX_PATH);
@@ -1232,6 +1233,7 @@ SINLINE int _HandleDropFiles(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 //    }
 //    DragFinish((HDROP)wparam);
 
+    /** Drags only one file **/
     if (DragQueryFile((HDROP)wparam, 0xFFFFFFFF, NULL, 0) > 1) {
         manager->error = MANAGER_WARN_QUERY_TOO_MUCH;
         ManagerHandleError(manager);
@@ -1306,7 +1308,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     static RECT rect, wrect;
     static HMENU menu;
     static Object* obj, *scr_obj;
-    static int index, id, stm_last, stm_delta, stm_current;
+    int index = 0, id = 0, stm_last = 0, stm_delta = 0, stm_current = 0;
     static GIFDesk* gfk;
     static TCHAR text[64];
     static DWORD style;
@@ -1316,15 +1318,20 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     index = GetDlgCtrlID((HWND)lparam) - 1;
 
-    if (index < 0) {
-        id = wparam--;
+    if (lparam != 0 && IsWindow((HWND)lparam)) {
+        index = GetDlgCtrlID((HWND)lparam) - 1;
+    }
+
+    if (index < 0 || (unsigned int)index >= manager->objects_count) {
+        id = LOWORD(wparam);
     }
     else {
-        if (manager->objects[index].btndown != NULL && (int)wparam - 1 == index)
+        if (manager->objects[index].btndown != NULL && LOWORD(wparam) - 1 == index)
             manager->objects[index].btndown((void *)&manager->objects[index]);
 
         id = manager->objects[index].id;
     }
+    if (!id) id = (int)wparam;
 
     switch (id) {
 
@@ -1911,6 +1918,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             uint16_t gfk_index = (LPARAM)lparam;
             obj = _CreateManagerButton(manager, 20, 20 + 20 * (gfk_index), 199, 20, TRUE, MANAGER_BTN_FILE,
                                        0, manager->gfk[gfk_index].filename, FALSE);
+
             if (!obj) {
                 manager->error = MANAGER_WARN_CREATE_OBJ;
                 ManagerHandleError(manager);
@@ -1933,8 +1941,8 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         }
 
         case MANAGER_THREAD_CREATEWINDOW: {
-            gfk = &manager->gfk[manager->gfk_count];
-            if (!GIFDeskWindow(manager, gfk)) return 0;
+            uint16_t gfk_index = (LPARAM)lparam;
+            if (!GIFDeskWindow(manager, gfk_index)) return 0;
             else return 1;
         }
 
@@ -2129,7 +2137,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             _UpdateTabItems(manager);
             InvalidateRect(manager->window, NULL, TRUE);
-            if (lparam) {
+            if (!lparam) {
                 printf("WriteSettings [%ld]\n", lparam);
                 WriteSettings(manager);
             }
