@@ -1,6 +1,7 @@
 # GIFDesk
 
-Lightweight application that allows you to place animated images directly on your desktop
+Lightweight application that allows you to place animated images directly on your desktop<br>
+Supports all types of `GIF` `APNG` `WEBP`
 
 ## Basic information
 
@@ -12,7 +13,7 @@ Each window can stay on top of all others like a desktop sticker. You can also a
 
 ## System Requirements
 
-#### Minimal:&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;Recommended:
+#### Minimal: (in theory)&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;Recommended:
 
 &ensp;&ensp;OS: Windows XP&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;OS: Windows Vista
 
