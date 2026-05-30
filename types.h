@@ -11,18 +11,24 @@
 #include <stdarg.h>
 
 #include <gl/gl.h>
+#include <setjmp.h>
 
 #include "libgif/gif_lib.h"
+#include "libapng/png.h"
+#include "libapng/pngconf.h"
+#include "libapng/pnglibconf.h"
+#include "libwebp/decode.h"
+#include "libwebp/demux.h"
 
 //--------------------------------------------------
 // APP
 //--------------------------------------------------
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.4a.2"
-#define APP_GENERAL_VER "Version 1.4a.2"
+#define APP_NAME_VER "GIFDesk 1.4b"
+#define APP_GENERAL_VER "Version 1.4b"
 // build-NNDDMMYY
-#define APP_BUILD_DESC "Public alpha build-02080526"
+#define APP_BUILD_DESC "Public beta build-01300526"
 #define RESOURCE_ICON 1
 
 //--------------------------------------------------
@@ -34,8 +40,8 @@ enum {MANAGER_BTN_NEWFILE = 1, MANAGER_BTN_FILE, MANAGER_BTN_SETTINGS, MANAGER_B
       MANAGER_BTN_PSPEED, MANAGER_BTN_MSPEED,
       MANAGER_BTN_PSCALE, MANAGER_BTN_MSCALE,
 
-//    ST1                  ST2
-      MANAGER_BTN_GENERAL, MANAGER_BTN_TEMPLATE,
+//    ST1                  ST2                   ST3
+      MANAGER_BTN_GENERAL, MANAGER_BTN_TEMPLATE, MANAGER_BTN_PLAYBACK,
       MANAGER_BTN_MSPEED_ST2, MANAGER_BTN_PSPEED_ST2,
       MANAGER_BTN_MSCALE_ST2, MANAGER_BTN_PSCALE_ST2,
 
@@ -46,7 +52,7 @@ enum {MANAGER_BTN_NEWFILE = 1, MANAGER_BTN_FILE, MANAGER_BTN_SETTINGS, MANAGER_B
       MANAGER_STATIC_LABELST, MANAGER_STATIC_DESCRIPTIONST,
       MANAGER_STATIC_SPEED_ST2, MANAGER_STATIC_SCALE_ST2,
       MANAGER_STATIC_LABEL_ST2, MANAGER_STATIC_DESCRIPTION_ST2,
-      MANAGER_STATIC_DM_ST2,
+      MANAGER_STATIC_DM_ST2, MANAGER_STATIC_LABELST3,
 
       MANAGER_SCROLL_CONFIG, MANAGER_SCROLL_FILES,
 
@@ -55,6 +61,7 @@ enum {MANAGER_BTN_NEWFILE = 1, MANAGER_BTN_FILE, MANAGER_BTN_SETTINGS, MANAGER_B
       MANAGER_SWITCH_MSTC,
       MANAGER_SWITCH_AOT_ST2, MANAGER_SWITCH_STI_ST2,
       MANAGER_SWITCH_DM_ST2, MANAGER_SWITCH_HH_ST2, MANAGER_SWITCH_CT_ST2,
+      MANAGER_SWITCH_SP,
 
       MANAGER_RECT_TITLE, MANAGER_RECT_DIV, MANAGER_RECT_DIV_LINE,
 
@@ -62,12 +69,16 @@ enum {MANAGER_BTN_NEWFILE = 1, MANAGER_BTN_FILE, MANAGER_BTN_SETTINGS, MANAGER_B
       MANAGER_RECT_DIVST, MANAGER_RECT_DIVST2,
       MANAGER_RECT_DIV_LINEST, MANAGER_RECT_DIV_ENDST,
       MANAGER_RECT_TITLE_ST2, MANAGER_RECT_DIV_LINE_ST2,
+      MANAGER_RECT_DIVST3,
 
       MANAGER_SCROLLLINEAR_FRAMES, MANAGER_SCROLLLINEAR_SPEED, MANAGER_SCROLLLINEAR_SCALE,
       MANAGER_SCROLLLINEAR_SPEED_ST2, MANAGER_SCROLLLINEAR_SCALE_ST2,
 
-//    ST1                 ST2
-      MANAGER_SCROLL_ST1, MANAGER_SCROLL_ST2,
+//    ST1                 ST2                 ST3
+      MANAGER_SCROLL_ST1, MANAGER_SCROLL_ST2, MANAGER_SCROLL_ST3,
+
+      MANAGER_TEXTBOX_FRAMES, MANAGER_TEXTBOX_SPEED, MANAGER_TEXTBOX_SCALE,
+      MANAGER_TEXTBOX_SPEED_ST2, MANAGER_TEXTBOX_SCALE_ST2,
 
       MANAGER_THREAD_CREATEOBJECT, MANAGER_THREAD_CREATEWINDOW,
 
@@ -103,9 +114,10 @@ enum {FONT_NULL_ID, FONT_MAIN_ID, FONT_CORBEL_ID, FONT_LABEL_NAME_ID, FONT_LABEL
 #define MGR_COLOR_STATIC_TEXT_BRIGHT            RGB(130, 130, 130), RGB(130, 130, 130), RGB(130, 130, 130), RGB(130, 130, 130)
 
 // BUTTON BACKGROUND
-#define MGR_COLOR_BUTTON_BACKGROUND_DEFAULT     MGR_COLOR_BKG,      MGR_COLOR_BKG,      RGB(245, 245, 245), RGB(235, 235, 235)
-#define MGR_COLOR_BUTTON_BACKGROUND_DEFAULT_S   MGR_COLOR_BKG,      RGB(245, 245, 245), RGB(235, 235, 235), RGB(230, 230, 230)
-#define MGR_COLOR_BUTTON_BACKGROUND_DIV         RGB(245, 245, 245), RGB(230, 230, 230), RGB(220, 220, 220), RGB(215, 215, 215)
+#define MGR_COLOR_BUTTON_BACKGROUND_DEFAULT     MGR_COLOR_BKG,      MGR_COLOR_BKG,      RGB(235, 235, 235), RGB(220, 220, 220)
+#define MGR_COLOR_BUTTON_BACKGROUND_DEFAULT_S   MGR_COLOR_BKG,      RGB(240, 240, 240), RGB(225, 225, 225), RGB(210, 210, 210)
+#define MGR_COLOR_BUTTON_BACKGROUND_DIV         RGB(245, 245, 245), RGB(230, 230, 230), RGB(220, 220, 220), RGB(205, 205, 205)
+#define MGR_COLOR_BUTTON_BACKGROUND_DIV_T       RGB(245, 245, 245), RGB(210, 210, 210), RGB(195, 195, 195), RGB(185, 185, 185)
 // BUTTON TEXT
 #define MGR_COLOR_BUTTON_TEXT_DEFAULT           RGB(110, 110, 110), RGB(30, 30, 30),    RGB(30, 30, 30),    RGB(50, 50, 50)
 
@@ -140,6 +152,9 @@ enum {FONT_NULL_ID, FONT_MAIN_ID, FONT_CORBEL_ID, FONT_LABEL_NAME_ID, FONT_LABEL
 // SCROLLLINEAR ARROW
 #define MGR_COLOR_SCRLINEAR_ARROW_DEFAULT       RGB(215, 215, 215), RGB(190, 190, 190), RGB(180, 180, 180), RGB(170, 170, 170)
 #define MGR_COLOR_SCRLINEAR_ARROW_DARK          RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1)
+
+// TEXTBOX BACKGROUND
+#define MGR_COLOR_TEXTBOX_DIV                   RGB(245, 245, 245)
 
 // NULL
 #define MGR_COLOR_DARK                          RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1)
@@ -210,7 +225,7 @@ typedef struct {
     int16_t x, y;
     uint16_t speed;
     uint8_t flags, transparency, lang;
-    uint8_t settings_pos, sw_show, sfu, pos;
+    uint8_t settings_pos, sw_show, sfu /* Will be cut soon */, pos;
     OPENFILENAME ofn;
 
     /** DATA **/
@@ -223,8 +238,8 @@ typedef struct {
     /** RENDER **/
     uint16_t render_frame;
     uint8_t render_thread;
-    double start_time, current_time, inaccuracy;
-    uint8_t change_frames, render_pos;
+    double start_time;
+    uint8_t change_frames, schange_frames, render_pos;
     float glversion;
     float vertex[8], texcoord[8];
 }
@@ -255,6 +270,7 @@ typedef struct {
 #define OBJ_SCROLLBAR 5
 #define OBJ_LISTBOX   6
 #define OBJ_SCRLINEAR 7
+#define OBJ_TEXTBOX   8
     uint8_t type;
 #define OBJ_BOOL                0x1
 #define OBJ_HOVERED             0x2
@@ -295,6 +311,7 @@ typedef struct {
     void* lbsh;
     /** OBJ_SCRLINEAR **/
     int scr_index, scr_current, scr_min, scr_max, scr_info;
+    uint8_t change_text;
 }
 Object;
 
@@ -343,6 +360,7 @@ typedef struct {
 
     float size;
 #define SETTINGS_MSTC 0x1
+#define SETTINGS_SP   0x2
     uint8_t settings_ver, settings, transparency, lang, flags, sfu;
     uint16_t speed;
 }
@@ -417,27 +435,37 @@ enum {
     MANAGER_WARN_OBJCOUNT_OVERFLOW,
 
     // 12288
-    MANAGER_WARN_GIFLIB_OPEN_FAILED = 0x3000, MANAGER_WARN_GIFLIB_READ_FAILED,
-    MANAGER_WARN_GIFLIB_NOT_GIF_FILE, MANAGER_WARN_GIFLIB_NO_SCRN_DSCR,
-    MANAGER_WARN_GIFLIB_NO_IMAG_DSCR, MANAGER_WARN_GIFLIB_NO_COLOR_MAP,
-    MANAGER_WARN_GIFLIB_WRONG_RECORD, MANAGER_WARN_GIFLIB_DATA_TOO_BIG,
-    MANAGER_WARN_GIFLIB_NOT_ENOUGH_MEM, MANAGER_WARN_GIFLIB_CLOSE_FAILED,
-    MANAGER_WARN_GIFLIB_NOT_READABLE, MANAGER_WARN_GIFLIB_IMAGE_DEFECT,
-    MANAGER_WARN_GIFLIB_EOF_TOO_SOON, MANAGER_WARN_GIFLIB_NULL,
-
-    // 16384
-    MANAGER_WARN_OPENGL_NA = 0x4000, MANAGER_WARN_OPENGL_INVALID_ENUM,
+    MANAGER_WARN_OPENGL_NA = 0x3000, MANAGER_WARN_OPENGL_INVALID_ENUM,
     MANAGER_WARN_OPENGL_INVALID_VALUE, MANAGER_WARN_OPENGL_INVALID_OPERATION,
     MANAGER_WARN_OPENGL_STACK_OVERFLOW, MANAGER_WARN_OPENGL_STACK_UNDERFLOW,
     MANAGER_WARN_OPENGL_OUT_OF_MEMORY,
+
+    // 16384
+    MANAGER_WARN_GIF_OPEN_FAILED = 0x4000, MANAGER_WARN_GIF_READ_FAILED,
+    MANAGER_WARN_GIF_NOT_GIF_FILE, MANAGER_WARN_GIF_NO_SCRN_DSCR,
+    MANAGER_WARN_GIF_NO_IMAG_DSCR, MANAGER_WARN_GIF_NO_COLOR_MAP,
+    MANAGER_WARN_GIF_WRONG_RECORD, MANAGER_WARN_GIF_DATA_TOO_BIG,
+    MANAGER_WARN_GIF_NOT_ENOUGH_MEM, MANAGER_WARN_GIF_CLOSE_FAILED,
+    MANAGER_WARN_GIF_NOT_READABLE, MANAGER_WARN_GIF_IMAGE_DEFECT,
+    MANAGER_WARN_GIF_EOF_TOO_SOON, MANAGER_WARN_GIF_NULL,
+
+    // 20480
+    MANAGER_WARN_APNG_STRUCT = 0x5000, MANAGER_WARN_APNG_INFO,
+    MANAGER_WARN_APNG_JUMP, MANAGER_WARN_APNG_POINTERS, MANAGER_WARN_APNG_POINTER,
+
+    // 24576
+    MANAGER_WARN_WEBP_INFO = 0x6000, MANAGER_WARN_WEBP_OPTIONS,
+    MANAGER_WARN_WEBP_OUT_OF_MEMORY, MANAGER_WARN_WEBP_INVALID_PARAM, MANAGER_WARN_WEBP_BITSTREAM_ERROR,
+    MANAGER_WARN_WEBP_UNSUPPORTED_FEATURE, MANAGER_WARN_WEBP_SUSPENDED, MANAGER_WARN_WEBP_USER_ABORT,
+    MANAGER_WARN_WEBP_NOT_ENOUGH_DATA, MANAGER_WARN_WEBP_UNKNOWN, MANAGER_WARN_WEBP_DECODER,
 
     MANAGER_ERR_NULL = 0xFFFF
 };
 
 SINLINE int ManagerDestroy(Manager* manager) {
-    SendMessage(manager->window, WM_COMMAND, POPUP_CLOSEFILES, 1);
-
     if (manager) {
+        SendMessage(manager->window, WM_COMMAND, POPUP_CLOSEFILES, 1);
+
         if (manager->objects) {
             for (int i = manager->objects_count - 1; i >= 0; i--)
                 _DeleteObject(&manager->objects[i]);
@@ -470,35 +498,50 @@ SINLINE void ManagerHandleError(Manager* manager) {
     char err[256];
     if (manager) {
         if (manager->error < 0x2000) {
-            sprintf(err, "  Something went wrong...\n  Proccess returned %X       ", manager->error);
+            sprintf(err, "  Something went wrong...\n  Proccess returned 0x%.8X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
             ManagerDestroy(manager);
             return;
         }
         else if (manager->error < 0x3000) {
-            sprintf(err, "  WARNING:\n  Proccess returned %X       ", manager->error);
+            sprintf(err, "  WARNING:\n  Proccess returned 0x%.8X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
         else if (manager->error < 0x4000) {
-            sprintf(err, "  GIFLIB_ERROR:\n  Proccess returned %X       ", manager->error);
+            sprintf(err, "  OPENGL_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
         else if (manager->error < 0x5000) {
-            sprintf(err, "  OPENGL_ERROR:\n  Proccess returned %X       ", manager->error);
+            sprintf(err, "  GIF_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
+            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
+            manager->is_loading = 0;
+            DragAcceptFiles(manager->window, TRUE);
+            return;
+        }
+        else if (manager->error < 0x6000) {
+            sprintf(err, "  APNG_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
+            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
+            manager->is_loading = 0;
+            DragAcceptFiles(manager->window, TRUE);
+            return;
+        }
+        else if (manager->error < 0x7000) {
+            sprintf(err, "  WEBP_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
     }
-    sprintf(err, "  Something went wrong...\n  Proccess returned %X       ", MANAGER_ERR_NULL);
+    sprintf(err, "  Something went wrong...\n  Proccess returned 0x%.8X       ", MANAGER_ERR_NULL);
     MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
+    ManagerDestroy(manager);
 }
 
 #endif // TYPES_H_INCLUDED

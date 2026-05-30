@@ -2,12 +2,13 @@
 #define RENDER_H_INCLUDED
 
 #include "types.h"
+#include <math.h>
 
-SINLINE void ChangeTexFilt(Manager* manager, GIFDesk* gfk, GLint param) {
-    wglMakeCurrent(gfk->hdc, gfk->hrc);
+SINLINE void ChangeTexFilt(Manager* manager, uint16_t index, GLint param) {
+    wglMakeCurrent(manager->gfk[index].hdc, manager->gfk[index].hrc);
 
-    for (int i = 0; i < gfk->count; i++) {
-        glBindTexture(GL_TEXTURE_2D, gfk->textures[i]);
+    for (int i = 0; i < manager->gfk[index].count; i++) {
+        glBindTexture(GL_TEXTURE_2D, manager->gfk[index].textures[i]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
@@ -25,18 +26,27 @@ SINLINE double GetTime() {
     return (double)counter.QuadPart / freq.QuadPart;
 }
 
-SINLINE int GetCurrentFrame(GIFDesk* gfk) {
-    gfk->current_time = GetTime();
-    int frame = 0;
+SINLINE int GetCurrentFrame(Manager* manager, uint16_t index) {
+//    double current_time = GetTime();
+//    double elapsed = current_time - manager->gfk[index].start_time;
+//    double speed_factor = (double)manager->gfk[index].speed * 0.05;
+//    double total_duration = manager->gfk[index].lengths[manager->gfk[index].count - 1] / speed_factor;
+//
+//    double cycle_time = fmod(elapsed, total_duration);
+//    if (cycle_time < 0) cycle_time += total_duration;
+//
+//    int frame = 0;
+//    while (frame < manager->gfk[index].count - 1 &&
+//           cycle_time > (manager->gfk[index].lengths[frame] / speed_factor)) {
+//        frame++;
+//    }
 
+    int frame = 0;
     while (
-       (float)((int)((gfk->current_time -
-                      gfk->start_time) * 100)
+       (float)((int)((GetTime() - manager->gfk[index].start_time) * 100)
                %
-       (int)((gfk->lengths[
-              gfk->count - 1] /
-       ((float)gfk->speed * 0.05)) * 100)) / 100 >
-       (gfk->lengths[frame] / ((float)gfk->speed * 0.05)) && (int)gfk->count - 1 >= frame
+       (int)((manager->gfk[index].lengths[manager->gfk[index].count - 1] / ((float)manager->gfk[index].speed * 0.05)) * 100)) / 100 >
+       (manager->gfk[index].lengths[frame] / ((float)manager->gfk[index].speed * 0.05)) && (int)manager->gfk[index].count - 1 >= frame
     )
         frame++;
 
@@ -44,19 +54,19 @@ SINLINE int GetCurrentFrame(GIFDesk* gfk) {
 }
 
 SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
-    GIFDesk* gfk = &manager->gfk[gfk_index];
-    int cframe = gfk->render_frame;
-//
-    if (gfk->change_frames) gfk->render_frame = GetCurrentFrame(gfk);
-//
-    if (cframe == gfk->render_frame && !skip && gfk->count > 1) return;
+    int cframe = manager->gfk[gfk_index].render_frame;
+
+    if (manager->gfk[gfk_index].change_frames &&
+        manager->gfk[gfk_index].schange_frames) manager->gfk[gfk_index].render_frame = GetCurrentFrame(manager, gfk_index);
+
+    if (cframe == manager->gfk[gfk_index].render_frame && !skip && manager->gfk[gfk_index].count > 1) { return; }
 
     WaitForSingleObject(manager->glmutex, INFINITE);
-    wglMakeCurrent(gfk->hdc, gfk->hrc);
-//
-    float dw_ = (float)gfk->width,     dh_ = (float)gfk->height,
-          dwh = (float)gfk->npotwidth, dhh = (float)gfk->npotheight,
-          stt = gfk->size;
+    wglMakeCurrent(manager->gfk[gfk_index].hdc, manager->gfk[gfk_index].hrc);
+
+    float dw_ = (float)manager->gfk[gfk_index].width,     dh_ = (float)manager->gfk[gfk_index].height,
+          dwh = (float)manager->gfk[gfk_index].npotwidth, dhh = (float)manager->gfk[gfk_index].npotheight,
+          stt = manager->gfk[gfk_index].size;
 
     int coordh_LTC = (int)   (dhh * 2 - dhh * stt - (dh_ - dhh) * stt + 0.5),
         coordh_LLC = (int) - ((dh_ - dhh) * stt + 0.5),
@@ -71,7 +81,7 @@ SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
 
 //
 
-    switch (gfk->pos) {
+    switch (manager->gfk[gfk_index].pos) {
         case POS_NULL:
             glViewport(0, 0, coordw, coordh);
             break;
@@ -94,10 +104,10 @@ SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
             break;
     }
 
-    if (gfk->index >= manager->gfk_count) { return; }
+    if (manager->gfk[gfk_index].index >= manager->gfk_count) { return; }
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f); glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, gfk->textures[gfk->render_frame]);
+    glBindTexture(GL_TEXTURE_2D, manager->gfk[gfk_index].textures[manager->gfk[gfk_index].render_frame]);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glPushMatrix();
@@ -105,8 +115,8 @@ SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        glVertexPointer(2, GL_FLOAT, 0, &gfk->vertex);
-        glTexCoordPointer(2, GL_FLOAT, 0, &gfk->texcoord);
+        glVertexPointer(2, GL_FLOAT, 0, &manager->gfk[gfk_index].vertex);
+        glTexCoordPointer(2, GL_FLOAT, 0, &manager->gfk[gfk_index].texcoord);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         glDisableClientState(GL_VERTEX_ARRAY);
@@ -115,19 +125,19 @@ SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
 
-        if (0) { // (gfk->sfu) {
+        if (0) { // (manager->gfk[gfk_index].sfu) {
             glColor4f(1.0, 0.0, 0.0, 1.0);
             glLineWidth(1.0f);
 
             glBegin(GL_LINE_LOOP);
-                glVertex2f(gfk->frame_points[gfk->render_frame * 4],
-                           gfk->frame_points[gfk->render_frame * 4 + 3]);
-                glVertex2f(gfk->frame_points[gfk->render_frame * 4 + 2],
-                           gfk->frame_points[gfk->render_frame * 4 + 3]);
-                glVertex2f(gfk->frame_points[gfk->render_frame * 4 + 2],
-                           gfk->frame_points[gfk->render_frame * 4 + 1]);
-                glVertex2f(gfk->frame_points[gfk->render_frame * 4],
-                           gfk->frame_points[gfk->render_frame * 4 + 1]);
+                glVertex2f(manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4],
+                           manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 3]);
+                glVertex2f(manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 2],
+                           manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 3]);
+                glVertex2f(manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 2],
+                           manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 1]);
+                glVertex2f(manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4],
+                           manager->gfk[gfk_index].frame_points[manager->gfk[gfk_index].render_frame * 4 + 1]);
             glEnd();
 
             glColor4f(0.0, 1.0, 0.0, 1.0);
@@ -142,7 +152,7 @@ SINLINE void ShowFrame(Manager* manager, uint16_t gfk_index, uint8_t skip) {
 
     glPopMatrix();
 
-    SwapBuffers(gfk->hdc);
+    SwapBuffers(manager->gfk[gfk_index].hdc);
     wglMakeCurrent(NULL, NULL);
     ReleaseMutex(manager->glmutex);
 }

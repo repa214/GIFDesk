@@ -340,7 +340,11 @@ SINLINE void _SetScrollLinearCurrent(Object* obj, int current) {
     if (obj->scr_current == current) return;
     if (current > obj->scr_max && obj->flags & OBJ_TRACKBAR_OVERFLOW) obj->scr_current = obj->scr_min;
     else if (current < obj->scr_min && obj->flags & OBJ_TRACKBAR_OVERFLOW) obj->scr_current = obj->scr_max;
+
     else if (current >= obj->scr_min && current <= obj->scr_max) obj->scr_current = current;
+
+    else if (current > obj->scr_max && !(obj->flags & OBJ_TRACKBAR_OVERFLOW)) obj->scr_current = obj->scr_max;
+    else if (current < obj->scr_min && !(obj->flags & OBJ_TRACKBAR_OVERFLOW)) obj->scr_current = obj->scr_min;
     InvalidateRect(obj->window, NULL, TRUE);
 }
 
@@ -349,7 +353,8 @@ SINLINE void _SetScrollLinearRemote(Manager* manager, Object* obj, int add, int 
         if (!&manager->objects[i]) continue;
 
         if (manager->objects[i].id == add ||
-            manager->objects[i].id == reduce) {
+            manager->objects[i].id == reduce ||
+            manager->objects[i].id == info) {
             manager->objects[i].scr_index = obj->index;
         }
         if (manager->objects[i].id == info) obj->scr_info = i;

@@ -6,14 +6,12 @@
 #include "render.h"
 #include "settings.h"
 
-SINLINE void EnableOpenGL(GIFDesk* gfk) {
-    Manager* manager = (Manager *)gfk->mgr;
-
+SINLINE void EnableOpenGL(Manager* manager, uint16_t index) {
     PIXELFORMATDESCRIPTOR pfd;
 
     int iFormat;
 
-    gfk->hdc = GetDC(gfk->window);
+    manager->gfk[index].hdc = GetDC(manager->gfk[index].window);
 
     ZeroMemory(&pfd, sizeof(pfd));
 
@@ -24,17 +22,17 @@ SINLINE void EnableOpenGL(GIFDesk* gfk) {
     pfd.cColorBits = 32;
     pfd.cDepthBits = 16;
 
-    iFormat = ChoosePixelFormat(gfk->hdc, &pfd);
-    SetPixelFormat(gfk->hdc, iFormat, &pfd);
+    iFormat = ChoosePixelFormat(manager->gfk[index].hdc, &pfd);
+    SetPixelFormat(manager->gfk[index].hdc, iFormat, &pfd);
 
     WaitForSingleObject(manager->glmutex, INFINITE);
-    gfk->hrc = wglCreateContext(gfk->hdc);
+    manager->gfk[index].hrc = wglCreateContext(manager->gfk[index].hdc);
 
-    wglMakeCurrent(gfk->hdc, gfk->hrc);
+    wglMakeCurrent(manager->gfk[index].hdc, manager->gfk[index].hrc);
 
     int major, minor;
     sscanf((const char*)glGetString(GL_VERSION), "%d.%d", &major, &minor);
-    gfk->glversion = (float)major + (float)minor / 10;
+    manager->gfk[index].glversion = (float)major + (float)minor / 10;
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.75f);
@@ -82,7 +80,7 @@ SINLINE uint8_t GIFDeskWindow(Manager* manager, uint16_t index) {
     dstyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
     SetWindowLong(manager->gfk[index].window, GWL_STYLE, dstyle);
 
-    EnableOpenGL(&manager->gfk[index]);
+    EnableOpenGL(manager, index);
 
     SetLayeredWindowAttributes(manager->gfk[index].window, 0x0, 0, LWA_COLORKEY);
     SetWindowPos(manager->gfk[index].window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
@@ -90,31 +88,28 @@ SINLINE uint8_t GIFDeskWindow(Manager* manager, uint16_t index) {
     return 1;
 }
 
-SINLINE void GIFDeskRelease(GIFDesk* gfk) {
-    Manager* manager = NULL;
-    if (gfk) {
-        gfk->render_thread = 0;
-        if (gfk->textures && gfk->count && gfk->hrc && gfk->mgr) {
-            manager = (Manager *)gfk->mgr;
-
+SINLINE void GIFDeskRelease(Manager* manager, uint16_t index) {
+    if (&manager->gfk[index]) {
+        manager->gfk[index].render_thread = 0;
+        if (manager->gfk[index].textures && manager->gfk[index].count && manager->gfk[index].hrc) {
             WaitForSingleObject(manager->glmutex, INFINITE);
-            wglMakeCurrent(gfk->hdc, gfk->hrc);
-            glDeleteTextures(gfk->count, gfk->textures);
+            wglMakeCurrent(manager->gfk[index].hdc, manager->gfk[index].hrc);
+            glDeleteTextures(manager->gfk[index].count, manager->gfk[index].textures);
             wglMakeCurrent(NULL, NULL);
             ReleaseMutex(manager->glmutex);
 
-            free(gfk->textures); gfk->textures = NULL;
+            free(manager->gfk[index].textures); manager->gfk[index].textures = NULL;
         }
-        if (gfk->window) { DestroyWindow(gfk->window); gfk->window = NULL; }
-        if (gfk->hrc) { wglDeleteContext(gfk->hrc); gfk->hrc = NULL; }
-        if (gfk->hdc) { ReleaseDC(NULL, gfk->hdc); gfk->hdc = NULL; }
-        if (gfk->frame_points) { free(gfk->frame_points); gfk->frame_points = NULL; }
-        if (gfk->delays) { free(gfk->delays); gfk->delays = NULL; }
-        if (gfk->lengths) { free(gfk->lengths); gfk->lengths = NULL; }
-        if (gfk->frame) { free(gfk->frame); gfk->frame = NULL; }
-        if (gfk->buff) { free(gfk->buff); gfk->buff = NULL; }
-        if (gfk->data) { free(gfk->data); gfk->data = NULL; }
-        memset(gfk, 0, sizeof(GIFDesk));
+        if (manager->gfk[index].window) { DestroyWindow(manager->gfk[index].window); manager->gfk[index].window = NULL; }
+        if (manager->gfk[index].hrc) { wglDeleteContext(manager->gfk[index].hrc); manager->gfk[index].hrc = NULL; }
+        if (manager->gfk[index].hdc) { ReleaseDC(NULL, manager->gfk[index].hdc); manager->gfk[index].hdc = NULL; }
+        if (manager->gfk[index].frame_points) { free(manager->gfk[index].frame_points); manager->gfk[index].frame_points = NULL; }
+        if (manager->gfk[index].delays) { free(manager->gfk[index].delays); manager->gfk[index].delays = NULL; }
+        if (manager->gfk[index].lengths) { free(manager->gfk[index].lengths); manager->gfk[index].lengths = NULL; }
+        if (manager->gfk[index].frame) { free(manager->gfk[index].frame); manager->gfk[index].frame = NULL; }
+        if (manager->gfk[index].buff) { free(manager->gfk[index].buff); manager->gfk[index].buff = NULL; }
+        if (manager->gfk[index].data) { free(manager->gfk[index].data); manager->gfk[index].data = NULL; }
+        memset(&manager->gfk[index], 0, sizeof(GIFDesk));
     }
 }
 
@@ -132,6 +127,7 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
     memcpy(&manager->gfk[index].vertex, vertex, sizeof(vertex));
     memcpy(&manager->gfk[index].texcoord, texcoord, sizeof(texcoord));
     manager->gfk[index].change_frames = 1;
+    manager->gfk[index].schange_frames = 1;
     manager->gfk[index].index = index;
     manager->gfk[index].render_thread = 1;
     manager->gfk[index].size = size;
@@ -185,8 +181,13 @@ DWORD WINAPI GIFDeskFromParams(Manager* manager, uint16_t index, char* filepath,
     msg = SendMessage(manager->window, WM_COMMAND, MANAGER_THREAD_CREATEOBJECT, (LPARAM)index);
     if (!msg) return 0;
 
-    /** Creating thread loop **/
-    manager->gfk[index].start_time = GetTime();
+    /** Setting sync playback **/
+    if (manager->flags & SETTINGS_SP && index)
+        manager->gfk[index].start_time = manager->gfk[index - 1].start_time;
+    else
+        manager->gfk[index].start_time = GetTime();
+
+    /** Setting thread loop **/
     GIFDeskLoop* args = malloc(sizeof(GIFDeskLoop));
     if (!args) {
         manager->error = MANAGER_WARN_GFKLOOP_NULL;

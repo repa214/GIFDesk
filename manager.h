@@ -121,7 +121,7 @@ SINLINE Object* _CreateManagerRect(Manager* manager, int ox, int oy, int cx, int
 
     obj->type = OBJ_RECT;
     obj->index = manager->objects_count;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -165,7 +165,7 @@ SINLINE Object* _CreateManagerStatic(Manager* manager, int ox, int oy, int cx, i
 
     obj->type = OBJ_STATIC;
     obj->index = manager->objects_count;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -218,7 +218,7 @@ Object* _CreateManagerButton(Manager* manager, int ox, int oy, int cx, int cy, B
     obj->index = manager->objects_count;
     obj->btnup = DEFBTNBTNUPDEL;
     obj->btndown = DEFBTNBTNDWNDEL;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -289,7 +289,7 @@ SINLINE Object* _CreateManagerSwitch(Manager* manager, int ox, int oy, int swsiz
     obj->index = manager->objects_count;
     obj->btnup = DEFSWHBTNUPDEL;
     obj->btndown = DEFSWHBTNDWNDEL;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -339,7 +339,7 @@ SINLINE Object* _CreateManagerScrollBar(Manager* manager, int ox, int oy, int cx
     obj->index = manager->objects_count;
     obj->btnup = DEFSCRBTNUPDEL;
     obj->btndown = DEFSCRBTNDWNDEL;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -421,7 +421,7 @@ SINLINE Object* _CreateManagerListBox(Manager* manager, int ox, int oy, int cx, 
     obj->index = manager->objects_count + 1;
     obj->btnup = DEFLTBBTNUPDEL;
     obj->btndown = DEFLTBBTNDWNDEL;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->gfk_index = -1;
     obj->parent = (void *)manager;
 
@@ -480,7 +480,7 @@ SINLINE Object* _CreateManagerScrollLinear(Manager* manager, int ox, int oy, int
     obj->index = manager->objects_count;
     obj->btnup = DEFSCLBTNUPDEL;
     obj->btndown = DEFSCLBTNDWNDEL;
-    obj->id = id;
+    obj->id = id ? id : 0xFFFF;
     obj->scr_current = current;
     obj->scr_min = min;
     obj->scr_max = max;
@@ -492,6 +492,54 @@ SINLINE Object* _CreateManagerScrollLinear(Manager* manager, int ox, int oy, int
     _SetManagerObjectColor(obj, MGR_COLOR_SCRLINEAR_BACKGROUND_DEFAULT,
                                 MGR_COLOR_SCRLINEAR_LINE_DEFAULT,
                                 MGR_COLOR_SCRLINEAR_ARROW_DEFAULT);
+
+    return obj;
+}
+
+SINLINE Object* _CreateManagerTextBox(Manager* manager, int ox, int oy, int cx, int cy, BOOL enabled, int id,
+                                      int fonti) {
+    Object* buff = realloc(manager->objects, sizeof(Object) * (manager->objects_count + 1));
+    if (!buff) return NULL;
+    manager->objects = buff;
+
+    Object* obj = &manager->objects[manager->objects_count];
+    memset(obj, 0, sizeof(Object));
+    obj->window = CreateWindow(
+        "EDIT",
+        "",
+        WS_VISIBLE | WS_CHILD /* | ES_NUMBER */ | ((enabled) ? 0 : WS_DISABLED),
+        ScaleForDPI(ox, manager->scale_dpi),
+        ScaleForDPI(oy, manager->scale_dpi),
+        ScaleForDPI(cx, manager->scale_dpi),
+        ScaleForDPI(cy, manager->scale_dpi),
+        manager->window,
+        (HMENU)(manager->objects_count + 1),
+        (HINSTANCE)GetWindowLongPtr(manager->window, GWLP_HINSTANCE),
+        NULL
+    );
+
+    if (!obj->window) {
+        if (manager->objects_count == 0) {
+            free(manager->objects); manager->objects = NULL;
+        }
+        else {
+            buff = realloc(manager->objects, sizeof(Object) * manager->objects_count);
+            if (buff) manager->objects = buff;
+        }
+        return NULL;
+    }
+
+    obj->type = OBJ_TEXTBOX;
+    obj->index = manager->objects_count;
+    obj->btnup = NULL;
+    obj->btndown = NULL;
+    obj->id = id ? id : 0xFFFF;
+    obj->gfk_index = -1;
+    obj->parent = (void *)manager;
+
+    manager->objects_count++;
+    if (obj->window && fonti)
+        SendMessage(obj->window, WM_SETFONT, (WPARAM)manager->fonts[fonti], TRUE);
 
     return obj;
 }
@@ -740,6 +788,8 @@ LRESULT WINAPI _ManagerProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARAM 
             return _InvalidateManagerBkg(hwnd);
         case WM_DRAWITEM:
             return _InvalidateManagerItem(hwnd, wparam, lparam);
+        case WM_CTLCOLOREDIT:
+            return _InvalidateManagerTextBox(hwnd, wparam, lparam);
         case WM_CTLCOLORBTN:
             return (LRESULT)GetStockObject(NULL_BRUSH);
 
@@ -1062,8 +1112,8 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
 
         /// -----------------------------------------------------------------------------
 
-        obj = _CreateManagerStatic(manager, 257, x += 12, 89, 16, TRUE, MANAGER_STATIC_FRAMES,
-                                   FONT_FRAMES_ID, "Frame: N/M");
+        obj = _CreateManagerStatic(manager, 257, x += 12, 39, 16, TRUE, MANAGER_STATIC_FRAMES,
+                                   FONT_FRAMES_ID, "Frame:");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1075,8 +1125,19 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
         _SetItemTab(obj, MGR_MMSF);
 
+        obj = _CreateManagerTextBox(manager, 295, x, 55, 16, TRUE, MANAGER_TEXTBOX_FRAMES,
+                                    FONT_FRAMES_ID);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
+        _SetItemTab(obj, MGR_MMSF);
+
         obj = _CreateManagerButton(manager, 257, x += 21, 30, 16, TRUE, MANAGER_BTN_MFRAME,
-                                   FONT_LABEL_NAME_ID, "-", TRUE);
+                                   FONT_LABEL_NAME_ID, "<", TRUE);
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1096,11 +1157,12 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
             ManagerHandleError(manager);
         }
 
+        _SetTextFormat(obj, DT_BOTTOM | DT_SINGLELINE);
         _SetParamsFrom(manager, obj, MANAGER_BTN_MFRAME);
         _SetRoundObject(manager, obj, 5, 5);
 
         obj = _CreateManagerButton(manager, 327, x, 30, 16, TRUE, MANAGER_BTN_PFRAME,
-                                   FONT_LABEL_NAME_ID, "+", TRUE);
+                                   FONT_LABEL_NAME_ID, ">", TRUE);
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1122,7 +1184,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_SCRLINEAR_BACKGROUND_DIV);
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
         _SetItemTab(obj, MGR_MMSF);
-        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MFRAME, MANAGER_BTN_PFRAME, MANAGER_STATIC_FRAMES);
+        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MFRAME, MANAGER_BTN_PFRAME, MANAGER_TEXTBOX_FRAMES);
         _SetObjectsFlags(obj, OBJ_TRACKBAR_OVERFLOW);
 
         obj = _CreateManagerRect(manager, 0, x += 22, 0, 1, FALSE, MANAGER_RECT_DIV_LINE);
@@ -1137,8 +1199,8 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_RECT_DIV_LINE);
         _SetItemTab(obj, MGR_MMSF);
 
-        obj = _CreateManagerStatic(manager, 257, x += 4, 89, 16, TRUE, MANAGER_STATIC_SPEED,
-                                   FONT_FRAMES_ID, "Speed: Nx");
+        obj = _CreateManagerStatic(manager, 257, x += 8, 39, 16, TRUE, MANAGER_STATIC_SPEED,
+                                   FONT_FRAMES_ID, "Speed:");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1146,6 +1208,17 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         }
 
         _SetParamsFrom(manager, obj, MANAGER_STATIC_FRAMES);
+
+        obj = _CreateManagerTextBox(manager, 295, x, 50, 16, TRUE, MANAGER_TEXTBOX_SPEED,
+                                    FONT_FRAMES_ID);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
+        _SetItemTab(obj, MGR_MMSF);
 
         obj = _CreateManagerButton(manager, 257, x += 21, 30, 16, TRUE, MANAGER_BTN_MSPEED,
                                    FONT_LABEL_NAME_ID, "-", TRUE);
@@ -1170,7 +1243,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetRoundObject(manager, obj, 5, 5);
 
         obj = _CreateManagerScrollLinear(manager, 0, x -= 21, 0, 18, TRUE, MANAGER_SCROLLLINEAR_SPEED,
-                                         20, 5, 80); x += 24;
+                                         20, 1, 80); x += 24;
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1181,7 +1254,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_SCRLINEAR_BACKGROUND_DIV);
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
         _SetItemTab(obj, MGR_MMSF);
-        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSPEED, MANAGER_BTN_PSPEED, MANAGER_STATIC_SPEED);
+        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSPEED, MANAGER_BTN_PSPEED, MANAGER_TEXTBOX_SPEED);
 
         // MGR_MMWSF DIV 1
         obj = _CreateManagerRect(manager, 0, xdiv, 0, x + 30 - cdiv, FALSE, MANAGER_RECT_DIV);
@@ -1203,8 +1276,8 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
 
         /// -----------------------------------------------------------------------------
 
-        obj = _CreateManagerStatic(manager, 257, x += 12, 89, 16, TRUE, MANAGER_STATIC_SCALE,
-                                   FONT_FRAMES_ID, "Scale: N%");
+        obj = _CreateManagerStatic(manager, 257, x += 12, 36, 16, TRUE, MANAGER_STATIC_SCALE,
+                                   FONT_FRAMES_ID, "Scale:");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1212,6 +1285,17 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         }
 
         _SetParamsFrom(manager, obj, MANAGER_STATIC_FRAMES);
+
+        obj = _CreateManagerTextBox(manager, 289, x, 50, 16, TRUE, MANAGER_TEXTBOX_SCALE,
+                                    FONT_FRAMES_ID);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
+        _SetItemTab(obj, MGR_MMSF);
 
         obj = _CreateManagerButton(manager, 257, x += 21, 30, 16, TRUE, MANAGER_BTN_MSCALE,
                                    FONT_LABEL_NAME_ID, "-", TRUE);
@@ -1247,7 +1331,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_SCRLINEAR_BACKGROUND_DIV);
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_CONFIG);
         _SetItemTab(obj, MGR_MMSF);
-        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSCALE, MANAGER_BTN_PSCALE, MANAGER_STATIC_SCALE);
+        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSCALE, MANAGER_BTN_PSCALE, MANAGER_TEXTBOX_SCALE);
 
         obj = _CreateManagerRect(manager, 0, x += 16, 0, 1, FALSE, 0);
 
@@ -1490,7 +1574,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
             ManagerHandleError(manager);
         }
 
-        _SetItemTab(obj, MGR_ST1 | MGR_ST2);
+        _SetItemTab(obj, MGR_ST1 | MGR_ST2 | MGR_ST3);
 
         obj = _CreateManagerRect(manager, 150, 0, 1, 1, FALSE, 0);
 
@@ -1500,7 +1584,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         }
 
         _SetAlign(manager->window, obj, OBJ_ALIGNH, manager->scale_dpi, 0, 0);
-        _SetItemTab(obj, MGR_ST1 | MGR_ST2);
+        _SetItemTab(obj, MGR_ST1 | MGR_ST2 | MGR_ST3);
 
         obj = _CreateManagerButton(manager, 0, 20, 150, 20, TRUE, MANAGER_BTN_GENERAL,
                                    FONT_MAIN_ID, "General", FALSE);
@@ -1510,7 +1594,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
             ManagerHandleError(manager);
         }
 
-        _SetItemTab(obj, MGR_ST1 | MGR_ST2);
+        _SetItemTab(obj, MGR_ST1 | MGR_ST2 | MGR_ST3);
 
         obj = _CreateManagerButton(manager, 0, 40, 150, 20, TRUE, MANAGER_BTN_TEMPLATE,
                                    FONT_MAIN_ID, "Defaults", FALSE);
@@ -1520,10 +1604,20 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
             ManagerHandleError(manager);
         }
 
-        _SetItemTab(obj, MGR_ST1 | MGR_ST2);
+        _SetItemTab(obj, MGR_ST1 | MGR_ST2 | MGR_ST3);
+
+        obj = _CreateManagerButton(manager, 0, 60, 150, 20, TRUE, MANAGER_BTN_PLAYBACK,
+                                   FONT_MAIN_ID, "Playback", FALSE);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetItemTab(obj, MGR_ST1 | MGR_ST2 | MGR_ST3);
     }
 
-    /** MGR_ST1 **/
+    /** MGR_ST1: General **/
 
     {
         int xdiv = 10, x = xdiv, cdiv = xdiv;
@@ -1677,7 +1771,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         cdiv = xdiv;
     }
 
-    /** MGR_ST2 **/
+    /** MGR_ST2: Defaults **/
 
     {
         int xdiv = 10, x = xdiv, cdiv = xdiv;
@@ -1693,8 +1787,8 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetItemTab(obj, MGR_ST2);
         _SetScrollableRect(manager, obj, 150, 21, SHRT_MAX, SHRT_MAX);
 
-        obj = _CreateManagerStatic(manager, 177, x += 12, 89, 16, TRUE, MANAGER_STATIC_SPEED_ST2,
-                                   FONT_FRAMES_ID, "Speed: Nx");
+        obj = _CreateManagerStatic(manager, 177, x += 12, 39, 16, TRUE, MANAGER_STATIC_SPEED_ST2,
+                                   FONT_FRAMES_ID, "Speed:");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1703,6 +1797,17 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
 
         _SetManagerObjectColori(obj, 0, MGR_COLOR_STATIC_DIV);
         _SetTextFormat(obj, DT_LEFT | DT_SINGLELINE);
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST2);
+        _SetItemTab(obj, MGR_ST2);
+
+        obj = _CreateManagerTextBox(manager, 214, x, 55, 16, TRUE, MANAGER_TEXTBOX_SPEED_ST2,
+                                    FONT_FRAMES_ID);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST2);
         _SetItemTab(obj, MGR_ST2);
 
@@ -1742,7 +1847,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_SCRLINEAR_BACKGROUND_DIV);
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST2);
         _SetItemTab(obj, MGR_ST2);
-        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSPEED_ST2, MANAGER_BTN_PSPEED_ST2, MANAGER_STATIC_SPEED_ST2);
+        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSPEED_ST2, MANAGER_BTN_PSPEED_ST2, MANAGER_TEXTBOX_SPEED_ST2);
 
         obj = _CreateManagerRect(manager, 0, xdiv, 0, x + 30 - cdiv, FALSE, MANAGER_RECT_DIVST2);
 
@@ -1763,8 +1868,8 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
 
         /// ------------------------------------------------------------------------------------
 
-        obj = _CreateManagerStatic(manager, 177, x += 12, 89, 16, TRUE, MANAGER_STATIC_SCALE_ST2,
-                                   FONT_FRAMES_ID, "Scale: N%");
+        obj = _CreateManagerStatic(manager, 177, x += 12, 35, 16, TRUE, MANAGER_STATIC_SCALE_ST2,
+                                   FONT_FRAMES_ID, "Scale:");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;
@@ -1772,6 +1877,17 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         }
 
         _SetParamsFrom(manager, obj, MANAGER_STATIC_SPEED_ST2);
+
+        obj = _CreateManagerTextBox(manager, 210, x, 55, 16, TRUE, MANAGER_TEXTBOX_SCALE_ST2,
+                                    FONT_FRAMES_ID);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST2);
+        _SetItemTab(obj, MGR_ST2);
 
         obj = _CreateManagerButton(manager, 177, x += 21, 30, 16, TRUE, MANAGER_BTN_MSCALE_ST2,
                                    FONT_LABEL_NAME_ID, "-", TRUE);
@@ -1807,7 +1923,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetManagerObjectColori(obj, 0, MGR_COLOR_SCRLINEAR_BACKGROUND_DIV);
         _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST2);
         _SetItemTab(obj, MGR_ST2);
-        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSCALE_ST2, MANAGER_BTN_PSCALE_ST2, MANAGER_STATIC_SCALE_ST2);
+        _SetScrollLinearRemote(manager, obj, MANAGER_BTN_MSCALE_ST2, MANAGER_BTN_PSCALE_ST2, MANAGER_TEXTBOX_SCALE_ST2);
 
         obj = _CreateManagerRect(manager, 0, x += 16, 0, 1, FALSE, MANAGER_RECT_DIV_LINE_ST2);
 
@@ -2039,6 +2155,80 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
 
         _SetParamsFrom(manager, obj, MANAGER_RECT_DIVST2);
         _SetManagerObjectColori(obj, 0, MGR_COLOR_BKG);
+    }
+
+    /** MGR_ST3: Playback **/
+
+    {
+        int xdiv = 10, x = xdiv, cdiv = xdiv;
+
+        obj = _CreateManagerScrollBar(manager, 0, 0, 5, 0, TRUE, MANAGER_SCROLL_ST3);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetAlign(manager->window, obj, OBJ_ALIGNRH, manager->scale_dpi, 3, xdiv - 5, 3);
+        _SetItemTab(obj, MGR_ST3);
+        _SetScrollableRect(manager, obj, 150, 21, SHRT_MAX, SHRT_MAX);
+
+        obj = _CreateManagerStatic(manager, 0, x += 12, 0, 20, TRUE, MANAGER_STATIC_LABELST3,
+                                   FONT_LABEL_ID, "Sync playback");
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetAlign(manager->window, obj, OBJ_ALIGNW, manager->scale_dpi, 177, 70);
+        _SetManagerObjectColori(obj, 0, MGR_COLOR_STATIC_DIV);
+        _SetTextFormat(obj, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST3);
+        _SetItemTab(obj, MGR_ST3);
+
+        obj = _CreateManagerSwitch(manager, 0, x += 4, 33, TRUE, MANAGER_SWITCH_SP);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetAlign(manager->window, obj, OBJ_ALIGNR, manager->scale_dpi, 27);
+        _SetManagerObjectColori(obj, 0, MGR_COLOR_SWITCH_BACKGROUND_DIV);
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST3);
+        _SetItemTab(obj, MGR_ST3);
+
+        obj = _CreateManagerStatic(manager, 0, x += 17, 0, 15, TRUE, MANAGER_STATIC_DESCRIPTIONST,
+                                   FONT_DESCRIPTION_ID, "Follow the previous file's frame position");
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetAlign(manager->window, obj, OBJ_ALIGNW, manager->scale_dpi, 177, 70);
+        _SetManagerObjectColor(obj, MGR_COLOR_STATIC_DIV, MGR_COLOR_STATIC_TEXT_DESCRIPTION);
+        _SetTextFormat(obj, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST3);
+        _SetItemTab(obj, MGR_ST3);
+
+        obj = _CreateManagerRect(manager, 0, xdiv, 0, x + 30 - cdiv, FALSE, MANAGER_RECT_DIVST3);
+
+        if (!obj) {
+            manager->error = MANAGER_ERR_CREATE_OBJ;
+            ManagerHandleError(manager);
+        }
+
+        _SetAlign(manager->window, obj, OBJ_ALIGNW, manager->scale_dpi, 160, 10);
+        _SetRoundObject(manager, obj, 15, 15);
+        _SetItemTab(obj, MGR_ST3);
+        _SetScrollObjectByID(manager, obj, MANAGER_SCROLL_ST3);
+        _SetManagerObjectColori(obj, 0, MGR_COLOR_RECT_DIV);
+
+        xdiv += x + 30 - cdiv + 10;
+        x = xdiv;
+        cdiv = xdiv;
     }
 
     GetSettingsPath(manager);

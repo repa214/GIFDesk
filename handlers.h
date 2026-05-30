@@ -6,6 +6,24 @@
 #include "flags.h"
 #include "gifdesk.h"
 
+
+/** String functions **/
+
+int _ContainsOnlyStr(const char *str, const char *allowed) {
+    while (*str != '\0') {
+        if (strchr(allowed, *str) == NULL)
+            return 0;
+        str++;
+    }
+    return 1;
+}
+
+int _CountChr(char sym, char* str) {
+    int cnt = 0;
+    for (char *ptr = strchr(str, sym); ptr; ptr = strchr(++ptr, sym)) cnt++;
+    return cnt;
+}
+
 /** Params **/
 
 SINLINE int _SetMinimalWindowSize(LPARAM lparam, float scale) {
@@ -792,6 +810,14 @@ SINLINE int _InvalidateResizedItems(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
+SINLINE LRESULT _InvalidateManagerTextBox(HWND hwnd, WPARAM wparam, LPARAM lparam) {
+    HDC hdc = (HDC)wparam;
+    SetTextColor(hdc, RGB(0, 0, 0));
+    SetBkColor(hdc, MGR_COLOR_TEXTBOX_DIV);
+
+    return (LRESULT)CreateSolidBrush(MGR_COLOR_TEXTBOX_DIV);
+}
+
 /** Handlers **/
 
 SINLINE int _HandleManagerCursor(HWND hwnd, WPARAM wparam, LPARAM lparam) {
@@ -885,7 +911,7 @@ SINLINE int _HandleManagerWheel(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 SINLINE int _HandleSCRLNR(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     Manager* manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     static TCHAR text[64];
-    static Object* obj;
+    Object* obj;
     static GIFDesk* gfk;
 
     if (manager->casb >= 0)
@@ -895,58 +921,37 @@ SINLINE int _HandleSCRLNR(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     switch (obj->id) {
         case MANAGER_SCROLLLINEAR_FRAMES:
-            gfk = &manager->gfk[obj->gfk_index];
-            gfk->render_frame = obj->scr_current - 1;
-            gfk->change_frames = 0;
-            gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
-
-            sprintf(text, "Frame: %d/%d", obj->scr_current, gfk->count);
+            gfk = &manager->gfk[manager->gfk_current];
+            gfk->schange_frames = 0;
+            sprintf(text, "%d/%d", obj->scr_current, gfk->count);
             SetWindowText(manager->objects[obj->scr_info].window, text);
-
-            ShowFrame(manager, obj->gfk_index, 1);
             break;
         case MANAGER_SCROLLLINEAR_SPEED:
-            gfk = &manager->gfk[obj->gfk_index];
-            gfk->speed = obj->scr_current;
-            gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
-
-            if (gfk->speed % 20 == 0)
-                sprintf(text, "Speed: %.0fx", (float)gfk->speed * 0.05);
-            else if (gfk->speed % 2 == 0)
-                sprintf(text, "Speed: %.1fx", (float)gfk->speed * 0.05);
+            gfk = &manager->gfk[manager->gfk_current];
+            if (obj->scr_current % 20 == 0)
+                sprintf(text, "%.0fx", (float)obj->scr_current * 0.05);
+            else if (obj->scr_current % 2 == 0)
+                sprintf(text, "%.1fx", (float)obj->scr_current * 0.05);
             else
-                sprintf(text, "Speed: %.2fx", (float)gfk->speed * 0.05);
+                sprintf(text, "%.2fx", (float)obj->scr_current * 0.05);
             SetWindowText(manager->objects[obj->scr_info].window, text);
-
             break;
         case MANAGER_SCROLLLINEAR_SCALE:
-            gfk = &manager->gfk[obj->gfk_index];
-            gfk->size = (float)obj->scr_current / 100;
-
-            if (gfk->size == 1)
-                ChangeTexFilt(manager, gfk, GL_NEAREST);
-            else
-                ChangeTexFilt(manager, gfk, GL_LINEAR);
-
-            sprintf(text, "Scale: %.0f%%", gfk->size * 100);
+            gfk = &manager->gfk[manager->gfk_current];
+            sprintf(text, "%d%%", obj->scr_current);
             SetWindowText(manager->objects[obj->scr_info].window, text);
-
-            ShowFrame(manager, obj->gfk_index, 1);
             break;
         case MANAGER_SCROLLLINEAR_SPEED_ST2:
-            manager->speed = obj->scr_current;
-            if (manager->speed % 20 == 0)
-                sprintf(text, "Speed: %.0fx", (float)manager->speed * 0.05);
-            else if (manager->speed % 2 == 0)
-                sprintf(text, "Speed: %.1fx", (float)manager->speed * 0.05);
+            if (obj->scr_current % 20 == 0)
+                sprintf(text, "%.0fx", (float)obj->scr_current * 0.05);
+            else if (obj->scr_current % 2 == 0)
+                sprintf(text, "%.1fx", (float)obj->scr_current * 0.05);
             else
-                sprintf(text, "Speed: %.2fx", (float)manager->speed * 0.05);
-
+                sprintf(text, "%.2fx", (float)obj->scr_current * 0.05);
             SetWindowText(manager->objects[obj->scr_info].window, text);
             break;
         case MANAGER_SCROLLLINEAR_SCALE_ST2:
-            manager->size = (float)obj->scr_current / 100;
-            sprintf(text, "Scale: %.0f%%", manager->size * 100);
+            sprintf(text, "%d%%", obj->scr_current);
 
             SetWindowText(manager->objects[obj->scr_info].window, text);
             break;
@@ -1048,7 +1053,7 @@ SINLINE int _HandleManagerTimer(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     static POINT pnt; GetCursorPos(&pnt);
     static RECT rect;
     static TCHAR text[16];
-    static Object* obj;
+    Object* obj;
     manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (wparam) {
@@ -1088,10 +1093,10 @@ SINLINE int _HandleManagerTimer(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 if (!&manager->objects[i]) continue;
 
                 obj = &manager->objects[i];
-                if (obj->id == MANAGER_STATIC_FRAMES) {
-                    sprintf(text, "Frame: %d/%d", manager->gfk[manager->gfk_current].render_frame + 1,
+                if (obj->id == MANAGER_TEXTBOX_FRAMES) {
+                    sprintf(text, "%d/%d", manager->gfk[manager->gfk_current].render_frame + 1,
                             manager->gfk[manager->gfk_current].count);
-                    SetWindowText(obj->window, text);
+                    if (manager->gfk[manager->gfk_current].change_frames) SetWindowText(obj->window, text);
                     UpdateWindow(obj->window);
                 }
                 else if (obj->id == MANAGER_SCROLLLINEAR_FRAMES) {
@@ -1151,6 +1156,7 @@ SINLINE int _HandleButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         manager->gfk_current = -1;
         manager->context_id = -1;
         manager->casb = -1;
+
         _UpdateTabItems(manager);
         for (int i = 0; i < manager->objects_count; i++) {
             if (!&manager->objects[i]) continue;
@@ -1171,9 +1177,10 @@ SINLINE int _HandleButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     if (manager->gfk_current > -1) {
         gfk = &manager->gfk[manager->gfk_current];
-        gfk->change_frames = 1;
+        gfk->schange_frames = 1;
         gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
     }
+
     WriteSettings(manager);
     ReleaseCapture();
     manager->context_id = -1;
@@ -1307,12 +1314,14 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     static Manager* manager;
     static RECT rect, wrect;
     static HMENU menu;
-    static Object* obj, *scr_obj;
+    Object* obj, *scr_obj;
     int index = 0, id = 0, stm_last = 0, stm_delta = 0, stm_current = 0;
     static GIFDesk* gfk;
-    static TCHAR text[64];
+    static TCHAR text[64], buff[16];
     static DWORD style;
     static HKEY key = NULL;
+    static uint32_t value;
+    static char* ptr_speed;
 
     manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
@@ -1382,7 +1391,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 ShowWindow(manager->window, SW_SHOW);
 
             obj = &manager->objects[index];
-
             gfk = &manager->gfk[obj->gfk_index];
 
             _SetSizableWindow(manager, gfk, POS_NULL);
@@ -1403,7 +1411,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 }
 
                 switch (manager->objects[i].id) {
-                    case MANAGER_BTN_FRAMEPAUSE:
                     case MANAGER_BTN_PFRAME:
                     case MANAGER_BTN_MFRAME:
                     case MANAGER_BTN_PSCALE:
@@ -1411,6 +1418,16 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                         manager->objects[i].gfk_index = gfk->index;
                         continue;
 
+                    case MANAGER_BTN_FRAMEPAUSE:
+                        if (gfk->change_frames)
+                            _SetManagerObjectColor(&manager->objects[i],
+                                                   MGR_COLOR_BUTTON_BACKGROUND_DIV);
+                        else
+                            _SetManagerObjectColor(&manager->objects[i],
+                                                   MGR_COLOR_BUTTON_BACKGROUND_DIV_T);
+                        InvalidateRect(manager->objects[i].window, NULL, TRUE);
+                        manager->objects[i].gfk_index = gfk->index;
+                        continue;
                     case MANAGER_SCROLLLINEAR_FRAMES:
                         manager->objects[i].scr_max = gfk->count;
                         _SetScrollLinearCurrent(&manager->objects[i], gfk->render_frame + 1);
@@ -1425,17 +1442,21 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                         manager->objects[i].gfk_index = gfk->index;
                         continue;
 
-                    case MANAGER_STATIC_SPEED:
-                        if (gfk->speed % 20 == 0)
-                            sprintf(text, "Speed: %.0fx", (float)gfk->speed * 0.05);
-                        else if (gfk->speed % 2 == 0)
-                            sprintf(text, "Speed: %.1fx", (float)gfk->speed * 0.05);
-                        else
-                            sprintf(text, "Speed: %.2fx", (float)gfk->speed * 0.05);
+                    case MANAGER_TEXTBOX_FRAMES:
+                        sprintf(text, "%d/%d", gfk->render_frame + 1, gfk->count);
                         SetWindowText(manager->objects[i].window, text);
                         continue;
-                    case MANAGER_STATIC_SCALE:
-                        sprintf(text, "Scale: %d%%", (int)(gfk->size * 100));
+                    case MANAGER_TEXTBOX_SPEED:
+                        if (gfk->speed % 20 == 0)
+                            sprintf(text, "%.0fx", (float)gfk->speed * 0.05);
+                        else if (gfk->speed % 2 == 0)
+                            sprintf(text, "%.1fx", (float)gfk->speed * 0.05);
+                        else
+                            sprintf(text, "%.2fx", (float)gfk->speed * 0.05);
+                        SetWindowText(manager->objects[i].window, text);
+                        continue;
+                    case MANAGER_TEXTBOX_SCALE:
+                        sprintf(text, "%d%%", (int)(gfk->size * 100));
                         SetWindowText(manager->objects[i].window, text);
                         continue;
 
@@ -1523,6 +1544,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 }
             }
             _SetManagerObjectColori(obj, 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT_S);
+            InvalidateRect(obj->window, NULL, TRUE);
 
             manager->tab = MGR_MMSF;
             _UpdateTabItems(manager);
@@ -1537,6 +1559,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
                 switch (manager->objects[i].id) {
                     case MANAGER_BTN_TEMPLATE:
+                    case MANAGER_BTN_PLAYBACK:
                         _SetManagerObjectColori(&manager->objects[i], 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT);
                         InvalidateRect(manager->objects[i].window, NULL, TRUE);
                         break;
@@ -1584,6 +1607,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
                 switch (manager->objects[i].id) {
                     case MANAGER_BTN_GENERAL:
+                    case MANAGER_BTN_PLAYBACK:
                         _SetManagerObjectColori(&manager->objects[i], 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT);
                         InvalidateRect(manager->objects[i].window, NULL, TRUE);
                         break;
@@ -1594,17 +1618,17 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                         _SetScrollLinearCurrent(&manager->objects[i], (int)(manager->size * 100));
                         break;
 
-                    case MANAGER_STATIC_SPEED_ST2:
+                    case MANAGER_TEXTBOX_SPEED_ST2:
                         if (manager->speed % 20 == 0)
-                            sprintf(text, "Speed: %.0fx", (float)manager->speed * 0.05);
+                            sprintf(text, "%.0fx", (float)manager->speed * 0.05);
                         else if (manager->speed % 2 == 0)
-                            sprintf(text, "Speed: %.1fx", (float)manager->speed * 0.05);
+                            sprintf(text, "%.1fx", (float)manager->speed * 0.05);
                         else
-                            sprintf(text, "Speed: %.2fx", (float)manager->speed * 0.05);
+                            sprintf(text, "%.2fx", (float)manager->speed * 0.05);
                         SetWindowText(manager->objects[i].window, text);
                         break;
-                    case MANAGER_STATIC_SCALE_ST2:
-                        sprintf(text, "Scale: %d%%", (int)(manager->size * 100));
+                    case MANAGER_TEXTBOX_SCALE_ST2:
+                        sprintf(text, "%d%%", (int)(manager->size * 100));
                         SetWindowText(manager->objects[i].window, text);
                         break;
 
@@ -1691,12 +1715,56 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             break;
         }
 
+        case MANAGER_BTN_PLAYBACK: {
+            if (manager->is_loading) break;
+            obj = &manager->objects[index];
+            for (int i = 0; i < manager->objects_count; i++) {
+                if (!&manager->objects[i]) continue;
+
+                switch (manager->objects[i].id) {
+                    case MANAGER_BTN_TEMPLATE:
+                    case MANAGER_BTN_GENERAL:
+                        _SetManagerObjectColori(&manager->objects[i], 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT);
+                        InvalidateRect(manager->objects[i].window, NULL, TRUE);
+                        break;
+                    case MANAGER_SWITCH_SP: {
+                        if (manager->flags & SETTINGS_SP) {
+                            manager->objects[i].flags |= OBJ_BOOL;
+                            _SetManagerObjectColori(&manager->objects[i], 1, MGR_COLOR_SWITCH_SLIDERT_DEFAULT);
+                        }
+                        else {
+                            manager->objects[i].flags &= ~OBJ_BOOL;
+                            _SetManagerObjectColori(&manager->objects[i], 1, MGR_COLOR_SWITCH_SLIDER_DEFAULT);
+                        }
+                        InvalidateRect(manager->objects[i].window, NULL, TRUE);
+                        break;
+                    }
+                }
+            }
+            _SetManagerObjectColori(obj, 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT_S);
+
+            manager->tab = MGR_ST3;
+            _UpdateTabItems(manager);
+            break;
+        }
+
         case MANAGER_BTN_FRAMEPAUSE: {
             obj = &manager->objects[index];
             gfk = &manager->gfk[obj->gfk_index];
 
             gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
-            gfk->change_frames ^= 1;
+            if (gfk->change_frames) {
+                gfk->change_frames = 0;
+                gfk->schange_frames = 1;
+            }
+            else {
+                gfk->change_frames = 1;
+                gfk->schange_frames = 1;
+            }
+            if (gfk->change_frames)
+                _SetManagerObjectColor(obj, MGR_COLOR_BUTTON_BACKGROUND_DIV, MGR_COLOR_BUTTON_TEXT_DEFAULT);
+            else
+                _SetManagerObjectColor(obj, MGR_COLOR_BUTTON_BACKGROUND_DIV_T, MGR_COLOR_BUTTON_TEXT_DEFAULT);
             break;
         }
 
@@ -1912,12 +1980,226 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             break;
         }
 
+        case MANAGER_SWITCH_SP: {
+            obj = &manager->objects[index];
+            if (obj->flags & OBJ_BOOL) manager->flags |= SETTINGS_SP;
+            else manager->flags &= ~SETTINGS_SP;
+            WriteSettings(manager);
+            break;
+        }
+
+        case MANAGER_TEXTBOX_FRAMES: {
+            if (!IsWindowVisible((HWND)lparam)) break;
+            GetWindowText((HWND)lparam, text, 64);
+            obj = &manager->objects[index];
+            gfk = &manager->gfk[manager->gfk_current];
+            sscanf(text, "%u", &value);
+            sprintf(buff, "/%u", gfk->count);
+
+            if (!value ||
+                !_ContainsOnlyStr(text, "1234567890/") ||
+                !strstr(text, buff) ||
+                _CountChr('/', text) > 1) {
+                gfk->render_frame = 0;
+                sprintf(text, "%d/%d", gfk->render_frame + 1, gfk->count);
+                SetWindowText((HWND)lparam, text);
+                ShowFrame(manager, gfk->index, 1);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+                break;
+            }
+            if (value > gfk->count) {
+                gfk->render_frame = gfk->count - 1;
+                sprintf(text, "%d/%d", gfk->render_frame + 1, gfk->count);
+                SetWindowText((HWND)lparam, text);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+            }
+            gfk->render_frame = value - 1;
+
+            ShowFrame(manager, gfk->index, 1);
+            scr_obj = &manager->objects[obj->scr_index];
+            _SetScrollLinearCurrent(scr_obj, value);
+            break;
+        }
+
+        case MANAGER_TEXTBOX_SPEED: {
+            if (!IsWindowVisible((HWND)lparam)) break;
+            GetWindowText((HWND)lparam, text, 64);
+            obj = &manager->objects[index];
+            gfk = &manager->gfk[manager->gfk_current];
+            value = (uint16_t)(strtof(text, &ptr_speed) * 20);
+
+            if (!strchr(text, 'x') ||
+                !_ContainsOnlyStr(text, "1234567890.x") ||
+                _CountChr('.', text) > 1 ||
+                _CountChr('x', text) > 1) {
+                gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
+
+                if (gfk->speed % 20 == 0)
+                    sprintf(text, "%.0fx", (float)gfk->speed * 0.05);
+                else if (gfk->speed % 2 == 0)
+                    sprintf(text, "%.1fx", (float)gfk->speed * 0.05);
+                else
+                    sprintf(text, "%.2fx", (float)gfk->speed * 0.05);
+                SetWindowText((HWND)lparam, text);
+                ShowFrame(manager, gfk->index, 1);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+                break;
+            }
+            if (!value) value = 1;
+            if (value > 2000) {
+                value = 2000;
+
+                if (value % 20 == 0)
+                    sprintf(text, "%.0fx", (float)value * 0.05);
+                else if (value % 2 == 0)
+                    sprintf(text, "%.1fx", (float)value * 0.05);
+                else
+                    sprintf(text, "%.2fx", (float)value * 0.05);
+                SetWindowText((HWND)lparam, text);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+            }
+
+            if (gfk->speed != value) {
+                gfk->speed = value;
+                gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
+                ShowFrame(manager, gfk->index, 1);
+                scr_obj = &manager->objects[obj->scr_index];
+                _SetScrollLinearCurrent(scr_obj, value);
+                WriteSettings(manager);
+            }
+            break;
+        }
+
+        case MANAGER_TEXTBOX_SCALE: {
+            if (!IsWindowVisible((HWND)lparam)) break;
+            GetWindowText((HWND)lparam, text, 64);
+            obj = &manager->objects[index];
+            gfk = &manager->gfk[manager->gfk_current];
+            sscanf(text, "%u", &value);
+
+            if (!value ||
+                !strchr(text, '%') ||
+                !_ContainsOnlyStr(text, "1234567890%") ||
+                _CountChr('%', text) > 1) {
+                sprintf(text, "%u%%", (uint16_t)(gfk->size * 100));
+                SetWindowText((HWND)lparam, text);
+                ShowFrame(manager, gfk->index, 1);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+                break;
+            }
+            if (value < 1) value = 1;
+            if (value > 200) {
+                value = 200;
+                sprintf(text, "%u%%", value);
+
+                SetWindowText((HWND)lparam, text);
+                MessageBeep(MB_ICONEXCLAMATION);
+            }
+            gfk->size = (float)value / 100;
+
+            if (gfk->size == 1)
+                ChangeTexFilt(manager, gfk->index, GL_NEAREST);
+            else
+                ChangeTexFilt(manager, gfk->index, GL_LINEAR);
+            ShowFrame(manager, gfk->index, 1);
+            scr_obj = &manager->objects[obj->scr_index];
+            _SetScrollLinearCurrent(scr_obj, value);
+            WriteSettings(manager);
+            break;
+        }
+
+        case MANAGER_TEXTBOX_SPEED_ST2: {
+            if (!IsWindowVisible((HWND)lparam)) break;
+            GetWindowText((HWND)lparam, text, 64);
+            obj = &manager->objects[index];
+            value = (uint16_t)(strtof(text, &ptr_speed) * 20);
+
+            if (!strchr(text, 'x') ||
+                !_ContainsOnlyStr(text, "1234567890.x") ||
+                _CountChr('.', text) > 1 ||
+                _CountChr('x', text) > 1) {
+                if (manager->speed % 20 == 0)
+                    sprintf(text, "%.0fx", (float)manager->speed * 0.05);
+                else if (manager->speed % 2 == 0)
+                    sprintf(text, "%.1fx", (float)manager->speed * 0.05);
+                else
+                    sprintf(text, "%.2fx", (float)manager->speed * 0.05);
+                SetWindowText((HWND)lparam, text);
+                ShowFrame(manager, gfk->index, 1);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+                break;
+            }
+            if (!value) value = 1;
+            if (value > 2000) {
+                value = 2000;
+
+                if (value % 20 == 0)
+                    sprintf(text, "%.0fx", (float)value * 0.05);
+                else if (value % 2 == 0)
+                    sprintf(text, "%.1fx", (float)value * 0.05);
+                else
+                    sprintf(text, "%.2fx", (float)value * 0.05);
+                SetWindowText((HWND)lparam, text);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+            }
+            manager->speed = value;
+
+            ShowFrame(manager, gfk->index, 1);
+            scr_obj = &manager->objects[obj->scr_index];
+            _SetScrollLinearCurrent(scr_obj, value);
+            WriteSettings(manager);
+
+            break;
+        }
+
+        case MANAGER_TEXTBOX_SCALE_ST2: {
+            if (!IsWindowVisible((HWND)lparam)) break;
+            GetWindowText((HWND)lparam, text, 64);
+            obj = &manager->objects[index];
+            sscanf(text, "%u", &value);
+
+            if (!value ||
+                !strchr(text, '%') ||
+                !_ContainsOnlyStr(text, "1234567890%") ||
+                _CountChr('%', text) > 1) {
+                sprintf(text, "%u%%", (uint16_t)(manager->size * 100));
+                SetWindowText((HWND)lparam, text);
+                ShowFrame(manager, gfk->index, 1);
+
+                MessageBeep(MB_ICONEXCLAMATION);
+                break;
+            }
+            if (value < 1) value = 1;
+            if (value > 200) {
+                value = 200;
+                sprintf(text, "%u%%", value);
+
+                SetWindowText((HWND)lparam, text);
+                MessageBeep(MB_ICONEXCLAMATION);
+            }
+            manager->size = (float)value / 100;
+
+            ShowFrame(manager, gfk->index, 1);
+            scr_obj = &manager->objects[obj->scr_index];
+            _SetScrollLinearCurrent(scr_obj, value);
+            WriteSettings(manager);
+            printf("--------------------------------\n");
+            break;
+        }
+
         /** THREAD_ITEMS **/
 
         case MANAGER_THREAD_CREATEOBJECT: {
             uint16_t gfk_index = (LPARAM)lparam;
             obj = _CreateManagerButton(manager, 20, 20 + 20 * (gfk_index), 199, 20, TRUE, MANAGER_BTN_FILE,
-                                       0, manager->gfk[gfk_index].filename, FALSE);
+                                       FONT_MAIN_ID, manager->gfk[gfk_index].filename, FALSE);
 
             if (!obj) {
                 manager->error = MANAGER_WARN_CREATE_OBJ;
@@ -1984,7 +2266,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             /** Clearing GFK **/
 
-            GIFDeskRelease(gfk);
+            GIFDeskRelease(manager, gfk_index);
 
             for (uint16_t i = gfk_index; i < manager->gfk_count - 1; i++) {
                 manager->gfk[i + 1].render_thread = 0;
@@ -2138,7 +2420,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             _UpdateTabItems(manager);
             InvalidateRect(manager->window, NULL, TRUE);
             if (!lparam) {
-                printf("WriteSettings [%ld]\n", lparam);
                 WriteSettings(manager);
             }
             break;
@@ -2271,7 +2552,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         default:
             break;
     }
-
     return 0;
 }
 
