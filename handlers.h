@@ -2,6 +2,18 @@
 #define HANDLERS_H_INCLUDED
 
 #include "types.h"
+
+SINLINE void _UpdateTabItems(Manager* manager) {
+    for (int i = 0; i < manager->objects_count; i++) {
+        if (!&manager->objects[i]) continue;
+
+        if (!(manager->tab & manager->objects[i].tab)) ShowWindow(manager->objects[i].window, SW_HIDE);
+        else ShowWindow(manager->objects[i].window, SW_SHOW);
+    }
+    SetWindowPos(manager->window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    manager->last_casb = -1;
+}
+
 #include "render.h"
 #include "flags.h"
 #include "gifdesk.h"
@@ -203,9 +215,24 @@ SINLINE void _SetSizableWindow(Manager* manager, GIFDesk* gfk, uint8_t pos) {
 /** Drawing functions **/
 
 SINLINE int _InvalidateManagerBkg(HWND hwnd) {
+    Manager* manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     PAINTSTRUCT paintst;
 
-    BeginPaint(hwnd, &paintst);
+    HDC hdc = BeginPaint(hwnd, &paintst);
+
+    if (manager) {
+        HBRUSH brh = CreateSolidBrush(RGB(163, 255, 163));
+        HBRUSH obrh = (HBRUSH)SelectObject(hdc, brh);
+        FillRect(hdc, &manager->rc_load, brh);
+        SelectObject(hdc, obrh);
+        DeleteObject(brh);
+
+        brh = CreateSolidBrush(RGB(255, 163, 163));
+        obrh = (HBRUSH)SelectObject(hdc, brh);
+        FillRect(hdc, &manager->rc_release, brh);
+        SelectObject(hdc, obrh);
+        DeleteObject(brh);
+    }
 
     EndPaint(hwnd, &paintst);
 
@@ -464,9 +491,9 @@ SINLINE void _InvalidateManagerScrollBar(Manager* manager, LPDRAWITEMSTRUCT lpdi
 
     brush = (HBRUSH)CreateSolidBrush(ref);
     FillRect(hdc, &rect, brush);
+    DeleteObject(brush);
 
     /** Calculating slider pos **/
-    DeleteObject(brush);
     brush = (HBRUSH)CreateSolidBrush(sref);
     GetClientRect(manager->window, &orect);
 
@@ -580,7 +607,6 @@ SINLINE void _InvalidateManagerScrollLinear(Manager* manager, LPDRAWITEMSTRUCT l
     static UINT state;
     static HBRUSH brush = NULL;
     static HDC hdc;
-    static HRGN rgn = NULL;
 
     hdc = lpdis->hDC;
     obj = &(manager->objects[GetDlgCtrlID(lpdis->hwndItem) - 1]);
@@ -594,7 +620,7 @@ SINLINE void _InvalidateManagerScrollLinear(Manager* manager, LPDRAWITEMSTRUCT l
         sref = obj->colormod[1].disabled;
         arw = obj->colormod[2].disabled;
     }
-    else if ((state & ODS_SELECTED) || manager->casb > -1) {
+    else if ((state & ODS_SELECTED) || manager->casb == obj->index) {
         ref = obj->colormod[0].pressed;
         sref = obj->colormod[1].pressed;
         arw = obj->colormod[2].pressed;
@@ -636,9 +662,7 @@ SINLINE void _InvalidateManagerScrollLinear(Manager* manager, LPDRAWITEMSTRUCT l
     rect.right = rect.left + rect.bottom / 2;
     FillRect(hdc, &rect, brush);
 
-
     DeleteObject(brush);
-    DeleteObject(rgn);
 }
 
 SINLINE int _InvalidateManagerItem(HWND hwnd, WPARAM wparam, LPARAM lparam) {
@@ -1081,6 +1105,7 @@ SINLINE int _HandleManagerTimer(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 GetWindowRect(manager->objects[i].window, &rect);
                 if (PtInRect(&rect, pnt) && IsWindowVisible(manager->objects[i].window)) {
                     manager->casb = i;
+                    manager->last_casb = i;
                 }
                 else continue;
             }
@@ -1097,11 +1122,9 @@ SINLINE int _HandleManagerTimer(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                     sprintf(text, "%d/%d", manager->gfk[manager->gfk_current].render_frame + 1,
                             manager->gfk[manager->gfk_current].count);
                     if (manager->gfk[manager->gfk_current].change_frames) SetWindowText(obj->window, text);
-                    UpdateWindow(obj->window);
                 }
                 else if (obj->id == MANAGER_SCROLLLINEAR_FRAMES) {
                     _SetScrollLinearCurrent(obj, manager->gfk[manager->gfk_current].render_frame + 1);
-                    UpdateWindow(obj->window);
                 }
             }
             break;
@@ -1120,16 +1143,6 @@ SINLINE int _HandleLBSActivate(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
     InvalidateRect(ref->window, NULL, TRUE);
 
     return DefWindowProc(hwnd, message, wparam, lparam);
-}
-
-SINLINE void _UpdateTabItems(Manager* manager) {
-    for (int i = 0; i < manager->objects_count; i++) {
-        if (!&manager->objects[i]) continue;
-
-        if (!(manager->tab & manager->objects[i].tab)) ShowWindow(manager->objects[i].window, SW_HIDE);
-        else ShowWindow(manager->objects[i].window, SW_SHOW);
-    }
-    SetWindowPos(manager->window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOCOPYBITS);
 }
 
 SINLINE int _HandleButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam) {
@@ -1173,6 +1186,7 @@ SINLINE int _HandleButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                          0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
         }
         ReleaseCapture();
+        SetFocus(manager->window);
     }
 
     if (manager->gfk_current > -1) {
@@ -1183,6 +1197,7 @@ SINLINE int _HandleButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     WriteSettings(manager);
     ReleaseCapture();
+    SetFocus(manager->window);
     manager->context_id = -1;
     manager->casb = -1;
     return DefWindowProc(hwnd, WM_LBUTTONUP, wparam, lparam);
@@ -1233,7 +1248,9 @@ SINLINE int _HandleDropFiles(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     /** Drags multiple file **/
 //    int cnt = (int)DragQueryFile((HDROP)wparam, 0xFFFFFFFF, NULL, 0);
+//    printf("cnt: %d\n", cnt);
 //    for (int i = 0; i < cnt; i++) {
+//
 //        DragQueryFile((HDROP)wparam, i, manager->buff_filepath, MAX_PATH);
 //
 //        GIFDeskNew((LPVOID)manager);
@@ -1264,20 +1281,102 @@ SINLINE int _HandleKeyDown(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
     switch (wparam) {
         case VK_DELETE:
-            if (manager->gfk_current == -1) return 0;
+            if (manager->gfk_current < 0) return 0;
 
             gfk = &manager->gfk[manager->gfk_current];
-
             manager->context_id = gfk->obj_index;
             SendMessage(manager->window, WM_COMMAND, POPUP_DELETEFILE, 0);
             return 0;
         case VK_SPACE:
-            if (manager->gfk_current == -1) return 0;
-
-            gfk = &manager->gfk[manager->gfk_current];
-            gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
-            gfk->change_frames ^= 1;
+            if (manager->gfk_current < 0) return 0;
+            for (int i = 0; i < manager->objects_count; i++)
+                if (manager->objects[i].id == MANAGER_BTN_FRAMEPAUSE)
+                    PostMessage(manager->window,
+                                WM_COMMAND,
+                                manager->objects[i].index,
+                                (LPARAM)manager->objects[i].window);
             return 0;
+        case VK_LEFT:
+            if (manager->gfk_current == -1) return 0;
+            if (manager->last_casb > -1) {
+                for (int i = 0; i < manager->objects_count; i++) {
+                    switch (manager->objects[i].id) {
+                        case MANAGER_BTN_MFRAME:
+                        case MANAGER_BTN_MSPEED:
+                        case MANAGER_BTN_MSCALE:
+                        case MANAGER_BTN_MSPEED_ST2:
+                        case MANAGER_BTN_MSCALE_ST2:
+                            if (manager->objects[i].scr_index == manager->last_casb)
+                            PostMessage(manager->window,
+                                        WM_COMMAND,
+                                        manager->objects[i].index,
+                                        (LPARAM)manager->objects[i].window);
+                    }
+                }
+            }
+            else {
+                for (int i = 0; i < manager->objects_count; i++)
+                if (manager->objects[i].id == MANAGER_BTN_MSPEED)
+                PostMessage(manager->window,
+                            WM_COMMAND,
+                            manager->objects[i].index,
+                            (LPARAM)manager->objects[i].window);
+            }
+            return 0;
+        case VK_RIGHT:
+            if (manager->gfk_current == -1) return 0;
+            if (manager->last_casb > -1) {
+                for (int i = 0; i < manager->objects_count; i++) {
+                    switch (manager->objects[i].id) {
+                        case MANAGER_BTN_PFRAME:
+                        case MANAGER_BTN_PSPEED:
+                        case MANAGER_BTN_PSCALE:
+                        case MANAGER_BTN_PSPEED_ST2:
+                        case MANAGER_BTN_PSCALE_ST2:
+                            if (manager->objects[i].scr_index == manager->last_casb)
+                            PostMessage(manager->window,
+                                        WM_COMMAND,
+                                        manager->objects[i].index,
+                                        (LPARAM)manager->objects[i].window);
+                            break;
+                    }
+                }
+            }
+            else {
+                for (int i = 0; i < manager->objects_count; i++)
+                if (manager->objects[i].id == MANAGER_BTN_PSPEED)
+                PostMessage(manager->window,
+                            WM_COMMAND,
+                            manager->objects[i].index,
+                            (LPARAM)manager->objects[i].window);
+            }
+            return 0;
+//        case VK_F12:
+//            system("cls");
+//            printf("MANAGER: {\n    dpi: %u\n    scale_dpi: %f\n    tab: %u\n    error: %u (%x)\n    width_buff: %d\n    height_buff: %d\n    cpx_buff: %d\n    cpy_buff: %d\n    casb: %d\n    lbsh_count: %u\n    objects_count: %u\n    context_id: %d\n    gfk_count: %u\n    gfk_current: %d\n\n[SETTINGS]\n    size: %f\n    settings_ver: %u\n    settings: %u\n    transparency: %u\n    lang: %u\n    flags: %u\n    sfu: %u\n    speed: %u\n}\n",
+//                   manager->dpi,
+//                   manager->scale_dpi,
+//                   manager->tab,
+//                   manager->error, manager->error,
+//                   manager->width_buff,
+//                   manager->height_buff,
+//                   manager->cpx_buff,
+//                   manager->cpy_buff,
+//                   manager->casb,
+//                   manager->lbsh_count,
+//                   manager->objects_count,
+//                   manager->context_id,
+//                   manager->gfk_count,
+//                   manager->gfk_current,
+//                   manager->size,
+//                   manager->settings_ver,
+//                   manager->settings,
+//                   manager->transparency,
+//                   manager->lang,
+//                   manager->flags,
+//                   manager->sfu,
+//                   manager->speed);
+//            return 0;
         default:
             return 0;
     }
@@ -1308,14 +1407,36 @@ SINLINE int _HandleNotify(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
+SINLINE int _HandleManagerClose(HWND hwnd, WPARAM wparam, LPARAM lparam) {
+    Manager* manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    if (manager->flags & SETTINGS_MSTC) {
+        if (!(manager->flags & SETTINGS_CoTW)) {
+            MessageBox(manager->window, "   The utility will close to the system tray.\n   This can be changed in the settings.", APP_NAME_VER, MB_ICONWARNING);
+        }
+        ShowWindow(manager->window, SW_HIDE);
+        manager->flags |= SETTINGS_CoTW;
+        WriteSettings(manager);
+    }
+    else {
+        manager->flags |= SETTINGS_CoTW;
+        WriteSettings(manager);
+
+        _SetSizableWindow(manager, NULL, POS_NULL);
+        ManagerDestroy(manager);
+        PostQuitMessage(0);
+    }
+    return 0;
+}
+
 /** Commands/API **/
 
 SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     static Manager* manager;
-    static RECT rect, wrect;
+    static RECT rect /*, wrect */;
     static HMENU menu;
     Object* obj, *scr_obj;
-    int index = 0, id = 0, stm_last = 0, stm_delta = 0, stm_current = 0;
+    int index = 0, id = 0 /* , stm_last = 0, stm_delta = 0, stm_current = 0 */;
     static GIFDesk* gfk;
     static TCHAR text[64], buff[16];
     static DWORD style;
@@ -1326,10 +1447,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     index = GetDlgCtrlID((HWND)lparam) - 1;
-
-    if (lparam != 0 && IsWindow((HWND)lparam)) {
-        index = GetDlgCtrlID((HWND)lparam) - 1;
-    }
 
     if (index < 0 || (unsigned int)index >= manager->objects_count) {
         id = LOWORD(wparam);
@@ -1353,8 +1470,15 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             menu = CreatePopupMenu();
             AppendMenu(menu, MF_STRING, POPUP_OPENFILE, "Open file...");
-            if (manager->gfk_count > 0)
-                AppendMenu(menu, MF_STRING, POPUP_CLOSEFILES, "Close all files");
+            for (int i = 0; i < manager->objects_count; i++) {
+                if (!&manager->objects[i]) continue;
+
+                if (manager->objects[i].id == MANAGER_SCROLL_FILES &&
+                    !manager->objects[i].stm_offset &&
+                    manager->gfk_count > 0) {
+                    AppendMenu(menu, MF_STRING, POPUP_CLOSEFILES, "Close all files");
+                }
+            }
 
             TrackPopupMenu(menu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_HORNEGANIMATION,
                            rect.left + ScaleForDPI(8, manager->scale_dpi),
@@ -1363,6 +1487,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             DestroyMenu(menu);
             break;
         }
+
         case MANAGER_BTN_SETTINGS: {
             if (manager->is_loading) break;
             _HandleButtonUp(hwnd, 0, 0);
@@ -1548,6 +1673,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             manager->tab = MGR_MMSF;
             _UpdateTabItems(manager);
+            SetFocus(manager->window);
             break;
         }
 
@@ -1578,7 +1704,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                         break;
                     }
                     case MANAGER_SWITCH_MSTC: {
-                        if (manager->flags & 0x1) {
+                        if (manager->settings & 0x1) {
                             manager->objects[i].flags |= OBJ_BOOL;
                             _SetManagerObjectColori(&manager->objects[i], 1, MGR_COLOR_SWITCH_SLIDERT_DEFAULT);
                         }
@@ -1604,7 +1730,6 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             for (int i = 0; i < manager->objects_count; i++) {
                 if (!&manager->objects[i]) continue;
-
                 switch (manager->objects[i].id) {
                     case MANAGER_BTN_GENERAL:
                     case MANAGER_BTN_PLAYBACK:
@@ -1765,6 +1890,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 _SetManagerObjectColor(obj, MGR_COLOR_BUTTON_BACKGROUND_DIV, MGR_COLOR_BUTTON_TEXT_DEFAULT);
             else
                 _SetManagerObjectColor(obj, MGR_COLOR_BUTTON_BACKGROUND_DIV_T, MGR_COLOR_BUTTON_TEXT_DEFAULT);
+            InvalidateRect(obj->window, NULL, TRUE);
             break;
         }
 
@@ -1777,8 +1903,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             scr_obj = &manager->objects[obj->scr_index];
 
             _SetScrollLinearCurrent(scr_obj, scr_obj->scr_current + 1);
-            SendMessage(manager->window, WM_SCRLNR, (WPARAM)scr_obj->scr_current, (LPARAM)scr_obj->index);
-            WriteSettings(manager);
+            SendMessage(manager->window, WM_SCRLNR, 0, (LPARAM)scr_obj->index);
             break;
         }
 
@@ -1791,8 +1916,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             scr_obj = &manager->objects[obj->scr_index];
 
             _SetScrollLinearCurrent(scr_obj, scr_obj->scr_current - 1);
-            SendMessage(manager->window, WM_SCRLNR, (WPARAM)scr_obj->scr_current, (LPARAM)scr_obj->index);
-            WriteSettings(manager);
+            PostMessage(manager->window, WM_SCRLNR, 0, (LPARAM)scr_obj->index);
             break;
         }
 
@@ -1833,8 +1957,8 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         case MANAGER_SWITCH_MSTC: {
             obj = &manager->objects[index];
 
-            if (obj->flags & OBJ_BOOL) manager->flags |= SETTINGS_MSTC;
-            else manager->flags &= ~SETTINGS_MSTC;
+            if (obj->flags & OBJ_BOOL) manager->settings |= SETTINGS_MSTC;
+            else manager->settings &= ~SETTINGS_MSTC;
             WriteSettings(manager);
             break;
         }
@@ -1989,7 +2113,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         }
 
         case MANAGER_TEXTBOX_FRAMES: {
-            if (!IsWindowVisible((HWND)lparam)) break;
+            if (!IsWindowVisible((HWND)lparam) && HIWORD(wparam) != EN_UPDATE) break;
             GetWindowText((HWND)lparam, text, 64);
             obj = &manager->objects[index];
             gfk = &manager->gfk[manager->gfk_current];
@@ -2019,16 +2143,16 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
             ShowFrame(manager, gfk->index, 1);
             scr_obj = &manager->objects[obj->scr_index];
-            _SetScrollLinearCurrent(scr_obj, value);
+            if (scr_obj->scr_current != value) _SetScrollLinearCurrent(scr_obj, value);
             break;
         }
 
         case MANAGER_TEXTBOX_SPEED: {
-            if (!IsWindowVisible((HWND)lparam)) break;
+            if (!IsWindowVisible((HWND)lparam) && HIWORD(wparam) != EN_CHANGE) break;
             GetWindowText((HWND)lparam, text, 64);
             obj = &manager->objects[index];
             gfk = &manager->gfk[manager->gfk_current];
-            value = (uint16_t)(strtof(text, &ptr_speed) * 20);
+            value = (uint16_t)(strtof(text, NULL) * 20 + 0.5f);
 
             if (!strchr(text, 'x') ||
                 !_ContainsOnlyStr(text, "1234567890.x") ||
@@ -2061,6 +2185,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 SetWindowText((HWND)lparam, text);
 
                 MessageBeep(MB_ICONEXCLAMATION);
+                break;
             }
 
             if (gfk->speed != value) {
@@ -2068,14 +2193,14 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 gfk->start_time = GetTime() - (double)gfk->lengths[gfk->render_frame] / ((double)gfk->speed * 0.05);
                 ShowFrame(manager, gfk->index, 1);
                 scr_obj = &manager->objects[obj->scr_index];
-                _SetScrollLinearCurrent(scr_obj, value);
+                if (scr_obj->scr_current != value) _SetScrollLinearCurrent(scr_obj, value);
                 WriteSettings(manager);
             }
             break;
         }
 
         case MANAGER_TEXTBOX_SCALE: {
-            if (!IsWindowVisible((HWND)lparam)) break;
+            if (!IsWindowVisible((HWND)lparam) && HIWORD(wparam) != EN_UPDATE) break;
             GetWindowText((HWND)lparam, text, 64);
             obj = &manager->objects[index];
             gfk = &manager->gfk[manager->gfk_current];
@@ -2108,16 +2233,16 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 ChangeTexFilt(manager, gfk->index, GL_LINEAR);
             ShowFrame(manager, gfk->index, 1);
             scr_obj = &manager->objects[obj->scr_index];
-            _SetScrollLinearCurrent(scr_obj, value);
+            if (scr_obj->scr_current != value) _SetScrollLinearCurrent(scr_obj, value);
             WriteSettings(manager);
             break;
         }
 
         case MANAGER_TEXTBOX_SPEED_ST2: {
-            if (!IsWindowVisible((HWND)lparam)) break;
+            if (!IsWindowVisible((HWND)lparam) && HIWORD(wparam) != EN_UPDATE) break;
             GetWindowText((HWND)lparam, text, 64);
             obj = &manager->objects[index];
-            value = (uint16_t)(strtof(text, &ptr_speed) * 20);
+            value = (uint16_t)(strtof(text, &ptr_speed) * 20 + 0.5f);
 
             if (!strchr(text, 'x') ||
                 !_ContainsOnlyStr(text, "1234567890.x") ||
@@ -2150,17 +2275,14 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
                 MessageBeep(MB_ICONEXCLAMATION);
             }
             manager->speed = value;
-
-            ShowFrame(manager, gfk->index, 1);
             scr_obj = &manager->objects[obj->scr_index];
-            _SetScrollLinearCurrent(scr_obj, value);
+            if (scr_obj->scr_current != value) _SetScrollLinearCurrent(scr_obj, value);
             WriteSettings(manager);
-
             break;
         }
 
         case MANAGER_TEXTBOX_SCALE_ST2: {
-            if (!IsWindowVisible((HWND)lparam)) break;
+            if (!IsWindowVisible((HWND)lparam) && HIWORD(wparam) != EN_UPDATE) break;
             GetWindowText((HWND)lparam, text, 64);
             obj = &manager->objects[index];
             sscanf(text, "%u", &value);
@@ -2186,11 +2308,9 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             }
             manager->size = (float)value / 100;
 
-            ShowFrame(manager, gfk->index, 1);
             scr_obj = &manager->objects[obj->scr_index];
-            _SetScrollLinearCurrent(scr_obj, value);
+            if (scr_obj->scr_current != value) _SetScrollLinearCurrent(scr_obj, value);
             WriteSettings(manager);
-            printf("--------------------------------\n");
             break;
         }
 
@@ -2198,7 +2318,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
         case MANAGER_THREAD_CREATEOBJECT: {
             uint16_t gfk_index = (LPARAM)lparam;
-            obj = _CreateManagerButton(manager, 20, 20 + 20 * (gfk_index), 199, 20, TRUE, MANAGER_BTN_FILE,
+            obj = _CreateManagerButton(manager, 20, 20 + 20 * (gfk_index), 199 /* 211 */, 20, TRUE, MANAGER_BTN_FILE,
                                        FONT_MAIN_ID, manager->gfk[gfk_index].filename, FALSE);
 
             if (!obj) {
@@ -2224,8 +2344,24 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
         case MANAGER_THREAD_CREATEWINDOW: {
             uint16_t gfk_index = (LPARAM)lparam;
-            if (!GIFDeskWindow(manager, gfk_index)) return 0;
+            if (!GIFDeskWindow(manager, gfk_index)) { return 0; }
             else return 1;
+        }
+
+        case MANAGER_THREAD_DELETEOBJECT: {
+            obj = &manager->objects[lparam];
+
+            printf("MANAGER_THREAD_DELETEOBJECT [0]\n");
+            _DeleteObject(obj);
+            printf("MANAGER_THREAD_DELETEOBJECT [1]\n");
+            return 1;
+        }
+
+        case MANAGER_THREAD_DELETEWINDOW: {
+            gfk = &manager->gfk[lparam];
+
+            GIFDeskRelease(manager, gfk->index);
+            return 1;
         }
 
         /** POPUP_ITEMS **/
@@ -2242,186 +2378,44 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         }
 
         case POPUP_CLOSEFILES: {
-            for (int i = manager->gfk_count - 1; i >= 0; i--) {
-                manager->context_id = manager->gfk[i].obj_index;
-                SendMessage(manager->window, WM_COMMAND, POPUP_DELETEFILE, lparam);
+            manager->is_loading = 1;
+            DragAcceptFiles(manager->window, FALSE);
+
+            if (!lparam) {
+                if (!CreateThread(NULL, 0, GIFDeskCloseAllWS, (LPVOID)manager, 0, NULL)) {
+                    manager->error = MANAGER_WARN_CREATE_THREAD;
+                    ManagerHandleError(manager);
+                    return 0;
+                }
             }
+            else {
+                GIFDeskCloseAll((LPVOID)manager);
+            }
+
+            DragAcceptFiles(manager->window, TRUE);
+            manager->is_loading = 0;
             break;
         }
 
         case POPUP_CONFIGUREFILE: {
-            PostMessage(manager->window, WM_COMMAND, index + 1, (LPARAM)manager->objects[manager->context_id].window);
+            SendMessage(manager->window, WM_COMMAND, index + 1, (LPARAM)manager->objects[manager->context_id].window);
             manager->context_id = -1;
             break;
         }
 
         case POPUP_DELETEFILE: {
-            if (manager->context_id < 0) break;
+            manager->is_loading = 1;
+            DragAcceptFiles(manager->window, FALSE);
 
-            obj = &manager->objects[manager->context_id];
-            gfk = &manager->gfk[obj->gfk_index];
-
-            uint16_t obj_index = obj->index;
-            uint16_t gfk_index = gfk->index;
-
-            /** Clearing GFK **/
-
-            GIFDeskRelease(manager, gfk_index);
-
-            for (uint16_t i = gfk_index; i < manager->gfk_count - 1; i++) {
-                manager->gfk[i + 1].render_thread = 0;
-
-                memmove(&manager->gfk[i], &manager->gfk[i + 1], sizeof(GIFDesk));
-                manager->gfk[i].index = i;
+            if (!CreateThread(NULL, 0, GIFDeskClose, (LPVOID)manager, 0, NULL)) {
+                manager->error = MANAGER_WARN_CREATE_THREAD;
+                ManagerHandleError(manager);
+                return 0;
             }
+            WriteSettings(manager);
 
-            manager->gfk_count--;
-            if (manager->gfk_count) {
-                GIFDesk* buff = realloc(manager->gfk, sizeof(GIFDesk) * manager->gfk_count);
-                if (buff) manager->gfk = buff;
-            }
-            else {
-                free(manager->gfk);
-                manager->gfk = NULL;
-            }
-
-            for (uint16_t i = gfk_index; i < manager->gfk_count; i++) {
-                SetWindowLongPtr(manager->gfk[i].window, GWLP_USERDATA, (LONG_PTR)&manager->gfk[i]);
-                if (i >= gfk_index) {
-                    manager->gfk[i].render_thread = 1;
-                    GIFDeskLoop* args = malloc(sizeof(GIFDeskLoop));
-                    args->manager = manager;
-                    args->gfk = &manager->gfk[i];
-                    args->gfk_index = manager->gfk[i].index;
-                    CreateThread(NULL, 0, Loop, (LPVOID)args, 0, NULL);
-                }
-            }
-
-            /** Clearing Object **/
-
-            for (int i = 0; i < manager->objects_count; i++)
-                if (manager->objects[i].gfk_index > gfk_index)
-                    manager->objects[i].gfk_index--;
-
-            _DeleteObject(obj);
-
-            for (uint16_t i = obj_index; i < manager->objects_count - 1; i++) {
-                memmove(&manager->objects[i], &manager->objects[i + 1], sizeof(Object));
-                manager->objects[i].index = i;
-                SetWindowLongPtr(manager->objects[i].window, GWLP_ID, (LONG_PTR)(i + 1));
-
-                if (manager->objects[i].id != MANAGER_BTN_FILE &&
-                    obj_index != i) continue;
-                GetWindowRect(manager->objects[i].window, &rect);
-                MapWindowPoints(HWND_DESKTOP, manager->window, (POINT*)&rect, 2);
-                SetWindowPos(manager->objects[i].window, NULL,
-                             rect.left, rect.top - ScaleForDPI(20, manager->scale_dpi),
-                             0, 0,
-                             SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
-            }
-
-            manager->objects_count--;
-            if (manager->objects_count > 0) {
-                Object* buff = realloc(manager->objects, sizeof(Object) * manager->objects_count);
-                if (buff) manager->objects = buff;
-            }
-            else {
-                free(manager->objects);
-                manager->objects = NULL;
-            }
-
-            /** Clearing *stm **/
-
-            for (int i = 0; i < manager->objects_count; i++) {
-                if ( manager->objects[i].type != OBJ_SCROLLBAR ||
-                    !manager->objects[i].stm_count) continue;
-
-                BOOL is_obj = FALSE;
-                for (uint16_t j = 0; j < manager->objects[i].stm_count; j++)
-                    if (manager->objects[i].stm[j] == obj_index) is_obj = TRUE;
-                if (!is_obj) continue;
-
-                manager->objects[i].stm_count--;
-
-                for (int j = 0; j < manager->objects[i].stm_count; j++) {
-                    if (manager->objects[i].stm[j] >= obj_index)
-                        manager->objects[i].stm[j] = --manager->objects[i].stm[j + 1];
-                }
-
-                int* stm_buff = malloc(sizeof(int) * (manager->objects[i].stm_count));
-                memcpy(stm_buff, manager->objects[i].stm, sizeof(int) * (manager->objects[i].stm_count));
-
-                free(manager->objects[i].stm); manager->objects[i].stm = NULL;
-                memset(manager->objects[i].stm_object_ids, 0, sizeof(int) * 4);
-                memset(&manager->objects[i].stm_rect, 0, sizeof(RECT));
-
-                _SetScrollObjectsM(manager, i, manager->objects[i].stm_count, stm_buff);
-
-                if (!manager->objects[i].stm_count) continue;
-
-                stm_last = manager->objects[i].stm[manager->objects[i].stm_count - 1];
-                GetWindowRect(manager->objects[stm_last].window, &rect);
-                MapWindowPoints(HWND_DESKTOP, manager->window, (POINT*)&rect, 2);
-                GetClientRect(manager->window, &wrect);
-
-                /** Check overflow pos **/
-
-                if (rect.bottom < wrect.bottom) {
-                    stm_delta = wrect.bottom - rect.bottom;
-                    if (stm_delta <= manager->objects[i].stm_offset) {
-                        manager->objects[i].stm_offset -= stm_delta;
-                        for (int j = 0; j < manager->objects[i].stm_count; j++) {
-                            stm_current = manager->objects[i].stm[j];
-                            GetWindowRect(manager->objects[stm_current].window, &rect);
-                            MapWindowPoints(HWND_DESKTOP, manager->window, (POINT*)&rect, 2);
-
-                            SetWindowPos(manager->objects[stm_current].window, NULL,
-                                         rect.left, rect.top + stm_delta, 0, 0,
-                                         SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-                        }
-                    }
-                }
-            }
-
-            if (manager->gfk_current == gfk_index) {
-                manager->gfk_current = -1;
-                for (int i = 0; i < manager->objects_count; i++) {
-                    if (!&manager->objects[i]) continue;
-
-                    if (manager->objects[i].id == MANAGER_BTN_FILE) {
-                        _SetManagerObjectColori(&manager->objects[i], 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT);
-                        InvalidateRect(manager->objects[i].window, NULL, TRUE);
-                    }
-                }
-            }
-            else if (manager->gfk_current > gfk_index) manager->gfk_current--;
-
-            if (manager->casb == obj_index) manager->casb = -1;
-            else if (manager->casb > obj_index) manager->casb--;
-
-            if (manager->context_id == obj_index) {
-                manager->context_id = -1;
-
-                for (int i = 0; i < manager->objects_count; i++) {
-                    if (!&manager->objects[i]) continue;
-
-                    if (manager->objects[i].id == MANAGER_BTN_FILE) {
-                        _SetManagerObjectColori(&manager->objects[i], 0, MGR_COLOR_BUTTON_BACKGROUND_DEFAULT);
-                        InvalidateRect(manager->objects[i].window, NULL, TRUE);
-                    }
-                }
-            }
-            else if (manager->context_id > obj_index) manager->context_id--;
-
-            if (manager->gfk_count && manager->gfk_current > -1 && manager->context_id > -1) manager->tab = MGR_MMSF;
-            else if (manager->gfk_count) manager->tab = MGR_MMWF;
-            else manager->tab = MGR_MMWnF;
-
-            _UpdateTabItems(manager);
-            InvalidateRect(manager->window, NULL, TRUE);
-            if (!lparam) {
-                WriteSettings(manager);
-            }
+            DragAcceptFiles(manager->window, TRUE);
+            manager->is_loading = 0;
             break;
         }
 
@@ -2473,7 +2467,7 @@ SINLINE int _HandleManagerCommand(HWND hwnd, WPARAM wparam, LPARAM lparam) {
             WriteSettings(manager);
             break;
         }
-        case POPUP_MOVEWINDOW_C: { // Center
+        case POPUP_MOVEWINDOW_C: {   // Center
             obj = &manager->objects[manager->context_id];
             gfk = &manager->gfk[obj->gfk_index];
 

@@ -31,15 +31,21 @@ SINLINE GLenum _GLImage(Manager* manager, uint16_t index) {
     }
 
     glGenTextures(1, &manager->gfk[index].textures[manager->gfk[index].count]);
+    if (glGetError() != 0) return 0;
     glBindTexture(GL_TEXTURE_2D, manager->gfk[index].textures[manager->gfk[index].count]);
+    if (glGetError() != 0) return 0;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                     manager->gfk[index].glversion < 1.2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
+    if (glGetError() != 0) return 0;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                     manager->gfk[index].glversion < 1.2 ? GL_CLAMP : GL_CLAMP_TO_EDGE);
+    if (glGetError() != 0) return 0;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     (manager->gfk[index].size == 1) ? GL_NEAREST : GL_LINEAR);
+    if (glGetError() != 0) return 0;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                     (manager->gfk[index].size == 1) ? GL_NEAREST : GL_LINEAR);
+    if (glGetError() != 0) return 0;
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, manager->gfk[index].width, manager->gfk[index].height,
                                 0, GL_RGBA, GL_UNSIGNED_BYTE, manager->gfk[index].frame);
@@ -206,6 +212,8 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 46, 40 + 20 * index); /// = 13%
+
     if (DGifSlurp(gif) != GIF_OK) {
         DGifCloseFile(gif, &gif_error);
         manager->error = MANAGER_WARN_GIF_CLOSE_FAILED;
@@ -223,6 +231,8 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
     manager->gfk[index].npotwidth = manager->gfk[index].width;
     manager->gfk[index].npotheight = manager->gfk[index].height;
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 48, 40 + 20 * index); /// = 14%
+
     int num = gif->ImageCount;
     long pixcount = manager->gfk[index].width * manager->gfk[index].height * 4;
 
@@ -233,12 +243,16 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 50, 40 + 20 * index); /// = 15%
+
     manager->gfk[index].buff = calloc(pixcount, 1);
     if (!manager->gfk[index].buff) {
         manager->error = MANAGER_WARN_BUFF_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 52, 40 + 20 * index); /// = 16%
 
     manager->gfk[index].delays = calloc(num, sizeof(float));
     if (!manager->gfk[index].delays) {
@@ -247,12 +261,16 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 54, 40 + 20 * index); /// = 17%
+
     manager->gfk[index].lengths = calloc(num, sizeof(float));
     if (!manager->gfk[index].lengths) {
         manager->error = MANAGER_WARN_LENGTHS_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 56, 40 + 20 * index); /// = 18%
 
     manager->gfk[index].frame_points = calloc(num, sizeof(float) * 4);
     if (!manager->gfk[index].frame_points) {
@@ -261,12 +279,16 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 58, 40 + 20 * index); /// = 19%
+
     manager->gfk[index].textures = calloc(num, sizeof(GLuint));
     if (!manager->gfk[index].textures) {
         manager->error = MANAGER_WARN_TEXTURES_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 60, 40 + 20 * index); /// = 20%
 
     /** -------------------------------------------- **/
 
@@ -347,6 +369,8 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
                 case GL_OUT_OF_MEMORY:
                     manager->error = MANAGER_WARN_OPENGL_OUT_OF_MEMORY;
                     break;
+                default:
+                    manager->error = MANAGER_WARN_OPENGL_OUT_OF_CONTEXT;
             }
             ManagerHandleError(manager);
             return 0;
@@ -378,6 +402,8 @@ SINLINE uint8_t _LoadGIF(Manager* manager, uint16_t index) {
         manager->gfk[index].frame_points[(manager->gfk[index].count) * 4 + 2] = (float)(frxo + frxd) / ((float)_GetCollisionSize(manager->gfk[index].width, 1)) * 2 - 1.0001f;
         manager->gfk[index].frame_points[(manager->gfk[index].count) * 4 + 3] = -( (float)(fryo + fryd) / ((float)_GetCollisionSize(manager->gfk[index].height, 1)) * 2 - 1.0001f );
         manager->gfk[index].count++;
+
+        _SetLoadRect(manager, 20, 20 + 20 * index, (uint16_t)(61 + (float)i / (float)num * (float)(198 - 61)), 40 + 20 * index); /// [21% ... 89%] [61 .. 198]
     }
 
     /** -------------------------------------------- **/
@@ -425,12 +451,13 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
         return 0;
     }
 
-
     if (setjmp(png_jmpbuf(png_ptr))) {
         manager->error = MANAGER_WARN_APNG_JUMP;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 46, 40 + 20 * index); /// = 13%
 
     png_set_read_fn(png_ptr, &manager->gfk[index].data, _pngr);
     png_read_info(png_ptr, info_ptr);
@@ -472,6 +499,8 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
 
     png_read_update_info(png_ptr, info_ptr);
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 48, 40 + 20 * index); /// = 14%
+
     int rpa = 0;
     int num = png_get_num_frames(png_ptr, info_ptr);
     int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
@@ -484,12 +513,16 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 50, 40 + 20 * index); /// = 15%
+
     manager->gfk[index].buff = calloc(pixcount, 1);
     if (!manager->gfk[index].buff) {
         manager->error = MANAGER_WARN_BUFF_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 52, 40 + 20 * index); /// = 16%
 
     manager->gfk[index].delays = calloc(num, sizeof(float));
     if (!manager->gfk[index].delays) {
@@ -498,6 +531,8 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 54, 40 + 20 * index); /// = 17%
+
     manager->gfk[index].lengths = calloc(num, sizeof(float));
     if (!manager->gfk[index].lengths) {
         manager->error = MANAGER_WARN_LENGTHS_ALLOC;
@@ -505,12 +540,16 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 56, 40 + 20 * index); /// = 18%
+
     manager->gfk[index].frame_points = calloc(num, sizeof(float) * 4);
     if (!manager->gfk[index].frame_points) {
         manager->error = MANAGER_WARN_FRAMEP_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 58, 40 + 20 * index); /// = 19%
 
     manager->gfk[index].textures = calloc(num, sizeof(GLuint));
     if (!manager->gfk[index].textures) {
@@ -525,6 +564,8 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 60, 40 + 20 * index); /// = 20%
 
     for (rpa = 0; rpa < manager->gfk[index].height; rpa++) {
         row_pointers[rpa] = malloc(row_bytes);
@@ -710,6 +751,8 @@ SINLINE uint8_t _LoadAPNG(Manager* manager, uint16_t index) {
 
             prev_mode = mode;
             manager->gfk[index].count++;
+
+            _SetLoadRect(manager, 20, 20 + 20 * index, (uint16_t)(61 + (float)i / (float)num * (float)(198 - 61)), 40 + 20 * index);
         }
     }
     else {
@@ -838,6 +881,8 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 46, 40 + 20 * index); /// = 13%
+
     WebPAnimInfo anim_info;
     if (!WebPAnimDecoderGetInfo(dec, &anim_info)) {
         manager->error = MANAGER_WARN_WEBP_DECODER;
@@ -857,6 +902,8 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
     manager->gfk[index].npotwidth = manager->gfk[index].width;
     manager->gfk[index].npotheight = manager->gfk[index].height;
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 48, 40 + 20 * index); /// = 14%
+
     int num = anim_info.frame_count;
     long pixcount = manager->gfk[index].width * manager->gfk[index].height * 4;
 
@@ -867,12 +914,16 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 50, 40 + 20 * index); /// = 15%
+
     manager->gfk[index].buff = calloc(pixcount, 1);
     if (!manager->gfk[index].buff) {
         manager->error = MANAGER_WARN_BUFF_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 52, 40 + 20 * index); /// = 16%
 
     manager->gfk[index].delays = calloc(num, sizeof(float));
     if (!manager->gfk[index].delays) {
@@ -881,12 +932,16 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 54, 40 + 20 * index); /// = 17%
+
     manager->gfk[index].lengths = calloc(num, sizeof(float));
     if (!manager->gfk[index].lengths) {
         manager->error = MANAGER_WARN_LENGTHS_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 56, 40 + 20 * index); /// = 18%
 
     manager->gfk[index].frame_points = calloc(num, sizeof(float) * 4);
     if (!manager->gfk[index].frame_points) {
@@ -895,12 +950,16 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
         return 0;
     }
 
+    _SetLoadRect(manager, 20, 20 + 20 * index, 58, 40 + 20 * index); /// = 19%
+
     manager->gfk[index].textures = calloc(num, sizeof(GLuint));
     if (!manager->gfk[index].textures) {
         manager->error = MANAGER_WARN_TEXTURES_ALLOC;
         ManagerHandleError(manager);
         return 0;
     }
+
+    _SetLoadRect(manager, 20, 20 + 20 * index, 60, 40 + 20 * index); /// = 20%
 
     int prev_stamp = 0, stamp = 0;
     while (WebPAnimDecoderHasMoreFrames(dec)) {
@@ -969,6 +1028,8 @@ SINLINE uint8_t _LoadWEBP(Manager* manager, uint16_t index) {
         manager->gfk[index].frame_points[3] = -1.0001f;
         manager->gfk[index].count++;
         prev_stamp = stamp;
+
+        _SetLoadRect(manager, 20, 20 + 20 * index, (uint16_t)(61 + (float)manager->gfk[index].count / (float)num * (float)(198 - 61)), 40 + 20 * index); /// [21% ... 89%] [61 .. 198]
     }
 
     WebPAnimDecoderDelete(dec);

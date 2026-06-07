@@ -544,20 +544,6 @@ SINLINE Object* _CreateManagerTextBox(Manager* manager, int ox, int oy, int cx, 
     return obj;
 }
 
-void _DeleteObject(Object* obj) {
-    if (obj) {
-        if (obj->rgn) { DeleteObject(obj->rgn); obj->rgn = NULL; }
-        if (obj->window) { DestroyWindow(obj->window); obj->window = NULL; }
-        if (obj->stm) { free(obj->stm); obj->stm = NULL; }
-
-        if (obj->lbsh) {
-            Manager* lbsh = (Manager*)obj->lbsh;
-            if (lbsh->window) DestroyWindow(lbsh->window);
-            free(lbsh); obj->lbsh = NULL;
-        }
-    }
-}
-
 //--------------------------------------------------
 // GIFDESK
 //--------------------------------------------------
@@ -749,9 +735,6 @@ LRESULT CALLBACK _GIFDeskProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARA
         case WM_ERASEBKGND:
             return 1;
 
-        case WM_PAINT:
-            return _InvalidateManagerBkg(hwnd);
-
         default:
             return DefWindowProc(hwnd, message, wparam, lparam);
     }
@@ -769,16 +752,7 @@ LRESULT WINAPI _ManagerProcedure(HWND hwnd, UINT message, WPARAM wparam, LPARAM 
             return _SetProcedurePtr(hwnd, lparam);
 
         case WM_CLOSE:
-            manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-            if (manager->flags & 0x1) {
-                ShowWindow(manager->window, SW_HIDE);
-            }
-            else {
-                _SetSizableWindow(manager, NULL, POS_NULL);
-                ManagerDestroy(manager);
-                PostQuitMessage(0);
-            }
-            return 0;
+            return _HandleManagerClose(hwnd, wparam, lparam);
 
         case WM_GETMINMAXINFO:
             manager = (Manager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -2200,7 +2174,7 @@ SINLINE Manager* ManagerCreate(LPCTSTR name, int argc, char* argv[]) {
         _SetItemTab(obj, MGR_ST3);
 
         obj = _CreateManagerStatic(manager, 0, x += 17, 0, 15, TRUE, MANAGER_STATIC_DESCRIPTIONST,
-                                   FONT_DESCRIPTION_ID, "Follow the previous file's frame position");
+                                   FONT_DESCRIPTION_ID, "Start animation from the same frame as the previous file");
 
         if (!obj) {
             manager->error = MANAGER_ERR_CREATE_OBJ;

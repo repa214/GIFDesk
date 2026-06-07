@@ -2,7 +2,7 @@
 1777828103 source:c:\users\repa\desktop\projects\gifdesk_(new_winapi)\main.c
 	"manager.h"
 
-1780090604 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\manager.h
+1780781876 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\manager.h
 	"types.h"
 	"fonts.h"
 	"handlers.h"
@@ -11,11 +11,11 @@
 	"settings.h"
 	"fonts.h"
 
-1780092139 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\settings.h
+1780862992 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\settings.h
 	"types.h"
 	"gifdesk.h"
 
-1780091025 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\types.h
+1780862231 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\types.h
 	<windows.h>
 	<windowsx.h>
 	<stdio.h>
@@ -38,26 +38,27 @@
 	"settings.h"
 	"fonts.h"
 
-1780145797 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\handlers.h
+1780862837 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\handlers.h
 	"types.h"
 	"render.h"
 	"flags.h"
 	"gifdesk.h"
 
-1780145062 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\render.h
+1780777719 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\render.h
 	"types.h"
 	<math.h>
 
-1779643918 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\flags.h
+1780183442 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\flags.h
 	"types.h"
 
-1779654276 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\gifdesk.h
+1780862162 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\gifdesk.h
 	"types.h"
 	"data.h"
 	"render.h"
 	"settings.h"
+	"handlers.h"
 
-1779654276 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\data.h
+1780859025 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\data.h
 	"types.h"
 
 1571412343 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\libgif\gif_lib.h
@@ -84,7 +85,7 @@
 	<stddef.h>
 	"./types.h"
 
-1778294817 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\libwebp\types.h
+1780150472 c:\users\repa\desktop\projects\gifdesk_(new_winapi)\libwebp\types.h
 	<stddef.h>
 	<inttypes.h>
 	<string.h>

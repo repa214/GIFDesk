@@ -27,28 +27,18 @@ SINLINE double GetTime() {
 }
 
 SINLINE int GetCurrentFrame(Manager* manager, uint16_t index) {
-//    double current_time = GetTime();
-//    double elapsed = current_time - manager->gfk[index].start_time;
-//    double speed_factor = (double)manager->gfk[index].speed * 0.05;
-//    double total_duration = manager->gfk[index].lengths[manager->gfk[index].count - 1] / speed_factor;
-//
-//    double cycle_time = fmod(elapsed, total_duration);
-//    if (cycle_time < 0) cycle_time += total_duration;
-//
-//    int frame = 0;
-//    while (frame < manager->gfk[index].count - 1 &&
-//           cycle_time > (manager->gfk[index].lengths[frame] / speed_factor)) {
-//        frame++;
-//    }
+    double elapsed = GetTime() - manager->gfk[index].start_time;
+    double speed_factor = (double)manager->gfk[index].speed * 0.05;
+    double total_duration = manager->gfk[index].lengths[manager->gfk[index].count - 1] / speed_factor;
+
+    double cycle_time = fmod(elapsed, total_duration);
+    if (cycle_time < 0) cycle_time += total_duration;
 
     int frame = 0;
-    while (
-       (float)((int)((GetTime() - manager->gfk[index].start_time) * 100)
-               %
-       (int)((manager->gfk[index].lengths[manager->gfk[index].count - 1] / ((float)manager->gfk[index].speed * 0.05)) * 100)) / 100 >
-       (manager->gfk[index].lengths[frame] / ((float)manager->gfk[index].speed * 0.05)) && (int)manager->gfk[index].count - 1 >= frame
-    )
+    while (frame < manager->gfk[index].count - 1 &&
+           cycle_time > (manager->gfk[index].lengths[frame] / speed_factor)) {
         frame++;
+    }
 
     return frame;
 }

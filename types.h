@@ -25,10 +25,10 @@
 //--------------------------------------------------
 
 #define APP_NAME "GIFDesk"
-#define APP_NAME_VER "GIFDesk 1.4b"
-#define APP_GENERAL_VER "Version 1.4b"
+#define APP_NAME_VER "GIFDesk 1.4b.2"
+#define APP_GENERAL_VER "Version 1.4b.2"
 // build-NNDDMMYY
-#define APP_BUILD_DESC "Public beta build-01300526"
+#define APP_BUILD_DESC "Public second beta build-02070626"
 #define RESOURCE_ICON 1
 
 //--------------------------------------------------
@@ -81,6 +81,7 @@ enum {MANAGER_BTN_NEWFILE = 1, MANAGER_BTN_FILE, MANAGER_BTN_SETTINGS, MANAGER_B
       MANAGER_TEXTBOX_SPEED_ST2, MANAGER_TEXTBOX_SCALE_ST2,
 
       MANAGER_THREAD_CREATEOBJECT, MANAGER_THREAD_CREATEWINDOW,
+      MANAGER_THREAD_DELETEOBJECT, MANAGER_THREAD_DELETEWINDOW,
 
       POPUP_OPENFILE = 1024, POPUP_SAVESETTINGS_AS, POPUP_SAVESETTINGS, POPUP_DELETEFILE, POPUP_CONFIGUREFILE,
       POPUP_MOVEWINDOW_LTC, POPUP_MOVEWINDOW_LLC, POPUP_MOVEWINDOW_C, POPUP_MOVEWINDOW_RTC, POPUP_MOVEWINDOW_RLC,
@@ -150,7 +151,7 @@ enum {FONT_NULL_ID, FONT_MAIN_ID, FONT_CORBEL_ID, FONT_LABEL_NAME_ID, FONT_LABEL
 #define MGR_COLOR_SCRLINEAR_LINE_DEFAULT        RGB(215, 215, 215), RGB(225, 225, 225), RGB(220, 220, 220), RGB(220, 220, 220)
 #define MGR_COLOR_SCRLINEAR_LINE_DARK           RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1)
 // SCROLLLINEAR ARROW
-#define MGR_COLOR_SCRLINEAR_ARROW_DEFAULT       RGB(215, 215, 215), RGB(190, 190, 190), RGB(180, 180, 180), RGB(170, 170, 170)
+#define MGR_COLOR_SCRLINEAR_ARROW_DEFAULT       RGB(215, 215, 215), RGB(185, 185, 185), RGB(170, 170, 170), RGB(160, 160, 160)
 #define MGR_COLOR_SCRLINEAR_ARROW_DARK          RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1),       RGB(1, 1, 1)
 
 // TEXTBOX BACKGROUND
@@ -197,24 +198,6 @@ typedef struct {
     HGLRC hrc;
     HINSTANCE hinst;
 
-    /** SETTINGS
-            char              : FILENAME
-            size              : [0.01 ... 2] (2.01 ... 10)
-            x                 : int16_t
-            y                 : int16_t
-            speed             : (0 ... 20) [20 ...  40] * 0.05 (41 ... 255)
-            transparency      : [1  ... 255]
-            language          : [ ??? ]
-
-            flags             : [0 ... 255]
-                0b 00000001   : Always on top
-                0b 00000010   : Show taskbar icon
-                0b 00000100   : Disable moving
-                0b 00001000   : Hide on hover
-                0b 00010000   : Click-through
-
-    **/
-#define SETTINGS_VER 0x1
 #define SETTINGS_AOT 0x1
 #define SETTINGS_STI 0x2
 #define SETTINGS_DM  0x4
@@ -311,7 +294,6 @@ typedef struct {
     void* lbsh;
     /** OBJ_SCRLINEAR **/
     int scr_index, scr_current, scr_min, scr_max, scr_info;
-    uint8_t change_text;
 }
 Object;
 
@@ -344,7 +326,7 @@ typedef struct {
     uint16_t error;                  // ???
     int width_buff, height_buff;     // _InvalidateResizedItems
     int cpx_buff, cpy_buff;          // _HandleManagerMouseMove
-    int casb;                        // Current Active ScrollBar
+    int casb, last_casb;             // Current Active ScrollBar
     unsigned int lbsh_count;         // ListBox count
 
     /** DATA **/
@@ -361,8 +343,10 @@ typedef struct {
     float size;
 #define SETTINGS_MSTC 0x1
 #define SETTINGS_SP   0x2
+#define SETTINGS_CoTW 0x4   // Close on Tray Warning
     uint8_t settings_ver, settings, transparency, lang, flags, sfu;
     uint16_t speed;
+    RECT rc_load, rc_release;
 }
 Manager;
 
@@ -411,8 +395,6 @@ DWORD WINAPI GIFDeskFromParams(Manager*, uint16_t, char*, float, int16_t, int16_
                                uint16_t, uint8_t, uint8_t,
                                uint8_t, uint8_t);
 
-void _DeleteObject(Object*);
-
 //--------------------------------------------------
 // MANAGER
 //--------------------------------------------------
@@ -432,13 +414,13 @@ enum {
     MANAGER_WARN_LENGTHS_ALLOC, MANAGER_WARN_FRAMEP_ALLOC, MANAGER_WARN_TEXTURES_ALLOC,
     MANAGER_WARN_CREATE_OBJ, MANAGER_WARN_GFKLOOP_NULL, MANAGER_WARN_CREATE_LOOP,
     MANAGER_WARN_CREATE_THREAD, MANAGER_WARN_QUERY_TOO_MUCH, MANAGER_WARN_REG,
-    MANAGER_WARN_OBJCOUNT_OVERFLOW,
+    MANAGER_WARN_OBJCOUNT_OVERFLOW, MANAGER_WARN_APPLY_WINDOW,
 
     // 12288
     MANAGER_WARN_OPENGL_NA = 0x3000, MANAGER_WARN_OPENGL_INVALID_ENUM,
     MANAGER_WARN_OPENGL_INVALID_VALUE, MANAGER_WARN_OPENGL_INVALID_OPERATION,
     MANAGER_WARN_OPENGL_STACK_OVERFLOW, MANAGER_WARN_OPENGL_STACK_UNDERFLOW,
-    MANAGER_WARN_OPENGL_OUT_OF_MEMORY,
+    MANAGER_WARN_OPENGL_OUT_OF_MEMORY, MANAGER_WARN_OPENGL_OUT_OF_CONTEXT,
 
     // 16384
     MANAGER_WARN_GIF_OPEN_FAILED = 0x4000, MANAGER_WARN_GIF_READ_FAILED,
@@ -461,6 +443,20 @@ enum {
 
     MANAGER_ERR_NULL = 0xFFFF
 };
+
+SINLINE void _DeleteObject(Object* obj) {
+    if (obj) {
+        if (obj->rgn) { DeleteObject(obj->rgn); obj->rgn = NULL; }
+        if (obj->window) { DestroyWindow(obj->window); obj->window = NULL; }
+        if (obj->stm) { free(obj->stm); obj->stm = NULL; }
+
+        if (obj->lbsh) {
+            Manager* lbsh = (Manager*)obj->lbsh;
+            if (lbsh->window) DestroyWindow(lbsh->window);
+            free(lbsh); obj->lbsh = NULL;
+        }
+    }
+}
 
 SINLINE int ManagerDestroy(Manager* manager) {
     if (manager) {
@@ -497,51 +493,238 @@ SINLINE int ManagerDestroy(Manager* manager) {
 SINLINE void ManagerHandleError(Manager* manager) {
     char err[256];
     if (manager) {
+        switch (manager->error) {
+            case MANAGER_ERR_CREATE_MUTEX:
+                sprintf(err, "0x%.8X (%d)\nFailed to create mutex. Handle is invalid. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_WCEX:
+                sprintf(err, "0x%.8X (%d)\nFailed to create window class extension. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_WCEXTRAY:
+                sprintf(err, "0x%.8X (%d)\nFailed to create listbox window class extension. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_LBSWCEX:
+                sprintf(err, "0x%.8X (%d)\nFailed to create listbox window class extension. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_GFKWCEX:
+                sprintf(err, "0x%.8X (%d)\nFailed to create animation window class extension. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_WINDOW:
+                sprintf(err, "0x%.8X (%d)\nFailed to create main application window. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_FONT:
+                sprintf(err, "0x%.8X (%d)\nFailed to create required font. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_TRAY:
+                sprintf(err, "0x%.8X (%d)\nFailed to create system tray icon. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_CREATE_OBJ:
+                sprintf(err, "0x%.8X (%d)\nFailed to create an UI object. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_GET_OFNFILTER:
+                sprintf(err, "0x%.8X (%d)\nFailed to retrieve Open File dialog filter. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_GFK_NULL:
+                sprintf(err, "0x%.8X (%d)\nFailed to create tray window class extension. Please restart the app.", manager->error, manager->error);
+                break;
+            case MANAGER_ERR_NULL:
+                sprintf(err, "0x%.8X (%d)\nAn unknown error has occurred. Please restart the app.", manager->error, manager->error);
+                break;
+
+/// --------------------------------------------------------------------
+            case MANAGER_WARN_SETTINGS: // Not used or deprecated
+                sprintf(err, "0x%.8X (%d) ", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_PARSE_SETTINGS:
+                sprintf(err, "0x%.8X (%d)\nFailed to parse configuration file. Some settings may be ignored.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIFDESK_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nCould not allocate memory for animation descriptor.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_FILE_NEXIST:
+                sprintf(err, "0x%.8X (%d)\nSelected file does not exist.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_NO_FORMAT:
+                sprintf(err, "0x%.8X (%d)\nUnsupported or unknown image format.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_CREATE_WINDOW:
+                sprintf(err, "0x%.8X (%d)\nCould not create an animation window.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_FRAME_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nCould not allocate memory for a frame buffer. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_BUFF_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nCould not allocate memory for a frame buffer. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_DELAYS_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for a delays buffer. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_LENGTHS_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for a frame buffer. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_FRAMEP_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for a frame points buffer. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_TEXTURES_ALLOC:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for a animation textures. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_CREATE_OBJ:
+                sprintf(err, "0x%.8X (%d)\nFailed to create an UI object for animation. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GFKLOOP_NULL:
+                sprintf(err, "0x%.8X (%d)\nFailed to create render loop. Handle is invalid. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_CREATE_LOOP:
+                sprintf(err, "0x%.8X (%d)\nFailed to create render loop. Handle is invalid. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_CREATE_THREAD:
+                sprintf(err, "0x%.8X (%d)\nFailed to create render thread. Handle is invalid. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_QUERY_TOO_MUCH:
+                sprintf(err, "0x%.8X (%d)\nYou can select no more than one file at a time.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_REG:
+                sprintf(err, "0x%.8X (%d)\nFailed to access or modify Windows registry. Please restart the application with administrator rights.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OBJCOUNT_OVERFLOW: // Not used or deprecated
+                sprintf(err, "0x%.8X (%d) ", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_APPLY_WINDOW:
+                sprintf(err, "0x%.8X (%d)\nFailed to create an UI object for animation.\nSeems you've reached the file limit.", manager->error, manager->error);
+                break;
+/// --------------------------------------------------------------------
+            case MANAGER_WARN_OPENGL_NA: // Not used or deprecated
+                sprintf(err, "0x%.8X (%d) ", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_INVALID_ENUM:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: invalid enumerator used.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_INVALID_VALUE:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: invalid numeric value passed.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_INVALID_OPERATION:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: invalid operation in current state.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_STACK_OVERFLOW:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: stack overflow.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_STACK_UNDERFLOW:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: stack underflow.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_OUT_OF_MEMORY:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: out of graphics memory.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_OPENGL_OUT_OF_CONTEXT:
+                sprintf(err, "0x%.8X (%d)\nOpenGL error: unexpected error.", manager->error, manager->error);
+                break;
+/// --------------------------------------------------------------------
+            case MANAGER_WARN_GIF_OPEN_FAILED:
+                sprintf(err, "0x%.8X (%d)\nFailed to open GIF file. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_READ_FAILED:
+                sprintf(err, "0x%.8X (%d)\nFailed to read GIF data. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NOT_GIF_FILE:
+                sprintf(err, "0x%.8X (%d)\nFile is not a valid GIF image. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NO_SCRN_DSCR:
+                sprintf(err, "0x%.8X (%d)\nGIF has no screen descriptor. File is corrupted. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NO_IMAG_DSCR:
+                sprintf(err, "0x%.8X (%d)\nGIF has no image descriptor. File is corrupted. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NO_COLOR_MAP:
+                sprintf(err, "0x%.8X (%d)\nGIF missing required color map. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_WRONG_RECORD:
+                sprintf(err, "0x%.8X (%d)\nUnexpected record type in GIF stream. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_DATA_TOO_BIG:
+                sprintf(err, "0x%.8X (%d)\nGIF data block exceeds supported size. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NOT_ENOUGH_MEM:
+                sprintf(err, "0x%.8X (%d)\nNot enough memory to decode GIF. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_CLOSE_FAILED:
+                sprintf(err, "0x%.8X (%d)\nFailed to close GIF file properly. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NOT_READABLE:
+                sprintf(err, "0x%.8X (%d)\nCannot read GIF file. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_IMAGE_DEFECT:
+                sprintf(err, "0x%.8X (%d)\nGIF is corrupted. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_EOF_TOO_SOON:
+                sprintf(err, "0x%.8X (%d)\nUnexpected end of file while reading GIF. Please try to open another file.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_GIF_NULL:
+                sprintf(err, "0x%.8X (%d)\nInternal GIF structure is null. Please try to open another file.", manager->error, manager->error);
+                break;
+/// --------------------------------------------------------------------
+            case MANAGER_WARN_APNG_STRUCT:
+                sprintf(err, "0x%.8X (%d)\nFailed to initialize APNG structure. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_APNG_INFO:
+                sprintf(err, "0x%.8X (%d)\nFailed to retrieve APNG image information.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_APNG_JUMP:
+                sprintf(err, "0x%.8X (%d)\nFailed to setjmp to jmpbuf. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_APNG_POINTERS:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for an image rows. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_APNG_POINTER:
+                sprintf(err, "0x%.8X (%d)\nFailed to allocate memory for an image row bytes. Please try again later.", manager->error, manager->error);
+                break;
+/// --------------------------------------------------------------------
+            case MANAGER_WARN_WEBP_INFO:
+                sprintf(err, "0x%.8X (%d)\nFailed to retrieve WebP image info.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_OPTIONS:
+                sprintf(err, "0x%.8X (%d)\nInvalid WebP decoding options.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_OUT_OF_MEMORY:
+                sprintf(err, "0x%.8X (%d)\nDecoder ran out of memory. Please try again later.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_INVALID_PARAM:
+                sprintf(err, "0x%.8X (%d)\nInvalid parameter passed to decoder.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_BITSTREAM_ERROR:
+                sprintf(err, "0x%.8X (%d)\nCorrupted or invalid WebP bitstream.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_UNSUPPORTED_FEATURE:
+                sprintf(err, "0x%.8X (%d)\nWebP feature not supported by this decoder.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_SUSPENDED:
+                sprintf(err, "0x%.8X (%d)\nWebP decoding was suspended.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_USER_ABORT:
+                sprintf(err, "0x%.8X (%d)\nWebP decoding was aborted by something else.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_NOT_ENOUGH_DATA:
+                sprintf(err, "0x%.8X (%d)\nNot enough data to decode WebP image.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_UNKNOWN:
+                sprintf(err, "0x%.8X (%d)\nUnknown WebP decoding error.", manager->error, manager->error);
+                break;
+            case MANAGER_WARN_WEBP_DECODER:
+                sprintf(err, "0x%.8X (%d)\nGeneral WebP decoder failure.", manager->error, manager->error);
+                break;
+/// --------------------------------------------------------------------
+            default:
+                break;
+        }
         if (manager->error < 0x2000) {
-            sprintf(err, "  Something went wrong...\n  Proccess returned 0x%.8X       ", manager->error);
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
             ManagerDestroy(manager);
-            return;
         }
-        else if (manager->error < 0x3000) {
-            sprintf(err, "  WARNING:\n  Proccess returned 0x%.8X       ", manager->error);
-            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
-            manager->is_loading = 0;
-            DragAcceptFiles(manager->window, TRUE);
-            return;
-        }
-        else if (manager->error < 0x4000) {
-            sprintf(err, "  OPENGL_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
-            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
-            manager->is_loading = 0;
-            DragAcceptFiles(manager->window, TRUE);
-            return;
-        }
-        else if (manager->error < 0x5000) {
-            sprintf(err, "  GIF_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
-            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
-            manager->is_loading = 0;
-            DragAcceptFiles(manager->window, TRUE);
-            return;
-        }
-        else if (manager->error < 0x6000) {
-            sprintf(err, "  APNG_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
-            MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
-            manager->is_loading = 0;
-            DragAcceptFiles(manager->window, TRUE);
-            return;
-        }
-        else if (manager->error < 0x7000) {
-            sprintf(err, "  WEBP_ERROR:\n  Proccess returned 0x%.8X       ", manager->error);
+        else {
             MessageBox(NULL, err, APP_NAME_VER, MB_ICONWARNING);
             manager->is_loading = 0;
             DragAcceptFiles(manager->window, TRUE);
             return;
         }
     }
-    sprintf(err, "  Something went wrong...\n  Proccess returned 0x%.8X       ", MANAGER_ERR_NULL);
-    MessageBox(NULL, err, APP_NAME_VER, MB_ICONERROR);
-    ManagerDestroy(manager);
 }
 
 #endif // TYPES_H_INCLUDED

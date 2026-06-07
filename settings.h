@@ -52,9 +52,13 @@ SINLINE uint8_t SetSettings(Manager* manager) {
 SINLINE void SwapFilenames(Manager* manager, uint16_t index) {
     strncpy(manager->gfk[index].filepath, manager->buff_filepath, MAX_PATH);
     manager->gfk[index].filepath[MAX_PATH - 1] = '\0';
+
     /* D:/Folder/filename.img -> filename.img */
     strncpy(manager->gfk[index].filename, strrchr(manager->gfk[index].filepath, '\\') + 1, MAX_PATH - 1);
     manager->gfk[index].filename[MAX_PATH - 1] = '\0';
+    if (strlen(manager->gfk[index].filename) > 32) {
+        memset(manager->gfk[index].filename + 31, '.', strlen(manager->gfk[index].filename) - 31);
+    }
 }
 
 SINLINE void WriteSettings(Manager* manager) {
@@ -88,13 +92,13 @@ SINLINE void WriteSettings(Manager* manager) {
 }
 
 SINLINE void ParseSettings(Manager* manager) {
-    manager->settings_ver = SETTINGS_VER;
+    manager->settings_ver = 0x1;
     manager->settings = 0x1;
     manager->size = 1.0f;
     manager->speed = 20; // 20 * 0.05 = 1
     manager->transparency = 255;
     manager->lang = 255;
-    manager->flags = 0x1;
+    manager->flags = 0x0;
     manager->sfu = 0;
     manager->gfk_count = 0;
 
