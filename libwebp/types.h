@@ -1,15 +1,7 @@
 #ifndef WEBP_WEBP_TYPES_H_
 #define WEBP_WEBP_TYPES_H_
 
-#ifndef _MSC_VER
-#include <inttypes.h>  // IWYU pragma: export
-#if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
-    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
 #define WEBP_INLINE inline
-#else
-#define WEBP_INLINE
-#endif
-#else
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;
@@ -18,8 +10,6 @@ typedef signed int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef long long int int64_t;
-#define WEBP_INLINE __forceinline
-#endif /* _MSC_VER */
 
 #ifndef WEBP_NODISCARD
 #if defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD
