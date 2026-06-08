@@ -1,9 +1,5 @@
-// Author: Skal (pascal.massimino@gmail.com)
-
 #ifndef WEBP_WEBP_TYPES_H_
 #define WEBP_WEBP_TYPES_H_
-
-#include <stddef.h>  // IWYU pragma: export for size_t
 
 #ifndef _MSC_VER
 #include <inttypes.h>  // IWYU pragma: export
